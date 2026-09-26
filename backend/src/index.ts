@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import { connectDB } from './config/db';
 import healthRoutes from './routes/healthRoutes';
 import authRoutes from './routes/authRoutes';
+import crmRoutes from './routes/crmRoutes';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -37,6 +38,7 @@ app.use('/api', limiter);
 // Routes
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/crm', crmRoutes);
 
 // Base route
 app.get('/', (_req, res) => {
@@ -44,6 +46,7 @@ app.get('/', (_req, res) => {
     message: 'Welcome to DevFlow API Server',
     health: '/api/health',
     auth: '/api/auth',
+    crm: '/api/crm',
   });
 });
 

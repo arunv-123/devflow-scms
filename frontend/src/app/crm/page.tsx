@@ -1,14 +1,32 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Layers, PhoneCall, UserCheck, Calendar, TrendingUp, Plus, ArrowRight } from 'lucide-react';
+import { PhoneCall, UserCheck, Calendar, Plus } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { mockLeads, mockClients, mockMeetings } from '@/lib/mockData';
+import { crmApi, CRMOverviewStats } from '@/services/crmApi';
 
 export default function CRMOverviewPage() {
-  const totalLeadsValue = mockLeads.reduce((acc, l) => acc + l.value, 0);
+  const initialPipelineValue = mockLeads.reduce((acc, l) => acc + l.value, 0);
+  const [stats, setStats] = useState<CRMOverviewStats>({
+    pipelineValue: initialPipelineValue,
+    activeOpportunities: mockLeads.length,
+    activeClients: mockClients.length,
+    scheduledMeetings: mockMeetings.length,
+  });
+
+  useEffect(() => {
+    crmApi
+      .getOverview()
+      .then((data) => {
+        if (data) setStats(data);
+      })
+      .catch(() => {
+        // Fallback to mockData if API request fails
+      });
+  }, []);
 
   return (
     <AppLayout>
@@ -37,19 +55,19 @@ export default function CRMOverviewPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1">
             <span className="text-xs font-semibold text-slate-400 uppercase">Pipeline Value</span>
-            <div className="text-3xl font-extrabold text-white">${totalLeadsValue.toLocaleString()}</div>
-            <div className="text-[11px] text-emerald-400">{mockLeads.length} Active Opportunities</div>
+            <div className="text-3xl font-extrabold text-white">${stats.pipelineValue.toLocaleString()}</div>
+            <div className="text-[11px] text-emerald-400">{stats.activeOpportunities} Active Opportunities</div>
           </div>
 
           <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1">
             <span className="text-xs font-semibold text-slate-400 uppercase">Active Clients</span>
-            <div className="text-3xl font-extrabold text-sky-400">{mockClients.length} Enterprise Clients</div>
+            <div className="text-3xl font-extrabold text-sky-400">{stats.activeClients} Enterprise Clients</div>
             <div className="text-[11px] text-slate-400">100% Retainer Active</div>
           </div>
 
           <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1">
             <span className="text-xs font-semibold text-slate-400 uppercase">Upcoming Meetings</span>
-            <div className="text-3xl font-extrabold text-purple-400">{mockMeetings.length} Scheduled</div>
+            <div className="text-3xl font-extrabold text-purple-400">{stats.scheduledMeetings} Scheduled</div>
             <div className="text-[11px] text-slate-400">This Week</div>
           </div>
         </div>
