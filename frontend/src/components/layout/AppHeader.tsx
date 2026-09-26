@@ -16,10 +16,12 @@ import {
   Sliders,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { currentUser, mockNotifications } from '@/lib/mockData';
+import { mockNotifications } from '@/lib/mockData';
+import { useAuth } from '@/context/AuthContext';
 
 export function AppHeader() {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
 
@@ -149,8 +151,8 @@ export function AppHeader() {
             className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-800/60 transition-colors"
           >
             <img
-              src={currentUser.avatar}
-              alt={currentUser.name}
+              src={user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
+              alt={user?.name || 'User'}
               className="size-7 rounded-full object-cover ring-2 ring-sky-500/40"
             />
             <ChevronDown className="size-3.5 text-slate-400 hidden sm:inline" />
@@ -159,10 +161,10 @@ export function AppHeader() {
           {showProfileMenu && (
             <div className="absolute right-0 mt-2 w-56 bg-[#0b0f19] border border-slate-800 rounded-xl shadow-2xl p-2 space-y-1 z-50">
               <div className="px-3 py-2 border-b border-slate-800">
-                <p className="text-xs font-bold text-white">{currentUser.name}</p>
-                <p className="text-[11px] text-slate-400 truncate">{currentUser.email}</p>
+                <p className="text-xs font-bold text-white">{user?.name || 'Authenticated User'}</p>
+                <p className="text-[11px] text-slate-400 truncate">{user?.email || ''}</p>
                 <span className="mt-1 inline-block text-[10px] font-semibold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">
-                  {currentUser.role}
+                  {user?.role || 'Member'}
                 </span>
               </div>
               <Link
@@ -180,7 +182,7 @@ export function AppHeader() {
                 <span>Settings</span>
               </Link>
               <button
-                onClick={() => alert('Signed out of DevFlow SCMS')}
+                onClick={logout}
                 className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-950/30 rounded-lg transition-colors text-left"
               >
                 <LogOut className="size-3.5" />

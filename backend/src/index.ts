@@ -11,6 +11,10 @@ import crmRoutes from './routes/crmRoutes';
 import projectRoutes from './routes/projectRoutes';
 import taskRoutes from './routes/taskRoutes';
 import milestoneRoutes from './routes/milestoneRoutes';
+import userRoutes from './routes/userRoutes';
+import documentRoutes from './routes/documentRoutes';
+import notificationRoutes from './routes/notificationRoutes';
+import activityLogRoutes from './routes/activityLogRoutes';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -45,6 +49,10 @@ app.use('/api/crm', crmRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/milestones', milestoneRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/documents', documentRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/activity-logs', activityLogRoutes);
 
 // Base route
 app.get('/', (_req, res) => {
@@ -56,6 +64,10 @@ app.get('/', (_req, res) => {
     projects: '/api/projects',
     tasks: '/api/tasks',
     milestones: '/api/milestones',
+    users: '/api/users',
+    documents: '/api/documents',
+    notifications: '/api/notifications',
+    activityLogs: '/api/activity-logs',
   });
 });
 

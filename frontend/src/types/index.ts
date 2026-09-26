@@ -30,6 +30,7 @@ export interface TeamMember {
   email: string;
   role: UserRole;
   avatar: string;
+  department?: string;
   skills: string[];
   assignedProjects: string[];
   workloadPercent: number;

@@ -10,7 +10,7 @@ import { protect, authorize } from '../middleware/authMiddleware';
 
 const router = Router();
 
-router.post('/register', register);
+router.post('/register', protect, authorize('Super Admin', 'Admin', 'Project Manager'), register);
 router.post('/login', login);
 router.post('/logout', logout);
 router.get('/me', protect, getMe);

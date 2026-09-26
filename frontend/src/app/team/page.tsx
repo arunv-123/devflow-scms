@@ -1,23 +1,72 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Users, Search, Plus, Star, Briefcase, Mail, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Users, Search, Plus, Star, Briefcase, Mail, CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
-import { mockTeamMembers } from '@/lib/mockData';
+import { TeamMember, UserRole } from '@/types';
+import { usersApi } from '@/services/usersApi';
 
 export default function TeamPage() {
+  const [team, setTeam] = useState<TeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('All');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
 
-  const filteredTeam = mockTeamMembers.filter((m) => {
-    const matchesSearch =
-      m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      m.skills.some((s) => s.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesRole = roleFilter === 'All' || m.role === roleFilter;
-    return matchesSearch && matchesRole;
-  });
+  // Modal form state
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('password123');
+  const [role, setRole] = useState<UserRole>('Developer');
+  const [department, setDepartment] = useState('Engineering');
+  const [skills, setSkills] = useState('TypeScript, React, Node.js');
+  const [error, setError] = useState('');
+
+  const loadTeam = async () => {
+    try {
+      setLoading(true);
+      const data = await usersApi.getUsers({ search: searchTerm, role: roleFilter });
+      setTeam(data);
+    } catch (err) {
+      console.error('Failed to load team', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadTeam();
+  }, [searchTerm, roleFilter]);
+
+  const handleAddMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSubmitLoading(true);
+
+    try {
+      const skillsArray = skills.split(',').map((s) => s.trim()).filter(Boolean);
+      await usersApi.createUser({
+        name,
+        email,
+        password,
+        role,
+        department,
+        skills: skillsArray,
+      });
+
+      setShowAddModal(false);
+      setName('');
+      setEmail('');
+      await loadTeam();
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to add team member');
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
 
   return (
     <AppLayout>
@@ -38,7 +87,11 @@ export default function TeamPage() {
                 Workload Matrix
               </Button>
             </Link>
-            <Button size="sm" className="bg-sky-600 hover:bg-sky-500 text-white text-xs gap-1.5 shadow-md shadow-sky-600/20">
+            <Button
+              size="sm"
+              onClick={() => setShowAddModal(true)}
+              className="bg-sky-600 hover:bg-sky-500 text-white text-xs gap-1.5 shadow-md shadow-sky-600/20"
+            >
               <Plus className="size-4" />
               <span>Add Member</span>
             </Button>
@@ -64,84 +117,198 @@ export default function TeamPage() {
             className="h-9 px-3 text-xs bg-[#060913] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-sky-500"
           >
             <option value="All">All Roles</option>
+            <option value="Super Admin">Super Admin</option>
+            <option value="Admin">Admin</option>
             <option value="Project Manager">Project Manager</option>
             <option value="Team Lead">Team Lead</option>
             <option value="Developer">Developer</option>
             <option value="Designer">Designer</option>
             <option value="QA">QA</option>
+            <option value="Client">Client</option>
           </select>
         </div>
 
-        {/* Team Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTeam.map((member) => (
-            <div
-              key={member.id}
-              className="p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 hover:border-slate-700 transition-colors space-y-4 flex flex-col justify-between"
-            >
-              <div className="space-y-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={member.avatar}
-                      alt={member.name}
-                      className="size-12 rounded-xl object-cover ring-2 ring-sky-500/30"
-                    />
-                    <div>
-                      <h3 className="text-base font-bold text-white">{member.name}</h3>
-                      <span className="text-xs font-semibold text-sky-400">{member.role}</span>
+        {/* Loading / Team Grid */}
+        {loading ? (
+          <div className="p-12 text-center text-xs text-slate-400">Loading team members...</div>
+        ) : team.length === 0 ? (
+          <div className="p-12 text-center text-xs text-slate-500 border border-dashed border-slate-800 rounded-2xl">
+            No team members found.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {team.map((member) => (
+              <div
+                key={member.id}
+                className="p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 hover:border-slate-700 transition-colors space-y-4 flex flex-col justify-between"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={member.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
+                        alt={member.name}
+                        className="size-12 rounded-xl object-cover ring-2 ring-sky-500/30"
+                      />
+                      <div>
+                        <h3 className="text-base font-bold text-white">{member.name}</h3>
+                        <span className="text-xs font-semibold text-sky-400">{member.role}</span>
+                      </div>
+                    </div>
+
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                        member.availability === 'Available'
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                          : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                      }`}
+                    >
+                      {member.availability || 'Available'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1 text-xs text-amber-400">
+                    <Star className="size-3.5 fill-amber-400 text-amber-400" />
+                    <span className="font-bold">{member.performanceRating || 5.0} / 5.0 Rating</span>
+                  </div>
+
+                  {/* Skills Matrix */}
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] uppercase font-semibold text-slate-500 block">Skills Matrix</span>
+                    <div className="flex flex-wrap gap-1">
+                      {(member.skills || ['TypeScript', 'React']).map((skill, idx) => (
+                        <span key={idx} className="px-2 py-0.5 rounded text-[10px] bg-[#060913] text-slate-300 border border-slate-800 font-mono">
+                          {skill}
+                        </span>
+                      ))}
                     </div>
                   </div>
-
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                      member.availability === 'Available'
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                        : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                    }`}
-                  >
-                    {member.availability}
-                  </span>
                 </div>
 
-                <div className="flex items-center gap-1 text-xs text-amber-400">
-                  <Star className="size-3.5 fill-amber-400 text-amber-400" />
-                  <span className="font-bold">{member.performanceRating} / 5.0 Rating</span>
-                </div>
-
-                {/* Skills Matrix */}
-                <div className="space-y-1.5">
-                  <span className="text-[10px] uppercase font-semibold text-slate-500 block">Skills Matrix</span>
-                  <div className="flex flex-wrap gap-1">
-                    {member.skills.map((skill, idx) => (
-                      <span key={idx} className="px-2 py-0.5 rounded text-[10px] bg-[#060913] text-slate-300 border border-slate-800 font-mono">
-                        {skill}
-                      </span>
-                    ))}
+                {/* Workload Progress Bar */}
+                <div className="pt-4 border-t border-slate-800/80 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-400">Current Workload</span>
+                    <span className={`font-bold ${(member.workloadPercent || 0) > 85 ? 'text-red-400' : 'text-sky-400'}`}>
+                      {member.workloadPercent || 0}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-[#060913] rounded-full h-1.5 overflow-hidden border border-slate-800">
+                    <div
+                      className={`h-full rounded-full ${
+                        (member.workloadPercent || 0) > 85 ? 'bg-red-500' : 'bg-sky-400'
+                      }`}
+                      style={{ width: `${member.workloadPercent || 0}%` }}
+                    />
                   </div>
                 </div>
               </div>
+            ))}
+          </div>
+        )}
 
-              {/* Workload Progress Bar */}
-              <div className="pt-4 border-t border-slate-800/80 space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400">Current Workload</span>
-                  <span className={`font-bold ${member.workloadPercent > 85 ? 'text-red-400' : 'text-sky-400'}`}>
-                    {member.workloadPercent}%
-                  </span>
+        {/* Add Member Modal */}
+        {showAddModal && (
+          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-[#0b0f19] border border-slate-800 rounded-2xl p-6 space-y-4 shadow-2xl relative">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 className="text-base font-bold text-white">Add Team Member</h3>
+                <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-white">
+                  <X className="size-4" />
+                </button>
+              </div>
+
+              {error && (
+                <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs">
+                  {error}
                 </div>
-                <div className="w-full bg-[#060913] rounded-full h-1.5 overflow-hidden border border-slate-800">
-                  <div
-                    className={`h-full rounded-full ${
-                      member.workloadPercent > 85 ? 'bg-red-500' : 'bg-sky-400'
-                    }`}
-                    style={{ width: `${member.workloadPercent}%` }}
+              )}
+
+              <form onSubmit={handleAddMember} className="space-y-3 text-xs">
+                <div className="space-y-1">
+                  <label className="text-slate-300 font-semibold">Full Name</label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. Marcus Vance"
+                    required
+                    className="w-full h-9 px-3 bg-[#060913] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-sky-500"
                   />
                 </div>
-              </div>
+
+                <div className="space-y-1">
+                  <label className="text-slate-300 font-semibold">Email Address</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="e.g. marcus@devflow.local"
+                    required
+                    className="w-full h-9 px-3 bg-[#060913] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-sky-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-slate-300 font-semibold">Role</label>
+                    <select
+                      value={role}
+                      onChange={(e) => setRole(e.target.value as UserRole)}
+                      className="w-full h-9 px-3 bg-[#060913] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-sky-500"
+                    >
+                      <option value="Admin">Admin</option>
+                      <option value="Project Manager">Project Manager</option>
+                      <option value="Team Lead">Team Lead</option>
+                      <option value="Developer">Developer</option>
+                      <option value="Designer">Designer</option>
+                      <option value="QA">QA</option>
+                      <option value="Client">Client</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-slate-300 font-semibold">Department</label>
+                    <input
+                      type="text"
+                      value={department}
+                      onChange={(e) => setDepartment(e.target.value)}
+                      className="w-full h-9 px-3 bg-[#060913] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-sky-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-slate-300 font-semibold">Skills (comma separated)</label>
+                  <input
+                    type="text"
+                    value={skills}
+                    onChange={(e) => setSkills(e.target.value)}
+                    className="w-full h-9 px-3 bg-[#060913] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-sky-500"
+                  />
+                </div>
+
+                <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-800">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setShowAddModal(false)}
+                    className="text-xs text-slate-400"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={submitLoading}
+                    className="bg-sky-600 hover:bg-sky-500 text-white text-xs px-4"
+                  >
+                    {submitLoading ? 'Creating...' : 'Save Member'}
+                  </Button>
+                </div>
+              </form>
             </div>
-          ))}
-        </div>
+          </div>
+        )}
       </div>
     </AppLayout>
   );

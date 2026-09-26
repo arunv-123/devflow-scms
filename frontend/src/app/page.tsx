@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Sparkles,
@@ -30,8 +30,11 @@ import {
   Sliders,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { authApi } from '@/services/authApi';
 
 export default function StitchLandingPage() {
+  const authHref = '/auth/signin';
+
   return (
     <div className="min-h-screen bg-[#060913] text-slate-100 font-sans antialiased selection:bg-cyan-500/20 selection:text-cyan-400 overflow-x-hidden">
       {/* Background Glow Effects */}
@@ -69,12 +72,12 @@ export default function StitchLandingPage() {
           </nav>
 
           <div className="flex items-center gap-4">
-            <Link href="/dashboard">
+            <Link href={authHref}>
               <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800/60 text-sm">
                 Sign In
               </Button>
             </Link>
-            <Link href="/dashboard">
+            <Link href={authHref}>
               <Button className="bg-sky-600 hover:bg-sky-500 text-white font-medium text-sm px-5 py-2.5 rounded-xl shadow-lg shadow-sky-600/30 gap-2 border border-sky-400/30">
                 <span>Get Started</span>
                 <ArrowRight className="size-4" />
@@ -103,7 +106,7 @@ export default function StitchLandingPage() {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-          <Link href="/dashboard">
+          <Link href={authHref}>
             <Button size="lg" className="h-12 px-8 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-sm font-semibold shadow-xl shadow-sky-600/30 border border-sky-400/30 gap-2">
               <span>See the Tour</span>
               <ArrowRight className="size-4" />
@@ -663,7 +666,7 @@ export default function StitchLandingPage() {
             Start today. Unite your team, clients, and AI workflows for every project, task, and business milestone.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-            <Link href="/dashboard">
+            <Link href={authHref}>
               <Button size="lg" className="h-12 px-8 rounded-xl bg-slate-950 hover:bg-slate-900 text-white font-bold text-sm gap-2">
                 <span>Get Started Now</span>
                 <ArrowRight className="size-4 text-sky-400" />

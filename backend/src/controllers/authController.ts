@@ -2,14 +2,43 @@ import { Response } from 'express';
 import { AuthRequest } from '../types/auth';
 import { AuthService } from '../services/authService';
 import { sendTokenResponse } from '../utils/token';
-import { asyncHandler } from '../utils/errors';
+import { ApiError, asyncHandler } from '../utils/errors';
 
-// @desc    Register new user
+// @desc    Register / create new user (Admin & Manager Internal Operation)
 // @route   POST /api/auth/register
-// @access  Public
+// @access  Private (Super Admin, Admin, Project Manager)
 export const register = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+  const creator = req.user;
+  if (!creator) {
+    throw new ApiError('Not authorized to perform account creation', 401);
+  }
+
+  const requestedRole = req.body.role || 'Developer';
+
+  // Role restriction checks
+  if (creator.role === 'Project Manager' && requestedRole !== 'Client') {
+    throw new ApiError('Project Managers are only authorized to create Client accounts', 403);
+  }
+
+  if (!['Super Admin', 'Admin', 'Project Manager'].includes(creator.role)) {
+    throw new ApiError('Your role is not authorized to create user accounts', 403);
+  }
+
   const user = await AuthService.registerUser(req.body);
-  sendTokenResponse(user, 201, res, 'User registered successfully');
+
+  res.status(201).json({
+    success: true,
+    message: 'User account created successfully',
+    user: {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      department: user.department,
+      skills: user.skills,
+      avatar: user.avatar,
+    },
+  });
 });
 
 // @desc    Login user & set JWT in HttpOnly cookie
@@ -24,9 +53,10 @@ export const login = asyncHandler(async (req: AuthRequest, res: Response): Promi
 // @route   POST /api/auth/logout
 // @access  Private / Public
 export const logout = asyncHandler(async (_req: AuthRequest, res: Response): Promise<void> => {
-  res.cookie('token', 'none', {
-    expires: new Date(Date.now() + 10 * 1000), // 10 seconds
+  res.cookie('token', '', {
+    expires: new Date(0),
     httpOnly: true,
+    path: '/',
     secure: process.env.NODE_ENV === 'production',
     sameSite: (process.env.NODE_ENV === 'production' ? 'none' : 'lax') as 'none' | 'lax',
   });

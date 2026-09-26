@@ -1,19 +1,43 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Sparkles, ArrowRight, Lock, Mail, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { authApi } from '@/services/authApi';
+import { getRedirectUrlForRole } from '@/context/AuthContext';
 
 export default function SignInPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('alex.morgan@devflow.io');
-  const [password, setPassword] = useState('••••••••••••');
+  const [email, setEmail] = useState('admin@devflow.local');
+  const [password, setPassword] = useState('password123');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    // If already authenticated, redirect based on user role
+    authApi
+      .getMe()
+      .then((user) => {
+        router.push(getRedirectUrlForRole(user.role));
+      })
+      .catch(() => {});
+  }, [router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    router.push('/dashboard');
+    setError('');
+    setLoading(true);
+
+    try {
+      const res = await authApi.login(email, password);
+      router.push(getRedirectUrlForRole(res.user?.role));
+    } catch (err: any) {
+      setError(err.response?.data?.error || err.message || 'Invalid email or password');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -43,6 +67,12 @@ export default function SignInPage() {
 
       {/* Form Card */}
       <div className="w-full max-w-md p-8 rounded-2xl bg-[#0b0f19] border border-slate-800 shadow-2xl space-y-6 relative z-10">
+        {error && (
+          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs text-center font-medium">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-300">Email Address</label>
@@ -75,8 +105,12 @@ export default function SignInPage() {
             </div>
           </div>
 
-          <Button type="submit" className="w-full h-11 bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-sky-600/25 gap-2 mt-2">
-            <span>Sign In to Workspace</span>
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full h-11 bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-sky-600/25 gap-2 mt-2"
+          >
+            <span>{loading ? 'Authenticating...' : 'Sign In to Workspace'}</span>
             <ArrowRight className="size-4" />
           </Button>
         </form>
