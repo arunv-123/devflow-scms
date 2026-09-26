@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
@@ -12,27 +12,53 @@ import {
   Clock,
   ArrowLeft,
   Plus,
-  Sparkles,
-  ShieldCheck,
-  Calendar,
-  DollarSign,
-  Layers,
-  ChevronRight,
-  Activity,
 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { mockProjects, mockTasks, mockMilestones, mockActivityLogs } from '@/lib/mockData';
+import { Project, Task, Milestone } from '@/types';
+import { projectApi } from '@/services/projectApi';
 
 export default function ProjectDetailsPage() {
   const params = useParams();
   const projectId = (params?.id as string) || 'prj-101';
-  const project = mockProjects.find((p) => p.id === projectId) || mockProjects[0];
+
+  const [project, setProject] = useState<Project>(
+    () => mockProjects.find((p) => p.id === projectId) || mockProjects[0]
+  );
+  const [projectTasks, setProjectTasks] = useState<Task[]>(
+    () => mockTasks.filter((t) => t.projectId === projectId)
+  );
+  const [projectMilestones, setProjectMilestones] = useState<Milestone[]>(
+    () => mockMilestones.filter((m) => m.projectId === projectId)
+  );
 
   const [activeTab, setActiveTab] = useState<'overview' | 'tasks' | 'milestones' | 'team' | 'health' | 'activity'>('overview');
 
-  const projectTasks = mockTasks.filter((t) => t.projectId === project.id);
-  const projectMilestones = mockMilestones.filter((m) => m.projectId === project.id);
+  useEffect(() => {
+    if (projectId) {
+      projectApi
+        .getProjectById(projectId)
+        .then((data) => {
+          if (data) setProject(data);
+        })
+        .catch(() => {});
+
+      projectApi
+        .getTasks(projectId)
+        .then((data) => {
+          if (data) setProjectTasks(data);
+        })
+        .catch(() => {});
+
+      projectApi
+        .getMilestones(projectId)
+        .then((data) => {
+          if (data) setProjectMilestones(data);
+        })
+        .catch(() => {});
+    }
+  }, [projectId]);
 
   return (
     <AppLayout>
@@ -52,7 +78,7 @@ export default function ProjectDetailsPage() {
                   {project.status}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-1">Client: {project.clientName} • Manager: {project.manager.name}</p>
+              <p className="text-xs text-slate-400 mt-1">Client: {project.clientName} • Manager: {project.manager?.name || 'Alex Morgan'}</p>
             </div>
 
             <div className="flex items-center gap-3">
@@ -78,7 +104,7 @@ export default function ProjectDetailsPage() {
             { id: 'overview', label: 'Overview', icon: FolderKanban },
             { id: 'tasks', label: `Tasks (${projectTasks.length})`, icon: CheckSquare },
             { id: 'milestones', label: `Milestones (${projectMilestones.length})`, icon: Flag },
-            { id: 'team', label: `Team (${project.members.length})`, icon: Users },
+            { id: 'team', label: `Team (${project.members?.length || 0})`, icon: Users },
             { id: 'health', label: 'Health & Risk', icon: BrainCircuit },
             { id: 'activity', label: 'Activity Log', icon: Clock },
           ].map((tab) => {
@@ -108,25 +134,25 @@ export default function ProjectDetailsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
               <div className="p-4 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1">
                 <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Total Budget</span>
-                <div className="text-xl font-bold text-white">${project.budget.toLocaleString()}</div>
-                <div className="text-[11px] text-slate-400">Spent: ${project.spent.toLocaleString()}</div>
+                <div className="text-xl font-bold text-white">${project.budget?.toLocaleString()}</div>
+                <div className="text-[11px] text-slate-400">Spent: ${project.spent?.toLocaleString()}</div>
               </div>
 
               <div className="p-4 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1">
                 <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Completion</span>
                 <div className="text-xl font-bold text-sky-400">{project.progress}%</div>
-                <div className="text-[11px] text-slate-400">Target: Oct 2026</div>
+                <div className="text-[11px] text-slate-400">Target: {project.endDate}</div>
               </div>
 
               <div className="p-4 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1">
                 <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Health Score</span>
                 <div className="text-xl font-bold text-emerald-400">{project.healthScore}/100</div>
-                <div className="text-[11px] text-emerald-400 font-semibold">Low Risk</div>
+                <div className="text-[11px] text-emerald-400 font-semibold">{project.riskLevel} Risk</div>
               </div>
 
               <div className="p-4 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1">
                 <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Team Size</span>
-                <div className="text-xl font-bold text-white">{project.members.length} Members</div>
+                <div className="text-xl font-bold text-white">{project.members?.length || 0} Members</div>
                 <div className="text-[11px] text-slate-400">Assigned</div>
               </div>
             </div>
@@ -139,11 +165,12 @@ export default function ProjectDetailsPage() {
               <div className="space-y-2 pt-2">
                 <span className="text-xs font-semibold text-slate-400">Technologies Used:</span>
                 <div className="flex flex-wrap gap-2">
-                  {project.techStack.map((tech, idx) => (
-                    <span key={idx} className="px-2.5 py-1 rounded-lg text-xs bg-[#060913] text-sky-300 border border-slate-800 font-mono">
-                      {tech}
-                    </span>
-                  ))}
+                  {Array.isArray(project.techStack) &&
+                    project.techStack.map((tech, idx) => (
+                      <span key={idx} className="px-2.5 py-1 rounded-lg text-xs bg-[#060913] text-sky-300 border border-slate-800 font-mono">
+                        {tech}
+                      </span>
+                    ))}
                 </div>
               </div>
             </div>
@@ -159,7 +186,7 @@ export default function ProjectDetailsPage() {
                   <div key={t.id} className="p-3.5 rounded-xl bg-[#060913] border border-slate-800 flex items-center justify-between">
                     <div>
                       <div className="text-xs font-bold text-white">{t.title}</div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">Assignee: {t.assignee.name} • Due: {t.dueDate}</div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">Assignee: {t.assignee?.name || 'Unassigned'} • Due: {t.dueDate}</div>
                     </div>
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20">
                       {t.status}
@@ -198,21 +225,22 @@ export default function ProjectDetailsPage() {
 
         {activeTab === 'team' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {project.members.map((m) => (
-              <div key={m.id} className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-3">
-                <div className="flex items-center gap-3">
-                  <img src={m.avatar} alt="" className="size-10 rounded-xl object-cover" />
-                  <div>
-                    <h4 className="text-sm font-bold text-white">{m.name}</h4>
-                    <span className="text-xs text-sky-400 font-semibold">{m.role}</span>
+            {Array.isArray(project.members) &&
+              project.members.map((m) => (
+                <div key={m.id} className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <img src={m.avatar} alt="" className="size-10 rounded-xl object-cover" />
+                    <div>
+                      <h4 className="text-sm font-bold text-white">{m.name}</h4>
+                      <span className="text-xs text-sky-400 font-semibold">{m.role}</span>
+                    </div>
+                  </div>
+                  <div className="text-xs text-slate-400 flex items-center justify-between pt-2 border-t border-slate-800">
+                    <span>Workload</span>
+                    <span className="font-bold text-white">{m.workloadPercent || 50}%</span>
                   </div>
                 </div>
-                <div className="text-xs text-slate-400 flex items-center justify-between pt-2 border-t border-slate-800">
-                  <span>Workload</span>
-                  <span className="font-bold text-white">{m.workloadPercent}%</span>
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
         )}
 

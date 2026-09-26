@@ -1,32 +1,120 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  CheckSquare,
   Plus,
   Grid,
   List,
   Search,
-  Filter,
   Clock,
   MessageSquare,
+  X,
   CheckCircle2,
-  Tag,
-  ChevronDown,
 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
-import { mockTasks } from '@/lib/mockData';
-import { TaskStatus } from '@/types';
+import { mockTasks, mockProjects } from '@/lib/mockData';
+import { Task, TaskStatus, PriorityLevel, TeamMember } from '@/types';
+import { projectApi } from '@/services/projectApi';
 
 export default function TasksPage() {
+  const [tasks, setTasks] = useState<Task[]>(mockTasks);
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const columns: TaskStatus[] = ['Todo', 'In Progress', 'Review', 'Completed'];
 
-  const filteredTasks = mockTasks.filter((t) => {
+  const [formData, setFormData] = useState({
+    title: '',
+    projectName: 'FinTech Nexus Suite',
+    projectId: 'prj-101',
+    description: '',
+    status: 'Todo' as TaskStatus,
+    priority: 'Medium' as PriorityLevel,
+    dueDate: new Date().toISOString().split('T')[0],
+    tagsStr: 'Backend, Feature',
+    assigneeName: 'Sarah Chen',
+  });
+
+  const loadTasks = () => {
+    projectApi
+      .getTasks()
+      .then((data) => {
+        if (data && data.length > 0) setTasks(data);
+      })
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    loadTasks();
+  }, []);
+
+  const handleCreateTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title || !formData.projectName || !formData.dueDate) return;
+    try {
+      const tags = formData.tagsStr
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean);
+
+      const assignee: TeamMember = {
+        id: 'tm-1',
+        name: formData.assigneeName,
+        email: 'sarah.c@devflow.io',
+        role: 'Project Manager',
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+        skills: ['Agile', 'Scrum'],
+        assignedProjects: ['FinTech Nexus Suite'],
+        workloadPercent: 78,
+        availability: 'Available',
+        performanceRating: 4.9,
+        joinedDate: '2023-01-15',
+      };
+
+      await projectApi.createTask({
+        title: formData.title,
+        projectName: formData.projectName,
+        projectId: formData.projectId,
+        description: formData.description,
+        status: formData.status,
+        priority: formData.priority,
+        dueDate: formData.dueDate,
+        tags,
+        assignee,
+        subtasks: [],
+      });
+
+      setIsModalOpen(false);
+      setFormData({
+        title: '',
+        projectName: 'FinTech Nexus Suite',
+        projectId: 'prj-101',
+        description: '',
+        status: 'Todo',
+        priority: 'Medium',
+        dueDate: new Date().toISOString().split('T')[0],
+        tagsStr: 'Backend, Feature',
+        assigneeName: 'Sarah Chen',
+      });
+      loadTasks();
+    } catch (err) {
+      console.error('Failed to create task', err);
+    }
+  };
+
+  const handleToggleSubtask = async (taskId: string, subtaskId: string, currentCompleted: boolean) => {
+    try {
+      await projectApi.updateSubtask(taskId, subtaskId, !currentCompleted);
+      loadTasks();
+    } catch (err) {
+      console.error('Failed to toggle subtask', err);
+    }
+  };
+
+  const filteredTasks = tasks.filter((t) => {
     const matchesSearch =
       t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       t.projectName.toLowerCase().includes(searchTerm.toLowerCase());
@@ -47,11 +135,142 @@ export default function TasksPage() {
               Manage work packages, subtask checklists, priority tags, and team assignments.
             </p>
           </div>
-          <Button size="sm" className="bg-sky-600 hover:bg-sky-500 text-white text-xs gap-1.5 shadow-md shadow-sky-600/20">
+          <Button
+            size="sm"
+            onClick={() => setIsModalOpen(true)}
+            className="bg-sky-600 hover:bg-sky-500 text-white text-xs gap-1.5 shadow-md shadow-sky-600/20"
+          >
             <Plus className="size-4" />
             <span>Create Task</span>
           </Button>
         </div>
+
+        {/* Modal for Creating Task */}
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+            <div className="w-full max-w-md rounded-2xl bg-[#0b0f19] border border-slate-800 p-6 space-y-4 text-white shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 className="text-base font-bold">Create New Task</h3>
+                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white">
+                  <X className="size-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateTask} className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-slate-400 mb-1">Task Title</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500"
+                    placeholder="e.g. Implement OAuth2 flow"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1">Project Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.projectName}
+                    onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500"
+                    placeholder="e.g. FinTech Nexus Suite"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1">Description</label>
+                  <textarea
+                    rows={2}
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500"
+                    placeholder="Task details & acceptance criteria..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-400 mb-1">Status</label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value as TaskStatus })}
+                      className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500"
+                    >
+                      {columns.map((col) => (
+                        <option key={col} value={col}>
+                          {col}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 mb-1">Priority</label>
+                    <select
+                      value={formData.priority}
+                      onChange={(e) => setFormData({ ...formData, priority: e.target.value as PriorityLevel })}
+                      className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500"
+                    >
+                      <option value="Low">Low</option>
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                      <option value="Critical">Critical</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-400 mb-1">Due Date</label>
+                    <input
+                      type="date"
+                      required
+                      value={formData.dueDate}
+                      onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                      className="w-full px-2 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500 text-[11px]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 mb-1">Assignee</label>
+                    <input
+                      type="text"
+                      value={formData.assigneeName}
+                      onChange={(e) => setFormData({ ...formData, assigneeName: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500"
+                      placeholder="e.g. Sarah Chen"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1">Tags (comma separated)</label>
+                  <input
+                    type="text"
+                    value={formData.tagsStr}
+                    onChange={(e) => setFormData({ ...formData, tagsStr: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500"
+                    placeholder="Security, Backend"
+                  />
+                </div>
+
+                <div className="pt-3 flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setIsModalOpen(false)}
+                    className="text-slate-400 text-xs"
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" className="bg-sky-600 hover:bg-sky-500 text-white text-xs">
+                    Save Task
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Filter Bar */}
         <div className="p-4 rounded-xl bg-[#0b0f19] border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -105,9 +324,15 @@ export default function TasksPage() {
                 <div key={colStatus} className="p-4 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-3">
                   <div className="flex items-center justify-between pb-2 border-b border-slate-800">
                     <span className="text-xs font-bold text-white flex items-center gap-2">
-                      <span className={`size-2 rounded-full ${
-                        colStatus === 'Completed' ? 'bg-emerald-400' : colStatus === 'In Progress' ? 'bg-sky-400' : 'bg-amber-400'
-                      }`} />
+                      <span
+                        className={`size-2 rounded-full ${
+                          colStatus === 'Completed'
+                            ? 'bg-emerald-400'
+                            : colStatus === 'In Progress'
+                            ? 'bg-sky-400'
+                            : 'bg-amber-400'
+                        }`}
+                      />
                       {colStatus}
                     </span>
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-900 text-slate-300">
@@ -131,24 +356,30 @@ export default function TasksPage() {
                           <p className="text-[11px] text-slate-400 line-clamp-2">{task.description}</p>
                         </div>
 
-                        {/* Subtasks progress */}
-                        {task.subtasks.length > 0 && (
-                          <div className="space-y-1 pt-1">
+                        {/* Subtasks checklist */}
+                        {Array.isArray(task.subtasks) && task.subtasks.length > 0 && (
+                          <div className="space-y-1.5 pt-1">
                             <div className="flex items-center justify-between text-[10px] text-slate-400">
                               <span>Subtasks</span>
                               <span>
                                 {task.subtasks.filter((st) => st.completed).length}/{task.subtasks.length}
                               </span>
                             </div>
-                            <div className="w-full bg-slate-900 rounded-full h-1 overflow-hidden">
-                              <div
-                                className="bg-sky-400 h-full rounded-full"
-                                style={{
-                                  width: `${
-                                    (task.subtasks.filter((st) => st.completed).length / task.subtasks.length) * 100
-                                  }%`,
-                                }}
-                              />
+                            <div className="space-y-1">
+                              {task.subtasks.map((st) => (
+                                <button
+                                  key={st.id}
+                                  onClick={() => handleToggleSubtask(task.id, st.id, st.completed)}
+                                  className="flex items-center gap-1.5 text-[10px] text-slate-300 hover:text-white w-full text-left"
+                                >
+                                  <CheckCircle2
+                                    className={`size-3 ${st.completed ? 'text-emerald-400' : 'text-slate-600'}`}
+                                  />
+                                  <span className={st.completed ? 'line-through text-slate-500' : ''}>
+                                    {st.title}
+                                  </span>
+                                </button>
+                              ))}
                             </div>
                           </div>
                         )}
@@ -163,14 +394,16 @@ export default function TasksPage() {
                           <div className="flex items-center gap-2">
                             <span className="flex items-center gap-1 text-slate-500">
                               <MessageSquare className="size-3" />
-                              {task.commentsCount}
+                              {task.commentsCount || 0}
                             </span>
-                            <img
-                              src={task.assignee.avatar}
-                              alt={task.assignee.name}
-                              className="size-5 rounded-full object-cover"
-                              title={`Assignee: ${task.assignee.name}`}
-                            />
+                            {task.assignee?.avatar && (
+                              <img
+                                src={task.assignee.avatar}
+                                alt={task.assignee.name}
+                                className="size-5 rounded-full object-cover"
+                                title={`Assignee: ${task.assignee.name}`}
+                              />
+                            )}
                           </div>
                         </div>
                       </div>
@@ -200,8 +433,10 @@ export default function TasksPage() {
                     <td className="py-3.5 px-4 font-bold text-white">{t.title}</td>
                     <td className="py-3.5 px-4 text-slate-400">{t.projectName}</td>
                     <td className="py-3.5 px-4 flex items-center gap-2">
-                      <img src={t.assignee.avatar} alt="" className="size-5 rounded-full" />
-                      <span>{t.assignee.name}</span>
+                      {t.assignee?.avatar && (
+                        <img src={t.assignee.avatar} alt="" className="size-5 rounded-full" />
+                      )}
+                      <span>{t.assignee?.name || 'Unassigned'}</span>
                     </td>
                     <td className="py-3.5 px-4">
                       <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20">

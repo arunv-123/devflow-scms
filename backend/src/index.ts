@@ -8,6 +8,9 @@ import { connectDB } from './config/db';
 import healthRoutes from './routes/healthRoutes';
 import authRoutes from './routes/authRoutes';
 import crmRoutes from './routes/crmRoutes';
+import projectRoutes from './routes/projectRoutes';
+import taskRoutes from './routes/taskRoutes';
+import milestoneRoutes from './routes/milestoneRoutes';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -39,6 +42,9 @@ app.use('/api', limiter);
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/crm', crmRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/tasks', taskRoutes);
+app.use('/api/milestones', milestoneRoutes);
 
 // Base route
 app.get('/', (_req, res) => {
@@ -47,6 +53,9 @@ app.get('/', (_req, res) => {
     health: '/api/health',
     auth: '/api/auth',
     crm: '/api/crm',
+    projects: '/api/projects',
+    tasks: '/api/tasks',
+    milestones: '/api/milestones',
   });
 });
 

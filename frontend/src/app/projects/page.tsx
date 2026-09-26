@@ -1,33 +1,98 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  FolderKanban,
   Search,
   Filter,
   Plus,
   Grid,
   List,
-  ChevronRight,
-  Sparkles,
-  DollarSign,
-  Calendar,
-  Users,
   BrainCircuit,
-  AlertTriangle,
+  X,
 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { mockProjects } from '@/lib/mockData';
-import { ProjectStatus } from '@/types';
+import { Project, ProjectStatus, PriorityLevel } from '@/types';
+import { projectApi } from '@/services/projectApi';
 
 export default function ProjectsPage() {
+  const [projects, setProjects] = useState<Project[]>(mockProjects);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const filteredProjects = mockProjects.filter((p) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    clientName: 'Apex Capital Corp',
+    description: '',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: '2026-12-31',
+    status: 'In Progress' as ProjectStatus,
+    priority: 'High' as PriorityLevel,
+    budget: 150000,
+    techStackStr: 'Next.js, TypeScript, Node.js, MongoDB',
+  });
+
+  const loadProjects = () => {
+    projectApi
+      .getProjects()
+      .then((data) => {
+        if (data && data.length > 0) setProjects(data);
+      })
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
+  const handleCreateProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name || !formData.clientName || !formData.description) return;
+    try {
+      const techStack = formData.techStackStr
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean);
+
+      await projectApi.createProject({
+        name: formData.name,
+        clientName: formData.clientName,
+        description: formData.description,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        status: formData.status,
+        priority: formData.priority,
+        budget: formData.budget,
+        spent: 0,
+        progress: 10,
+        techStack,
+        healthScore: 95,
+        riskLevel: 'Low',
+      });
+
+      setIsModalOpen(false);
+      setFormData({
+        name: '',
+        clientName: 'Apex Capital Corp',
+        description: '',
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: '2026-12-31',
+        status: 'In Progress',
+        priority: 'High',
+        budget: 150000,
+        techStackStr: 'Next.js, TypeScript, Node.js, MongoDB',
+      });
+      loadProjects();
+    } catch (err) {
+      console.error('Failed to create project', err);
+    }
+  };
+
+  const filteredProjects = projects.filter((p) => {
     const matchesSearch =
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -49,11 +114,138 @@ export default function ProjectsPage() {
               Manage client projects, budget allocations, tech stacks, and real-time health scores.
             </p>
           </div>
-          <Button size="sm" className="bg-sky-600 hover:bg-sky-500 text-white text-xs gap-1.5 shadow-md shadow-sky-600/20">
+          <Button
+            size="sm"
+            onClick={() => setIsModalOpen(true)}
+            className="bg-sky-600 hover:bg-sky-500 text-white text-xs gap-1.5 shadow-md shadow-sky-600/20"
+          >
             <Plus className="size-4" />
             <span>Create Project</span>
           </Button>
         </div>
+
+        {/* Modal for Creating Project */}
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+            <div className="w-full max-w-md rounded-2xl bg-[#0b0f19] border border-slate-800 p-6 space-y-4 text-white shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 className="text-base font-bold">Create New Project</h3>
+                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white">
+                  <X className="size-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateProject} className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-slate-400 mb-1">Project Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500"
+                    placeholder="e.g. FinTech Nexus Suite"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1">Client Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.clientName}
+                    onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500"
+                    placeholder="e.g. Apex Capital Corp"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1">Description</label>
+                  <textarea
+                    rows={2}
+                    required
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500"
+                    placeholder="Project overview & objectives..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-400 mb-1">Start Date</label>
+                    <input
+                      type="date"
+                      required
+                      value={formData.startDate}
+                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                      className="w-full px-2 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500 text-[11px]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 mb-1">End Date</label>
+                    <input
+                      type="date"
+                      required
+                      value={formData.endDate}
+                      onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                      className="w-full px-2 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500 text-[11px]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-400 mb-1">Status</label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value as ProjectStatus })}
+                      className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500"
+                    >
+                      <option value="Planning">Planning</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Review">Review</option>
+                      <option value="Completed">Completed</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 mb-1">Budget ($)</label>
+                    <input
+                      type="number"
+                      value={formData.budget}
+                      onChange={(e) => setFormData({ ...formData, budget: Number(e.target.value) })}
+                      className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1">Tech Stack (comma separated)</label>
+                  <input
+                    type="text"
+                    value={formData.techStackStr}
+                    onChange={(e) => setFormData({ ...formData, techStackStr: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500 font-mono"
+                    placeholder="Next.js, TypeScript, Node.js"
+                  />
+                </div>
+
+                <div className="pt-3 flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setIsModalOpen(false)}
+                    className="text-slate-400 text-xs"
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" className="bg-sky-600 hover:bg-sky-500 text-white text-xs">
+                    Save Project
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Filter Bar */}
         <div className="p-4 rounded-xl bg-[#0b0f19] border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -178,15 +370,16 @@ export default function ProjectsPage() {
 
                     <div className="flex items-center gap-2">
                       <div className="flex -space-x-2">
-                        {project.members.map((m) => (
-                          <img
-                            key={m.id}
-                            src={m.avatar}
-                            alt={m.name}
-                            className="size-6 rounded-full border border-slate-900 object-cover"
-                            title={m.name}
-                          />
-                        ))}
+                        {Array.isArray(project.members) &&
+                          project.members.map((m) => (
+                            <img
+                              key={m.id}
+                              src={m.avatar}
+                              alt={m.name}
+                              className="size-6 rounded-full border border-slate-900 object-cover"
+                              title={m.name}
+                            />
+                          ))}
                       </div>
                       <Link href={`/projects/${project.id}`}>
                         <Button size="xs" variant="outline" className="text-xs text-sky-300 border-sky-500/30">
