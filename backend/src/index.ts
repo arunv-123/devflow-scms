@@ -18,6 +18,7 @@ import activityLogRoutes from './routes/activityLogRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
 import reportsRoutes from './routes/reportsRoutes';
 import settingsRoutes from './routes/settingsRoutes';
+import aiRoutes from './routes/aiRoutes';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -59,6 +60,7 @@ app.use('/api/activity-logs', activityLogRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Base route
 app.get('/', (_req, res) => {
@@ -77,6 +79,7 @@ app.get('/', (_req, res) => {
     dashboard: '/api/dashboard',
     reports: '/api/reports',
     settings: '/api/settings',
+    ai: '/api/ai',
   });
 });
 

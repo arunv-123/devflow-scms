@@ -1,68 +1,188 @@
 'use client';
 
-import React from 'react';
-import { BrainCircuit, ShieldAlert, Sparkles, AlertTriangle, CheckCircle2, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { BrainCircuit, ShieldAlert, Sparkles, AlertTriangle, CheckCircle2, RefreshCw, Loader2, ArrowRight } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
-import { mockProjects } from '@/lib/mockData';
+import { aiApi, OverallHealthSummary } from '@/services/aiApi';
 
 export default function ProjectIntelligencePage() {
+  const [summary, setSummary] = useState<OverallHealthSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [scanning, setScanning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchHealthData = async () => {
+    try {
+      setError(null);
+      const data = await aiApi.getProjectHealth();
+      setSummary(data);
+    } catch (err: any) {
+      console.error('Failed to load project intelligence data:', err);
+      setError('Failed to fetch project health data from server.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchHealthData();
+  }, []);
+
+  const handleRunScan = async () => {
+    try {
+      setScanning(true);
+      setError(null);
+      const data = await aiApi.runProjectHealthScan();
+      setSummary(data);
+    } catch (err: any) {
+      console.error('Failed to run real-time scan:', err);
+      setError('Scan failed. Please check server connection.');
+    } finally {
+      setScanning(false);
+    }
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
+        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
               <BrainCircuit className="size-6 text-purple-400 animate-pulse" />
               <span>AI Project Intelligence</span>
             </h1>
-            <p className="text-xs text-slate-400">Automated project health scoring, deadline risk evaluation, and bottleneck mitigation.</p>
+            <p className="text-xs text-slate-400">
+              Automated project health scoring, deadline risk evaluation, and bottleneck mitigation.
+            </p>
           </div>
-          <Button size="sm" className="bg-sky-600 hover:bg-sky-500 text-white text-xs gap-1.5 shadow-md shadow-sky-600/20">
-            <RefreshCw className="size-4 text-purple-300" />
-            <span>Run Real-time Scan</span>
+          <Button
+            onClick={handleRunScan}
+            disabled={scanning || loading}
+            size="sm"
+            className="bg-sky-600 hover:bg-sky-500 text-white text-xs gap-1.5 shadow-md shadow-sky-600/20 disabled:opacity-50"
+          >
+            {scanning ? (
+              <Loader2 className="size-4 animate-spin text-purple-300" />
+            ) : (
+              <RefreshCw className="size-4 text-purple-300" />
+            )}
+            <span>{scanning ? 'Scanning...' : 'Run Real-time Scan'}</span>
           </Button>
         </div>
 
-        {/* AI Health Summary Card */}
-        <div className="p-6 rounded-2xl bg-[#0b0f19] border border-purple-500/30 space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-purple-300 uppercase tracking-wider">Company Project Health Rating</span>
-            <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              88/100 (Optimal)
-            </span>
+        {error && (
+          <div className="p-4 rounded-xl bg-red-950/40 border border-red-500/30 text-xs text-red-300">
+            {error}
           </div>
+        )}
 
-          <p className="text-xs text-slate-300 leading-relaxed">
-            AI analysis examined 4 active projects, 24 subtasks, and team capacity. Overall delivery probability is calculated at 94.2%.
-          </p>
-        </div>
-
-        {/* Project Health Score Breakdown */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {mockProjects.map((p) => (
-            <div key={p.id} className="p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-4">
+        {loading ? (
+          <div className="flex items-center justify-center p-12 text-slate-400 text-xs gap-2">
+            <Loader2 className="size-5 animate-spin text-purple-400" />
+            <span>Analyzing MongoDB projects, tasks, and sprint metrics...</span>
+          </div>
+        ) : summary ? (
+          <>
+            {/* AI Health Summary Card */}
+            <div className="p-6 rounded-2xl bg-[#0b0f19] border border-purple-500/30 space-y-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-semibold text-slate-400 block uppercase">{p.clientName}</span>
-                  <h3 className="text-base font-bold text-white">{p.name}</h3>
-                </div>
-                <div className="text-right">
-                  <span className="text-xl font-extrabold text-emerald-400">{p.healthScore}/100</span>
-                  <span className="text-[10px] text-slate-400 block">Risk: {p.riskLevel}</span>
-                </div>
+                <span className="text-xs font-bold text-purple-300 uppercase tracking-wider">
+                  Company Project Health Rating
+                </span>
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-extrabold border ${
+                    summary.overallHealthScore >= 80
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                      : summary.overallHealthScore >= 60
+                      ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                      : 'bg-red-500/10 text-red-400 border-red-500/20'
+                  }`}
+                >
+                  {summary.overallHealthScore}/100 ({summary.overallStatus})
+                </span>
               </div>
 
-              <div className="p-4 rounded-xl bg-[#060913] border border-slate-800 space-y-2">
-                <span className="text-xs font-bold text-sky-300">AI Diagnostic Insights:</span>
-                <ul className="text-xs text-slate-300 space-y-1 list-disc list-inside">
-                  <li>Task progress velocity matches target milestone date.</li>
-                  <li>No critical architectural blocking issues flagged.</li>
-                </ul>
-              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                AI analysis examined {summary.totalActiveProjects} active projects and {summary.totalTasksAnalyzed} sprint tasks across team capacity. Overall delivery probability is calculated at {summary.deliveryProbability}%.
+              </p>
             </div>
-          ))}
-        </div>
+
+            {/* Project Health Score Breakdown */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {summary.projectHealthList.map((p) => (
+                <div key={p.projectId} className="p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-semibold text-slate-400 block uppercase">
+                        {p.clientName}
+                      </span>
+                      <h3 className="text-base font-bold text-white">{p.projectName}</h3>
+                    </div>
+                    <div className="text-right">
+                      <span
+                        className={`text-xl font-extrabold ${
+                          p.healthScore >= 80
+                            ? 'text-emerald-400'
+                            : p.healthScore >= 50
+                            ? 'text-amber-400'
+                            : 'text-red-400'
+                        }`}
+                      >
+                        {p.healthScore}/100
+                      </span>
+                      <span className="text-[10px] text-slate-400 block">Risk: {p.riskLevel}</span>
+                    </div>
+                  </div>
+
+                  {/* Task Metrics Bar */}
+                  <div className="p-3 rounded-xl bg-[#060913] border border-slate-800/80 flex items-center justify-between text-xs text-slate-300">
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Completion</span>
+                      <span className="font-semibold text-white">{p.completionRate}%</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Total Tasks</span>
+                      <span className="font-semibold text-white">{p.totalTasks}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Overdue</span>
+                      <span
+                        className={`font-semibold ${
+                          p.overdueTasks > 0 ? 'text-red-400 font-bold' : 'text-emerald-400'
+                        }`}
+                      >
+                        {p.overdueTasks}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* AI Diagnostic Insights */}
+                  <div className="p-4 rounded-xl bg-[#060913] border border-slate-800 space-y-2">
+                    <span className="text-xs font-bold text-sky-300">AI Diagnostic Insights:</span>
+                    <ul className="text-xs text-slate-300 space-y-1 list-disc list-inside">
+                      {p.insights.map((insight, idx) => (
+                        <li key={idx}>{insight}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Recommended Action */}
+                  {p.recommendedActions.length > 0 && (
+                    <div className="p-3 rounded-xl bg-purple-950/20 border border-purple-500/20 text-xs text-purple-200 flex items-start gap-2">
+                      <Sparkles className="size-4 text-purple-400 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-semibold text-purple-300 block text-[11px]">Recommended Action:</span>
+                        <p className="text-slate-300 text-[11px]">{p.recommendedActions[0]}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
+        ) : null}
       </div>
     </AppLayout>
   );
