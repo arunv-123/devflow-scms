@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db';
 import healthRoutes from './routes/healthRoutes';
+import authRoutes from './routes/authRoutes';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -35,12 +36,14 @@ app.use('/api', limiter);
 
 // Routes
 app.use('/api/health', healthRoutes);
+app.use('/api/auth', authRoutes);
 
 // Base route
 app.get('/', (_req, res) => {
   res.json({
     message: 'Welcome to DevFlow API Server',
     health: '/api/health',
+    auth: '/api/auth',
   });
 });
 
