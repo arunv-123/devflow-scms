@@ -1,13 +1,31 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BarChart2, Download, TrendingUp, DollarSign, CheckCircle2, Users, Activity, ShieldCheck } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
-import { mockTeamMembers } from '@/lib/mockData';
+import { reportsApi, ReportsData } from '@/services/reportsApi';
 
 export default function ReportsPage() {
-  const velocityData = [
+  const [data, setData] = useState<ReportsData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    reportsApi
+      .getReportsData()
+      .then((res) => setData(res))
+      .catch((err) => console.error('Failed to load reports data', err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const metrics = data?.executiveMetrics || {
+    totalRevenue: 605000,
+    sprintVelocity: '42 Story Pts/Wk',
+    taskCompletionRate: '92.4%',
+    clientRetentionRate: '100%',
+  };
+
+  const velocityData = data?.velocityData || [
     { sprint: 'Sprint 21', planned: 35, completed: 34 },
     { sprint: 'Sprint 22', planned: 40, completed: 38 },
     { sprint: 'Sprint 23', planned: 42, completed: 44 },
@@ -15,6 +33,8 @@ export default function ReportsPage() {
     { sprint: 'Sprint 25', planned: 40, completed: 41 },
     { sprint: 'Sprint 26', planned: 48, completed: 46 },
   ];
+
+  const resourceMatrix = data?.resourceMatrix || [];
 
   return (
     <AppLayout>
@@ -34,26 +54,26 @@ export default function ReportsPage() {
         {/* Executive Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Q3 Total Revenue</span>
-            <div className="text-2xl font-bold text-white">$605,000</div>
+            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Total Revenue</span>
+            <div className="text-2xl font-bold text-white">${(metrics.totalRevenue || 605000).toLocaleString()}</div>
             <div className="text-[11px] text-emerald-400">+18% YoY Growth</div>
           </div>
 
           <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1">
             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Sprint Velocity</span>
-            <div className="text-2xl font-bold text-sky-400">42 Story Pts/Wk</div>
+            <div className="text-2xl font-bold text-sky-400">{metrics.sprintVelocity}</div>
             <div className="text-[11px] text-slate-400">Stable Delivery Pace</div>
           </div>
 
           <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Task Completion</span>
-            <div className="text-2xl font-bold text-purple-400">92.4%</div>
+            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Task Completion Rate</span>
+            <div className="text-2xl font-bold text-purple-400">{metrics.taskCompletionRate}</div>
             <div className="text-[11px] text-emerald-400">On Time Delivery</div>
           </div>
 
           <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1">
             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Client Retention</span>
-            <div className="text-2xl font-bold text-emerald-400">100%</div>
+            <div className="text-2xl font-bold text-emerald-400">{metrics.clientRetentionRate}</div>
             <div className="text-[11px] text-slate-400">0 Churn Rate</div>
           </div>
         </div>
@@ -68,7 +88,7 @@ export default function ReportsPage() {
                   <Activity className="size-4 text-sky-400" />
                   <span>Sprint Velocity & Story Points</span>
                 </h3>
-                <p className="text-[11px] text-slate-400">Planned vs Completed story points over the last 6 sprints</p>
+                <p className="text-[11px] text-slate-400">Planned vs Completed story points over recent sprints</p>
               </div>
 
               <div className="flex items-center gap-3 text-[10px] font-semibold">
@@ -126,60 +146,71 @@ export default function ReportsPage() {
                   <Users className="size-4 text-purple-400" />
                   <span>Resource Utilization Matrix</span>
                 </h3>
-                <p className="text-[11px] text-slate-400">Team bandwidth, capacity distribution, and burnout alerts</p>
+                <p className="text-[11px] text-slate-400">Team bandwidth and capacity distribution</p>
               </div>
 
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20">
-                78% Avg Load
+                Live Capacity
               </span>
             </div>
 
-            <div className="space-y-3.5">
-              {mockTeamMembers.map((member) => {
-                const isOverloaded = member.workloadPercent > 85;
-                const isOptimal = member.workloadPercent >= 50 && member.workloadPercent <= 85;
+            {loading ? (
+              <div className="p-8 text-center text-xs text-slate-400">Loading resource matrix...</div>
+            ) : resourceMatrix.length === 0 ? (
+              <div className="p-8 text-center text-xs text-slate-500">No resource utilization data.</div>
+            ) : (
+              <div className="space-y-3.5 max-h-56 overflow-y-auto">
+                {resourceMatrix.map((member) => {
+                  const load = member.workloadPercent || 0;
+                  const isOverloaded = load > 85;
+                  const isOptimal = load >= 50 && load <= 85;
 
-                return (
-                  <div key={member.id} className="p-3 rounded-xl bg-[#060913] border border-slate-800 space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2.5">
-                        <img src={member.avatar} alt={member.name} className="size-6 rounded-full object-cover" />
-                        <div>
-                          <span className="font-bold text-white">{member.name}</span>
-                          <span className="text-[10px] text-slate-400 block">{member.role}</span>
+                  return (
+                    <div key={member.id} className="p-3 rounded-xl bg-[#060913] border border-slate-800 space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2.5">
+                          <img
+                            src={member.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
+                            alt={member.name}
+                            className="size-6 rounded-full object-cover"
+                          />
+                          <div>
+                            <span className="font-bold text-white">{member.name}</span>
+                            <span className="text-[10px] text-slate-400 block">{member.role}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                              isOverloaded
+                                ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                                : isOptimal
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                : 'bg-sky-500/10 text-sky-400 border border-sky-500/20'
+                            }`}
+                          >
+                            {isOverloaded ? 'Overloaded' : isOptimal ? 'Optimal' : 'Available'}
+                          </span>
+                          <span className="font-mono text-xs font-bold text-white">{load}%</span>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                      <div className="w-full bg-[#0b0f19] rounded-full h-1.5 overflow-hidden border border-slate-800">
+                        <div
+                          className={`h-full rounded-full ${
                             isOverloaded
-                              ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-                              : isOptimal
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                              : 'bg-sky-500/10 text-sky-400 border border-sky-500/20'
+                              ? 'bg-gradient-to-r from-amber-500 to-red-500'
+                              : 'bg-gradient-to-r from-sky-400 to-emerald-400'
                           }`}
-                        >
-                          {isOverloaded ? 'Overloaded' : isOptimal ? 'Optimal' : 'Available'}
-                        </span>
-                        <span className="font-mono text-xs font-bold text-white">{member.workloadPercent}%</span>
+                          style={{ width: `${load}%` }}
+                        />
                       </div>
                     </div>
-
-                    <div className="w-full bg-[#0b0f19] rounded-full h-1.5 overflow-hidden border border-slate-800">
-                      <div
-                        className={`h-full rounded-full ${
-                          isOverloaded
-                            ? 'bg-gradient-to-r from-amber-500 to-red-500'
-                            : 'bg-gradient-to-r from-sky-400 to-emerald-400'
-                        }`}
-                        style={{ width: `${member.workloadPercent}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>

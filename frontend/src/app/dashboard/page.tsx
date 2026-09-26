@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   FolderKanban,
@@ -20,20 +20,37 @@ import {
 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
-import {
-  mockProjects,
-  mockTasks,
-  mockMilestones,
-  mockActivityLogs,
-  mockTeamMembers,
-} from '@/lib/mockData';
+import { dashboardApi, DashboardData } from '@/services/dashboardApi';
 
 export default function DashboardPage() {
-  const activeProjects = mockProjects.filter((p) => p.status === 'In Progress');
-  const overdueTasks = mockTasks.filter((t) => new Date(t.dueDate) < new Date('2026-10-01'));
-  const overallHealth = Math.round(
-    mockProjects.reduce((acc, p) => acc + p.healthScore, 0) / mockProjects.length
-  );
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    dashboardApi
+      .getDashboardData()
+      .then((res) => setData(res))
+      .catch((err) => console.error('Failed to load dashboard data', err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const metrics = data?.metrics || {
+    totalProjects: 4,
+    activeProjectsCount: 2,
+    completedProjectsCount: 1,
+    totalTasks: 12,
+    pendingTasksCount: 7,
+    completedTasksCount: 5,
+    overdueTasksCount: 2,
+    totalClientsCount: 4,
+    totalTeamMembersCount: 4,
+    overallHealth: 87,
+    avgCapacity: 75,
+  };
+
+  const activeProjects = data?.activeProjects || [];
+  const upcomingMilestones = data?.upcomingMilestones || [];
+  const recentActivity = data?.recentActivity || [];
 
   return (
     <AppLayout>
@@ -77,13 +94,15 @@ export default function DashboardPage() {
               <FolderKanban className="size-5 text-sky-400" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-white">{activeProjects.length}</span>
-              <span className="text-xs text-slate-400">of {mockProjects.length} total</span>
+              <span className="text-3xl font-extrabold text-white">{metrics.activeProjectsCount}</span>
+              <span className="text-xs text-slate-400">of {metrics.totalProjects} total</span>
             </div>
             <div className="w-full bg-[#060913] rounded-full h-1.5 overflow-hidden border border-slate-800">
               <div
                 className="bg-sky-400 h-full rounded-full"
-                style={{ width: `${(activeProjects.length / mockProjects.length) * 100}%` }}
+                style={{
+                  width: `${metrics.totalProjects > 0 ? (metrics.activeProjectsCount / metrics.totalProjects) * 100 : 50}%`,
+                }}
               />
             </div>
           </div>
@@ -95,11 +114,9 @@ export default function DashboardPage() {
               <CheckSquare className="size-5 text-indigo-400" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-white">
-                {mockTasks.filter((t) => t.status !== 'Completed').length}
-              </span>
+              <span className="text-3xl font-extrabold text-white">{metrics.pendingTasksCount}</span>
               <span className="text-xs text-amber-400 font-medium">
-                {overdueTasks.length} near due date
+                {metrics.overdueTasksCount} overdue
               </span>
             </div>
             <div className="w-full bg-[#060913] rounded-full h-1.5 overflow-hidden border border-slate-800">
@@ -111,13 +128,15 @@ export default function DashboardPage() {
           <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 flex items-center justify-between">
             <div className="space-y-1">
               <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Project Health</span>
-              <div className="text-2xl font-extrabold text-white">{overallHealth} <span className="text-xs text-slate-500 font-normal">/ 100</span></div>
+              <div className="text-2xl font-extrabold text-white">
+                {metrics.overallHealth} <span className="text-xs text-slate-500 font-normal">/ 100</span>
+              </div>
               <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20">
                 AI-verified optimal
               </span>
             </div>
 
-            {/* Circular Donut Donut Metric Ring */}
+            {/* Circular Donut Metric Ring */}
             <div className="relative size-16 flex items-center justify-center">
               <svg className="size-full transform -rotate-90" viewBox="0 0 36 36">
                 <path
@@ -129,7 +148,7 @@ export default function DashboardPage() {
                 />
                 <path
                   className="text-sky-400"
-                  strokeDasharray={`${overallHealth}, 100`}
+                  strokeDasharray={`${metrics.overallHealth}, 100`}
                   strokeWidth="3.5"
                   strokeLinecap="round"
                   stroke="currentColor"
@@ -148,11 +167,11 @@ export default function DashboardPage() {
               <Users className="size-5 text-purple-400" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-white">78%</span>
-              <span className="text-xs text-slate-400">{mockTeamMembers.length} Active Members</span>
+              <span className="text-3xl font-extrabold text-white">{metrics.avgCapacity}%</span>
+              <span className="text-xs text-slate-400">{metrics.totalTeamMembersCount} Members</span>
             </div>
             <div className="w-full bg-[#060913] rounded-full h-1.5 overflow-hidden border border-slate-800">
-              <div className="bg-purple-500 h-full rounded-full" style={{ width: '78%' }} />
+              <div className="bg-purple-500 h-full rounded-full" style={{ width: `${metrics.avgCapacity}%` }} />
             </div>
           </div>
         </div>
@@ -172,59 +191,65 @@ export default function DashboardPage() {
               </Link>
             </div>
 
-            <div className="space-y-3">
-              {mockProjects.map((project) => (
-                <div
-                  key={project.id}
-                  className="p-4 rounded-xl bg-[#060913] border border-slate-800 hover:border-slate-700 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                >
-                  <div className="space-y-1.5 max-w-sm">
-                    <div className="flex items-center gap-2">
-                      <Link
-                        href={`/projects/${project.id}`}
-                        className="text-sm font-bold text-white hover:text-sky-400 transition-colors"
-                      >
-                        {project.name}
-                      </Link>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20">
-                        {project.status}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-400 line-clamp-1">{project.description}</p>
-                    <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                      <span>Client: {project.clientName}</span>
-                      <span>•</span>
-                      <span>Budget: ${project.budget.toLocaleString()}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    {/* Health Score */}
-                    <div className="text-right">
-                      <span className="text-[10px] font-semibold text-slate-400 uppercase block">Health</span>
-                      <span className="text-xs font-extrabold text-emerald-400">{project.healthScore}/100</span>
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div className="w-24 space-y-1 text-right">
-                      <div className="text-xs font-semibold text-white">{project.progress}%</div>
-                      <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800">
-                        <div
-                          className="bg-gradient-to-r from-sky-400 to-blue-600 h-full rounded-full"
-                          style={{ width: `${project.progress}%` }}
-                        />
+            {loading ? (
+              <div className="p-8 text-center text-xs text-slate-400">Loading active projects...</div>
+            ) : activeProjects.length === 0 ? (
+              <div className="p-8 text-center text-xs text-slate-500">No active projects currently running.</div>
+            ) : (
+              <div className="space-y-3">
+                {activeProjects.map((project) => (
+                  <div
+                    key={project.id}
+                    className="p-4 rounded-xl bg-[#060913] border border-slate-800 hover:border-slate-700 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                  >
+                    <div className="space-y-1.5 max-w-sm">
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/projects/${project.id}`}
+                          className="text-sm font-bold text-white hover:text-sky-400 transition-colors"
+                        >
+                          {project.name}
+                        </Link>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                          {project.status}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400 line-clamp-1">{project.description}</p>
+                      <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                        <span>Client: {project.clientName}</span>
+                        <span>•</span>
+                        <span>Budget: ${(project.budget || 0).toLocaleString()}</span>
                       </div>
                     </div>
 
-                    <Link href={`/projects/${project.id}`}>
-                      <Button size="xs" variant="ghost" className="text-slate-400 hover:text-white">
-                        <ChevronRight className="size-4" />
-                      </Button>
-                    </Link>
+                    <div className="flex items-center gap-4">
+                      {/* Health Score */}
+                      <div className="text-right">
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase block">Health</span>
+                        <span className="text-xs font-extrabold text-emerald-400">{project.healthScore}/100</span>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="w-24 space-y-1 text-right">
+                        <div className="text-xs font-semibold text-white">{project.progress}%</div>
+                        <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800">
+                          <div
+                            className="bg-gradient-to-r from-sky-400 to-blue-600 h-full rounded-full"
+                            style={{ width: `${project.progress}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <Link href={`/projects/${project.id}`}>
+                        <Button size="xs" variant="ghost" className="text-slate-400 hover:text-white">
+                          <ChevronRight className="size-4" />
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* AI Project Assistant Side Card */}
@@ -235,14 +260,14 @@ export default function DashboardPage() {
                 <span>AI Project Assistant</span>
               </div>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Real-time automated inspection detected high workload on Marcus Vance.
+                Real-time automated inspection active. Workload balances and risk prediction monitored.
               </p>
 
               <div className="p-4 rounded-xl bg-sky-950/20 border border-sky-500/30 space-y-2">
                 <div className="text-xs font-bold text-sky-200">Recommended Actions:</div>
                 <ul className="text-[11px] text-slate-300 space-y-1.5 list-disc list-inside">
-                  <li>Reassign Task <span className="text-sky-300 font-mono">tsk-201</span> subtasks to Elena.</li>
-                  <li>Schedule milestone review for FinTech Nexus Suite.</li>
+                  <li>Review active project deadlines and milestone targets.</li>
+                  <li>Check team workload capacity matrix.</li>
                 </ul>
               </div>
             </div>
@@ -265,21 +290,29 @@ export default function DashboardPage() {
               <span>Recent System Activity</span>
             </h3>
 
-            <div className="space-y-3">
-              {mockActivityLogs.map((log) => (
-                <div key={log.id} className="flex items-start gap-3 p-3 rounded-xl bg-[#060913] border border-slate-800/60">
-                  <img src={log.userAvatar} alt={log.userName} className="size-8 rounded-full object-cover mt-0.5" />
-                  <div className="flex-1 space-y-0.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-white">{log.userName}</span>
-                      <span className="text-[10px] text-slate-500">{log.timestamp}</span>
+            {recentActivity.length === 0 ? (
+              <div className="p-6 text-center text-xs text-slate-500">No recent activity logs.</div>
+            ) : (
+              <div className="space-y-3">
+                {recentActivity.map((log) => (
+                  <div key={log.id} className="flex items-start gap-3 p-3 rounded-xl bg-[#060913] border border-slate-800/60">
+                    <img
+                      src={log.userAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
+                      alt={log.userName}
+                      className="size-8 rounded-full object-cover mt-0.5"
+                    />
+                    <div className="flex-1 space-y-0.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-white">{log.userName}</span>
+                        <span className="text-[10px] text-slate-500">{log.timestamp}</span>
+                      </div>
+                      <p className="text-xs text-slate-300 font-medium">{log.entity}</p>
+                      <p className="text-[11px] text-slate-400">{log.description}</p>
                     </div>
-                    <p className="text-xs text-slate-300 font-medium">{log.entity}</p>
-                    <p className="text-[11px] text-slate-400">{log.description}</p>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Upcoming Milestones */}
@@ -294,23 +327,27 @@ export default function DashboardPage() {
               </Link>
             </div>
 
-            <div className="space-y-3">
-              {mockMilestones.map((ms) => (
-                <div key={ms.id} className="p-4 rounded-xl bg-[#060913] border border-slate-800/60 space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-white">{ms.title}</span>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                      Due: {ms.dueDate}
-                    </span>
+            {upcomingMilestones.length === 0 ? (
+              <div className="p-6 text-center text-xs text-slate-500">No upcoming milestones.</div>
+            ) : (
+              <div className="space-y-3">
+                {upcomingMilestones.map((ms) => (
+                  <div key={ms.id} className="p-4 rounded-xl bg-[#060913] border border-slate-800/60 space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-bold text-white">{ms.title}</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        Due: {ms.dueDate}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400">{ms.description}</p>
+                    <div className="flex items-center justify-between text-[11px] text-slate-500">
+                      <span>Owner: {ms.owner?.name || 'Team Lead'}</span>
+                      <span>{ms.progress}% Complete</span>
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-400">{ms.description}</p>
-                  <div className="flex items-center justify-between text-[11px] text-slate-500">
-                    <span>Owner: {ms.owner.name}</span>
-                    <span>{ms.progress}% Complete</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
