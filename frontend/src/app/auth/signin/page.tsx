@@ -10,8 +10,8 @@ import { getRedirectUrlForRole } from '@/context/AuthContext';
 
 export default function SignInPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('admin@devflow.local');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -82,6 +82,7 @@ export default function SignInPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@company.com"
                 className="w-full h-11 pl-9 pr-4 text-xs bg-[#060913] border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-sky-500"
                 required
               />
@@ -99,6 +100,7 @@ export default function SignInPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
                 className="w-full h-11 pl-9 pr-4 text-xs bg-[#060913] border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-sky-500"
                 required
               />

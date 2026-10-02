@@ -56,6 +56,14 @@ export class AuthService {
       throw new ApiError('Invalid email or password credentials', 401);
     }
 
+    if (user.status === 'invited') {
+      throw new ApiError('Account invitation pending. Please check your invitation link to set a password and activate your account.', 401);
+    }
+
+    if (user.status === 'disabled') {
+      throw new ApiError('Account disabled. Please contact your administrator.', 403);
+    }
+
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
       throw new ApiError('Invalid email or password credentials', 401);

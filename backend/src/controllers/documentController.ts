@@ -2,12 +2,14 @@ import { Response } from 'express';
 import { AuthRequest } from '../types/auth';
 import { DocumentModel } from '../models/documentModel';
 import { ActivityLogModel } from '../models/activityLogModel';
+import { ProjectService } from '../services/projectService';
 import { ApiError, asyncHandler } from '../utils/errors';
 
 // @desc    Get all documents
 // @route   GET /api/documents
-// @access  Private
-export const getDocuments = asyncHandler(async (_req: AuthRequest, res: Response): Promise<void> => {
+// @access  Private (Client restricted to assigned project documents)
+export const getDocuments = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+  const user = req.user!;
   let documents = await DocumentModel.find().sort({ createdAt: -1 });
 
   // Seed sample documents if database is empty
@@ -16,7 +18,7 @@ export const getDocuments = asyncHandler(async (_req: AuthRequest, res: Response
       {
         name: 'FinTech Nexus Architecture Spec v2.4.pdf',
         category: 'Architecture',
-        projectName: 'FinTech Nexus',
+        projectName: 'FinTech Nexus Suite',
         size: '4.2 MB',
         uploadedBy: 'Alex Chen',
         uploadDate: '2026-03-15',
@@ -25,7 +27,7 @@ export const getDocuments = asyncHandler(async (_req: AuthRequest, res: Response
       {
         name: 'HealthPulse Client Service Agreement.pdf',
         category: 'Contract',
-        projectName: 'HealthPulse Platform',
+        projectName: 'HealthPulse Mobile Platform',
         size: '1.8 MB',
         uploadedBy: 'Sarah Jenkins',
         uploadDate: '2026-03-10',
@@ -52,6 +54,35 @@ export const getDocuments = asyncHandler(async (_req: AuthRequest, res: Response
     ]);
   }
 
+  if (user && user.role === 'Client') {
+    const allProjects = await ProjectService.getProjects();
+    const assignedProjectIds = (user.assignedProjects || []).map((id) => id.toString());
+    const clientProjects = allProjects.filter((p) => {
+      const pId = p._id.toString();
+      const isAssigned = assignedProjectIds.includes(pId);
+      const isMember = (p.members || []).some(
+        (m) => m.id === user._id.toString() || m.email === user.email
+      );
+      return isAssigned || isMember;
+    });
+
+    const clientProjectIds = new Set(clientProjects.map((p) => p._id.toString()));
+    const clientProjectNames = clientProjects.map((p) => p.name.toLowerCase());
+
+    documents = documents.filter((doc) => {
+      if (doc.projectId && clientProjectIds.has(doc.projectId.toString())) {
+        return true;
+      }
+      if (doc.projectName) {
+        const docPrjName = doc.projectName.toLowerCase();
+        return clientProjectNames.some(
+          (cpName) => docPrjName.includes(cpName) || cpName.includes(docPrjName)
+        );
+      }
+      return false;
+    });
+  }
+
   res.status(200).json({
     success: true,
     count: documents.length,
@@ -72,11 +103,41 @@ export const getDocuments = asyncHandler(async (_req: AuthRequest, res: Response
 
 // @desc    Get document by ID
 // @route   GET /api/documents/:id
-// @access  Private
+// @access  Private (Client restricted to assigned project documents)
 export const getDocumentById = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+  const user = req.user!;
   const doc = await DocumentModel.findById(req.params.id);
   if (!doc) {
     throw new ApiError('Document not found', 404);
+  }
+
+  if (user && user.role === 'Client') {
+    const allProjects = await ProjectService.getProjects();
+    const assignedProjectIds = (user.assignedProjects || []).map((id) => id.toString());
+    const clientProjects = allProjects.filter((p) => {
+      const pId = p._id.toString();
+      const isAssigned = assignedProjectIds.includes(pId);
+      const isMember = (p.members || []).some(
+        (m) => m.id === user._id.toString() || m.email === user.email
+      );
+      return isAssigned || isMember;
+    });
+
+    const clientProjectIds = new Set(clientProjects.map((p) => p._id.toString()));
+    const clientProjectNames = clientProjects.map((p) => p.name.toLowerCase());
+
+    const isMatch =
+      (doc.projectId && clientProjectIds.has(doc.projectId.toString())) ||
+      (doc.projectName &&
+        clientProjectNames.some(
+          (cpName) =>
+            doc.projectName.toLowerCase().includes(cpName) ||
+            cpName.includes(doc.projectName.toLowerCase())
+        ));
+
+    if (!isMatch) {
+      throw new ApiError('You are not authorised to access this document', 403);
+    }
   }
 
   res.status(200).json({
@@ -86,6 +147,7 @@ export const getDocumentById = asyncHandler(async (req: AuthRequest, res: Respon
       name: doc.name,
       category: doc.category,
       projectName: doc.projectName,
+      projectId: doc.projectId ? doc.projectId.toString() : undefined,
       size: doc.size,
       uploadedBy: doc.uploadedBy,
       uploadDate: doc.uploadDate,
@@ -99,7 +161,7 @@ export const getDocumentById = asyncHandler(async (req: AuthRequest, res: Respon
 // @route   POST /api/documents
 // @access  Private
 export const createDocument = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-  const { name, category, projectName, size, fileType, url } = req.body;
+  const { name, category, projectName, projectId, size, fileType, url } = req.body;
   const user = req.user;
 
   if (!name || !projectName) {
@@ -110,6 +172,7 @@ export const createDocument = asyncHandler(async (req: AuthRequest, res: Respons
     name,
     category: category || 'Requirement',
     projectName,
+    ...(projectId && { projectId }),
     size: size || '1.5 MB',
     uploadedBy: user?.name || 'Authenticated User',
     uploadedById: user?._id,

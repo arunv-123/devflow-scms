@@ -34,4 +34,17 @@ export const authApi = {
   async logout(): Promise<void> {
     await api.post('/auth/logout');
   },
+
+  async validateInvitationToken(token: string): Promise<{ email: string; name: string; role: string; department?: string; expiresAt: string }> {
+    const res = await api.get<{ success: boolean; invitation: any }>(`/invitations/${token}`);
+    return res.data.invitation;
+  },
+
+  async acceptInvitation(token: string, password: string): Promise<{ success: boolean; message: string }> {
+    const res = await api.post<{ success: boolean; message: string }>('/invitations/accept', {
+      token,
+      password,
+    });
+    return res.data;
+  },
 };

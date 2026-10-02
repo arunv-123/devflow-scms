@@ -6,6 +6,11 @@ import {
   updateUser,
   deleteUser,
 } from '../controllers/userController';
+import {
+  inviteUser,
+  resendInvitation,
+  cancelInvitation,
+} from '../controllers/invitationController';
 import { protect, authorize } from '../middleware/authMiddleware';
 
 const router = Router();
@@ -16,6 +21,10 @@ router
   .route('/')
   .get(getUsers)
   .post(authorize('Super Admin', 'Admin', 'Project Manager'), createUser);
+
+router.post('/invite', authorize('Super Admin', 'Admin', 'Project Manager'), inviteUser);
+router.post('/:id/resend-invitation', authorize('Super Admin', 'Admin', 'Project Manager'), resendInvitation);
+router.post('/:id/cancel-invitation', authorize('Super Admin', 'Admin'), cancelInvitation);
 
 router
   .route('/:id')

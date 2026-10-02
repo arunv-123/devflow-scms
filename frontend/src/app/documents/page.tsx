@@ -6,8 +6,13 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { DocumentItem } from '@/types';
 import { documentsApi } from '@/services/documentsApi';
+import { useAuth } from '@/context/AuthContext';
 
 export default function DocumentsPage() {
+  const { user } = useAuth();
+  const role = user?.role || 'Admin';
+  const canDeleteDocument = ['Super Admin', 'Admin', 'Project Manager'].includes(role);
+
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -128,13 +133,15 @@ export default function DocumentsPage() {
                         <Download className="size-3" />
                         <span>Download</span>
                       </Button>
-                      <button
-                        onClick={() => handleDelete(doc.id)}
-                        className="p-1 text-slate-500 hover:text-red-400 transition-colors"
-                        title="Delete Document"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </button>
+                      {canDeleteDocument && (
+                        <button
+                          onClick={() => handleDelete(doc.id)}
+                          className="p-1 text-slate-500 hover:text-red-400 transition-colors"
+                          title="Delete Document"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

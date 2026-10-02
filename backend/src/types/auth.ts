@@ -13,6 +13,8 @@ export type UserRole =
 
 export type AvailabilityStatus = 'Available' | 'Busy' | 'On Leave';
 
+export type UserAccountStatus = 'invited' | 'active' | 'disabled';
+
 export interface IUser extends Document {
   _id: Types.ObjectId;
   name: string;
@@ -25,6 +27,7 @@ export interface IUser extends Document {
   assignedProjects: Types.ObjectId[];
   workloadPercent: number;
   availability: AvailabilityStatus;
+  status: UserAccountStatus;
   performanceRating: number;
   createdAt: Date;
   updatedAt: Date;

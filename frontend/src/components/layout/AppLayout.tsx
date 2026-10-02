@@ -6,19 +6,75 @@ import { AppSidebar } from './AppSidebar';
 import { AppHeader } from './AppHeader';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 
+import { usePathname } from 'next/navigation';
+import { getRedirectUrlForRole } from '@/context/AuthContext';
+
 interface AppLayoutProps {
   children: React.ReactNode;
 }
 
 function AppLayoutInner({ children }: AppLayoutProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, loading, isAuthenticated } = useAuth();
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
       router.push('/auth/signin');
+      return;
     }
-  }, [loading, isAuthenticated, router]);
+
+    if (!loading && user) {
+      const role = user.role;
+      const isClient = role === 'Client';
+      const isDev = ['Developer', 'Designer', 'QA'].includes(role);
+      const isTeamLead = role === 'Team Lead';
+      const isPM = role === 'Project Manager';
+
+      // Client route guard: strictly allow only Client Portal, Documents, Notifications, Profile
+      if (isClient) {
+        const allowedClientRoutes = ['/client-portal', '/documents', '/notifications', '/profile'];
+        const isAllowed = allowedClientRoutes.some((r) => pathname === r || pathname.startsWith(r + '/'));
+        if (!isAllowed) {
+          router.push('/client-portal');
+          return;
+        }
+      }
+
+      // Dev / Designer / QA route guard: block CRM, Settings, Reports, and Client Portal
+      if (isDev) {
+        if (
+          pathname.startsWith('/crm') ||
+          pathname.startsWith('/settings') ||
+          pathname.startsWith('/reports') ||
+          pathname.startsWith('/client-portal')
+        ) {
+          router.push('/tasks');
+          return;
+        }
+      }
+
+      // Team Lead route guard: block CRM, Settings, and Client Portal
+      if (isTeamLead) {
+        if (
+          pathname.startsWith('/crm') ||
+          pathname.startsWith('/settings') ||
+          pathname.startsWith('/client-portal')
+        ) {
+          router.push('/projects');
+          return;
+        }
+      }
+
+      // PM route guard: block System Settings
+      if (isPM) {
+        if (pathname.startsWith('/settings')) {
+          router.push('/projects');
+          return;
+        }
+      }
+    }
+  }, [loading, isAuthenticated, user, pathname, router]);
 
   if (loading || !isAuthenticated || !user) {
     return (

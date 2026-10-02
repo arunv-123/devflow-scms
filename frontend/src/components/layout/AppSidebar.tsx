@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { mockNotifications } from '@/lib/mockData';
+import { useAuth } from '@/context/AuthContext';
 
 interface NavItem {
   name: string;
@@ -93,6 +94,78 @@ let globalSidebarScrollTop = 0;
 export function AppSidebar() {
   const pathname = usePathname();
   const navRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
+  const role = user?.role || 'Admin';
+
+  const isClient = role === 'Client';
+  const isDev = ['Developer', 'Designer', 'QA'].includes(role);
+  const isTeamLead = role === 'Team Lead';
+  const isPM = role === 'Project Manager';
+  const isAdmin = ['Super Admin', 'Admin'].includes(role);
+
+  // Filter navigation groups based on user role
+  const filteredGroups = navigationGroups
+    .map((group) => {
+      if (isClient) {
+        if (group.title === 'Workspace & Portal') {
+          return {
+            ...group,
+            items: group.items.filter((i) => ['/client-portal', '/documents', '/notifications'].includes(i.href)),
+          };
+        }
+        if (group.title === 'Settings') {
+          return {
+            ...group,
+            items: group.items.filter((i) => i.href === '/profile'),
+          };
+        }
+        return { ...group, items: [] };
+      }
+
+      if (isDev) {
+        if (group.title === 'CRM & Clients') return { ...group, items: [] };
+        if (group.title === 'Workspace & Portal') {
+          return {
+            ...group,
+            items: group.items.filter((i) => i.href !== '/reports' && i.href !== '/client-portal'),
+          };
+        }
+        if (group.title === 'Settings') {
+          return {
+            ...group,
+            items: group.items.filter((i) => i.href === '/profile'),
+          };
+        }
+      }
+
+      if (isTeamLead) {
+        if (group.title === 'CRM & Clients') return { ...group, items: [] };
+        if (group.title === 'Workspace & Portal') {
+          return {
+            ...group,
+            items: group.items.filter((i) => i.href !== '/client-portal'),
+          };
+        }
+        if (group.title === 'Settings') {
+          return {
+            ...group,
+            items: group.items.filter((i) => i.href === '/profile'),
+          };
+        }
+      }
+
+      if (isPM) {
+        if (group.title === 'Settings') {
+          return {
+            ...group,
+            items: group.items.filter((i) => i.href === '/profile'),
+          };
+        }
+      }
+
+      return group;
+    })
+    .filter((group) => group.items.length > 0);
 
   // Helper to restore scroll position to the nav container
   const restoreScroll = () => {
@@ -161,7 +234,7 @@ export function AppSidebar() {
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto px-4 py-4 space-y-6"
       >
-        {navigationGroups.map((group, groupIdx) => (
+        {filteredGroups.map((group, groupIdx) => (
           <div key={groupIdx} className="space-y-1.5">
             <h3 className="px-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
               {group.title}

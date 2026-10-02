@@ -12,14 +12,26 @@ import {
   Clock,
   ArrowLeft,
   Plus,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { mockProjects, mockTasks, mockMilestones, mockActivityLogs } from '@/lib/mockData';
 import { Project, Task, Milestone } from '@/types';
 import { projectApi } from '@/services/projectApi';
+import { useAuth } from '@/context/AuthContext';
 
 export default function ProjectDetailsPage() {
+  const { user } = useAuth();
+  const role = user?.role || 'Admin';
+  const canCreateTask = ['Super Admin', 'Admin', 'Project Manager', 'Team Lead'].includes(role);
+  const canEditProject = ['Super Admin', 'Admin', 'Project Manager', 'Team Lead'].includes(role);
+  const canDeleteProject = ['Super Admin', 'Admin'].includes(role);
+  const canEditTask = ['Super Admin', 'Admin', 'Project Manager', 'Team Lead'].includes(role);
+  const canDeleteTask = ['Super Admin', 'Admin', 'Project Manager'].includes(role);
+  const canDeleteMilestone = ['Super Admin', 'Admin', 'Project Manager'].includes(role);
+
   const params = useParams();
   const projectId = (params?.id as string) || 'prj-101';
 
@@ -60,6 +72,36 @@ export default function ProjectDetailsPage() {
     }
   }, [projectId]);
 
+  const handleDeleteProject = async () => {
+    if (!confirm('Are you sure you want to delete this project?')) return;
+    try {
+      await projectApi.deleteProject(projectId);
+      window.location.href = '/projects';
+    } catch (err) {
+      console.error('Failed to delete project', err);
+    }
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    if (!confirm('Are you sure you want to delete this task?')) return;
+    try {
+      await projectApi.deleteTask(taskId);
+      setProjectTasks((prev) => prev.filter((t) => t.id !== taskId));
+    } catch (err) {
+      console.error('Failed to delete task', err);
+    }
+  };
+
+  const handleDeleteMilestone = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this milestone?')) return;
+    try {
+      await projectApi.deleteMilestone(id);
+      setProjectMilestones((prev) => prev.filter((m) => m.id !== id));
+    } catch (err) {
+      console.error('Failed to delete milestone', err);
+    }
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -88,12 +130,25 @@ export default function ProjectDetailsPage() {
                   <span>AI Risk Scanner</span>
                 </Button>
               </Link>
-              <Link href="/tasks">
-                <Button size="sm" className="bg-sky-600 hover:bg-sky-500 text-white text-xs gap-1.5 shadow-md shadow-sky-600/20">
-                  <Plus className="size-4" />
-                  <span>Add Task</span>
+              {canDeleteProject && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleDeleteProject}
+                  className="border-rose-900/50 bg-rose-950/20 text-rose-400 hover:bg-rose-900/40 text-xs gap-1.5"
+                >
+                  <Trash2 className="size-3.5" />
+                  <span>Delete Project</span>
                 </Button>
-              </Link>
+              )}
+              {canCreateTask && (
+                <Link href="/tasks">
+                  <Button size="sm" className="bg-sky-600 hover:bg-sky-500 text-white text-xs gap-1.5 shadow-md shadow-sky-600/20">
+                    <Plus className="size-4" />
+                    <span>Add Task</span>
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -188,9 +243,22 @@ export default function ProjectDetailsPage() {
                       <div className="text-xs font-bold text-white">{t.title}</div>
                       <div className="text-[11px] text-slate-400 mt-0.5">Assignee: {t.assignee?.name || 'Unassigned'} • Due: {t.dueDate}</div>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20">
-                      {t.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                        {t.status}
+                      </span>
+                      {canDeleteTask && (
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          onClick={() => handleDeleteTask(t.id)}
+                          className="text-xs text-rose-400 hover:text-rose-300 p-1"
+                          title="Delete Task"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -207,9 +275,22 @@ export default function ProjectDetailsPage() {
                   <div key={m.id} className="p-4 rounded-xl bg-[#060913] border border-slate-800 space-y-2">
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-bold text-white">{m.title}</span>
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        {m.status}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          {m.status}
+                        </span>
+                        {canDeleteMilestone && (
+                          <Button
+                            size="xs"
+                            variant="ghost"
+                            onClick={() => handleDeleteMilestone(m.id)}
+                            className="text-xs text-rose-400 hover:text-rose-300 p-1"
+                            title="Delete Milestone"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                     <p className="text-xs text-slate-400">{m.description}</p>
                     <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">

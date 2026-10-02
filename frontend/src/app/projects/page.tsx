@@ -10,14 +10,23 @@ import {
   List,
   BrainCircuit,
   X,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { mockProjects } from '@/lib/mockData';
+import { useAuth } from '@/context/AuthContext';
 import { Project, ProjectStatus, PriorityLevel } from '@/types';
 import { projectApi } from '@/services/projectApi';
 
 export default function ProjectsPage() {
+  const { user } = useAuth();
+  const role = user?.role || 'Admin';
+  const canCreateProject = ['Super Admin', 'Admin', 'Project Manager'].includes(role);
+  const canEditProject = ['Super Admin', 'Admin', 'Project Manager', 'Team Lead'].includes(role);
+  const canDeleteProject = ['Super Admin', 'Admin'].includes(role);
+
   const [projects, setProjects] = useState<Project[]>(mockProjects);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
@@ -92,6 +101,16 @@ export default function ProjectsPage() {
     }
   };
 
+  const handleDeleteProject = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this project?')) return;
+    try {
+      await projectApi.deleteProject(id);
+      loadProjects();
+    } catch (err) {
+      console.error('Failed to delete project', err);
+    }
+  };
+
   const filteredProjects = projects.filter((p) => {
     const matchesSearch =
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -114,14 +133,16 @@ export default function ProjectsPage() {
               Manage client projects, budget allocations, tech stacks, and real-time health scores.
             </p>
           </div>
-          <Button
-            size="sm"
-            onClick={() => setIsModalOpen(true)}
-            className="bg-sky-600 hover:bg-sky-500 text-white text-xs gap-1.5 shadow-md shadow-sky-600/20"
-          >
-            <Plus className="size-4" />
-            <span>Create Project</span>
-          </Button>
+          {canCreateProject && (
+            <Button
+              size="sm"
+              onClick={() => setIsModalOpen(true)}
+              className="bg-sky-600 hover:bg-sky-500 text-white text-xs gap-1.5 shadow-md shadow-sky-600/20"
+            >
+              <Plus className="size-4" />
+              <span>Create Project</span>
+            </Button>
+          )}
         </div>
 
         {/* Modal for Creating Project */}
@@ -386,6 +407,17 @@ export default function ProjectsPage() {
                           Details
                         </Button>
                       </Link>
+                      {canDeleteProject && (
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          onClick={() => handleDeleteProject(project.id)}
+                          className="text-xs text-rose-400 hover:text-rose-300"
+                          title="Delete Project"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -421,11 +453,24 @@ export default function ProjectsPage() {
                     <td className="py-3.5 px-4">{p.progress}%</td>
                     <td className="py-3.5 px-4 font-mono">${p.budget.toLocaleString()}</td>
                     <td className="py-3.5 px-4 text-right">
-                      <Link href={`/projects/${p.id}`}>
-                        <Button size="xs" variant="ghost" className="text-sky-400">
-                          View
-                        </Button>
-                      </Link>
+                      <div className="flex items-center justify-end gap-1">
+                        <Link href={`/projects/${p.id}`}>
+                          <Button size="xs" variant="ghost" className="text-sky-400">
+                            View
+                          </Button>
+                        </Link>
+                        {canDeleteProject && (
+                          <Button
+                            size="xs"
+                            variant="ghost"
+                            onClick={() => handleDeleteProject(p.id)}
+                            className="text-xs text-rose-400 hover:text-rose-300"
+                            title="Delete Project"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

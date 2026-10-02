@@ -44,12 +44,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Logout error', e);
     } finally {
       setUser(null);
-      window.location.href = '/auth/signin';
+      if (typeof window !== 'undefined') {
+        window.location.replace('/auth/signin');
+      }
     }
   };
 
   useEffect(() => {
-    refreshUser();
+    let isMounted = true;
+    authApi
+      .getMe()
+      .then((u) => {
+        if (isMounted) setUser(u);
+      })
+      .catch(() => {
+        if (isMounted) setUser(null);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (

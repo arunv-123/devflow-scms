@@ -14,6 +14,7 @@ export type TaskStatus = 'Todo' | 'In Progress' | 'Review' | 'Completed';
 export type MilestoneStatus = 'Upcoming' | 'In Progress' | 'Achieved' | 'Overdue';
 export type LeadStatus = 'New' | 'Contacted' | 'Proposal' | 'Converted' | 'Lost';
 export type AvailabilityStatus = 'Available' | 'Busy' | 'On Leave';
+export type UserAccountStatus = 'invited' | 'active' | 'disabled';
 
 export interface User {
   id: string;
@@ -22,6 +23,7 @@ export interface User {
   role: UserRole;
   avatar: string;
   department?: string;
+  status?: UserAccountStatus;
 }
 
 export interface TeamMember {
@@ -35,6 +37,7 @@ export interface TeamMember {
   assignedProjects: string[];
   workloadPercent: number;
   availability: AvailabilityStatus;
+  status?: UserAccountStatus;
   performanceRating: number; // out of 5
   joinedDate: string;
 }

@@ -80,6 +80,11 @@ const userSchema = new Schema<IUser>(
       },
       default: 'Available',
     },
+    status: {
+      type: String,
+      enum: ['invited', 'active', 'disabled'],
+      default: 'active',
+    },
     performanceRating: {
       type: Number,
       default: 5.0,

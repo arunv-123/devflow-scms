@@ -11,7 +11,7 @@ async function runTests() {
   // 2. Register Admin
   const adminRegRes = await fetch(`${BASE_URL}/register`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application.json' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       name: 'Admin Test',
       email: 'admin@devflow.local',
@@ -27,7 +27,7 @@ async function runTests() {
   // 3. Login Admin
   const adminLoginRes = await fetch(`${BASE_URL}/login`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application.json' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       email: 'admin@devflow.local',
       password: 'password123',
@@ -40,7 +40,7 @@ async function runTests() {
   // 4. Register Developer
   const devRegRes = await fetch(`${BASE_URL}/register`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application.json' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       name: 'Dev Test',
       email: 'dev@devflow.local',
@@ -54,7 +54,7 @@ async function runTests() {
   // 5. Login Developer
   const devLoginRes = await fetch(`${BASE_URL}/login`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application.json' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       email: 'dev@devflow.local',
       password: 'password123',

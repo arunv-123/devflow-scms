@@ -10,14 +10,41 @@ import {
   MessageSquare,
   X,
   CheckCircle2,
+  Trash2,
+  Pencil,
 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { mockTasks, mockProjects } from '@/lib/mockData';
 import { Task, TaskStatus, PriorityLevel, TeamMember } from '@/types';
 import { projectApi } from '@/services/projectApi';
+import { useAuth } from '@/context/AuthContext';
 
 export default function TasksPage() {
+  const { user } = useAuth();
+  const role = user?.role || 'Admin';
+  const canCreateTask = ['Super Admin', 'Admin', 'Project Manager', 'Team Lead'].includes(role);
+  const canEditTask = ['Super Admin', 'Admin', 'Project Manager', 'Team Lead'].includes(role);
+  const canDeleteTask = ['Super Admin', 'Admin', 'Project Manager'].includes(role);
+  const canUpdateAssignedTask = ['Developer', 'Designer', 'QA'].includes(role);
+  const isClient = role === 'Client';
+
+  const isTaskAssignedToUser = (task: Task) => {
+    if (!user) return false;
+    return (
+      task.assignee?.name === user.name ||
+      task.assignee?.email === user.email ||
+      task.assignee?.id === user.id
+    );
+  };
+
+  const canToggleSubtaskForTask = (task: Task) => {
+    if (isClient) return false;
+    if (canEditTask) return true;
+    if (canUpdateAssignedTask && isTaskAssignedToUser(task)) return true;
+    return false;
+  };
+
   const [tasks, setTasks] = useState<Task[]>(mockTasks);
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
   const [statusFilter, setStatusFilter] = useState<string>('All');
@@ -114,6 +141,16 @@ export default function TasksPage() {
     }
   };
 
+  const handleDeleteTask = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this task?')) return;
+    try {
+      await projectApi.deleteTask(id);
+      loadTasks();
+    } catch (err) {
+      console.error('Failed to delete task', err);
+    }
+  };
+
   const filteredTasks = tasks.filter((t) => {
     const matchesSearch =
       t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -135,14 +172,16 @@ export default function TasksPage() {
               Manage work packages, subtask checklists, priority tags, and team assignments.
             </p>
           </div>
-          <Button
-            size="sm"
-            onClick={() => setIsModalOpen(true)}
-            className="bg-sky-600 hover:bg-sky-500 text-white text-xs gap-1.5 shadow-md shadow-sky-600/20"
-          >
-            <Plus className="size-4" />
-            <span>Create Task</span>
-          </Button>
+          {canCreateTask && (
+            <Button
+              size="sm"
+              onClick={() => setIsModalOpen(true)}
+              className="bg-sky-600 hover:bg-sky-500 text-white text-xs gap-1.5 shadow-md shadow-sky-600/20"
+            >
+              <Plus className="size-4" />
+              <span>Create Task</span>
+            </Button>
+          )}
         </div>
 
         {/* Modal for Creating Task */}
@@ -347,9 +386,20 @@ export default function TasksPage() {
                         className="p-4 rounded-xl bg-[#060913] border border-slate-800 hover:border-sky-500/30 transition-all space-y-3"
                       >
                         <div className="space-y-1">
-                          <span className="text-[10px] font-semibold text-sky-400 uppercase tracking-wider block">
-                            {task.projectName}
-                          </span>
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-[10px] font-semibold text-sky-400 uppercase tracking-wider block">
+                              {task.projectName}
+                            </span>
+                            {canDeleteTask && (
+                              <button
+                                onClick={() => handleDeleteTask(task.id)}
+                                className="text-slate-500 hover:text-rose-400 p-0.5 transition-colors"
+                                title="Delete Task"
+                              >
+                                <Trash2 className="size-3.5" />
+                              </button>
+                            )}
+                          </div>
                           <h4 className="text-xs font-bold text-white hover:text-sky-400 cursor-pointer transition-colors">
                             {task.title}
                           </h4>
@@ -366,20 +416,26 @@ export default function TasksPage() {
                               </span>
                             </div>
                             <div className="space-y-1">
-                              {task.subtasks.map((st) => (
-                                <button
-                                  key={st.id}
-                                  onClick={() => handleToggleSubtask(task.id, st.id, st.completed)}
-                                  className="flex items-center gap-1.5 text-[10px] text-slate-300 hover:text-white w-full text-left"
-                                >
-                                  <CheckCircle2
-                                    className={`size-3 ${st.completed ? 'text-emerald-400' : 'text-slate-600'}`}
-                                  />
-                                  <span className={st.completed ? 'line-through text-slate-500' : ''}>
-                                    {st.title}
-                                  </span>
-                                </button>
-                              ))}
+                              {task.subtasks.map((st) => {
+                                const canToggle = canToggleSubtaskForTask(task);
+                                return (
+                                  <button
+                                    key={st.id}
+                                    disabled={!canToggle}
+                                    onClick={() => canToggle && handleToggleSubtask(task.id, st.id, st.completed)}
+                                    className={`flex items-center gap-1.5 text-[10px] w-full text-left ${
+                                      canToggle ? 'text-slate-300 hover:text-white cursor-pointer' : 'text-slate-400 opacity-70 cursor-default'
+                                    }`}
+                                  >
+                                    <CheckCircle2
+                                      className={`size-3 ${st.completed ? 'text-emerald-400' : 'text-slate-600'}`}
+                                    />
+                                    <span className={st.completed ? 'line-through text-slate-500' : ''}>
+                                      {st.title}
+                                    </span>
+                                  </button>
+                                );
+                              })}
                             </div>
                           </div>
                         )}
@@ -425,6 +481,7 @@ export default function TasksPage() {
                   <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4">Priority</th>
                   <th className="py-3 px-4">Due Date</th>
+                  {canDeleteTask && <th className="py-3 px-4 text-right">Actions</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60 text-slate-300">
@@ -445,6 +502,19 @@ export default function TasksPage() {
                     </td>
                     <td className="py-3.5 px-4 font-semibold text-amber-400">{t.priority}</td>
                     <td className="py-3.5 px-4 font-mono">{t.dueDate}</td>
+                    {canDeleteTask && (
+                      <td className="py-3.5 px-4 text-right">
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          onClick={() => handleDeleteTask(t.id)}
+                          className="text-xs text-rose-400 hover:text-rose-300 p-1"
+                          title="Delete Task"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

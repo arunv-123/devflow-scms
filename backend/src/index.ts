@@ -19,6 +19,7 @@ import dashboardRoutes from './routes/dashboardRoutes';
 import reportsRoutes from './routes/reportsRoutes';
 import settingsRoutes from './routes/settingsRoutes';
 import aiRoutes from './routes/aiRoutes';
+import invitationRoutes from './routes/invitationRoutes';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -61,6 +62,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/invitations', invitationRoutes);
 
 // Base route
 app.get('/', (_req, res) => {

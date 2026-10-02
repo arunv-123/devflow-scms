@@ -2,16 +2,30 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, ArrowRight, X } from 'lucide-react';
+import { Plus, ArrowRight, X, Pencil, Trash2 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { mockMilestones } from '@/lib/mockData';
 import { Milestone, MilestoneStatus, TeamMember } from '@/types';
 import { projectApi } from '@/services/projectApi';
+import { useAuth } from '@/context/AuthContext';
 
 export default function MilestonesPage() {
+  const { user } = useAuth();
+  const role = user?.role || 'Admin';
+  const canCreateMilestone = ['Super Admin', 'Admin', 'Project Manager', 'Team Lead'].includes(role);
+  const canEditMilestone = ['Super Admin', 'Admin', 'Project Manager'].includes(role);
+  const canUpdateMilestoneProgress = ['Super Admin', 'Admin', 'Project Manager', 'Team Lead'].includes(role);
+  const canDeleteMilestone = ['Super Admin', 'Admin', 'Project Manager'].includes(role);
+
   const [milestones, setMilestones] = useState<Milestone[]>(mockMilestones);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null);
+
+  const [isQuickUpdateOpen, setIsQuickUpdateOpen] = useState(false);
+  const [quickMilestone, setQuickMilestone] = useState<Milestone | null>(null);
+  const [quickProgress, setQuickProgress] = useState(0);
+  const [quickStatus, setQuickStatus] = useState<MilestoneStatus>('In Progress');
 
   const [formData, setFormData] = useState({
     title: '',
@@ -37,6 +51,47 @@ export default function MilestonesPage() {
     loadMilestones();
   }, []);
 
+  const handleEditClick = (ms: Milestone) => {
+    setEditingMilestone(ms);
+    setFormData({
+      title: ms.title,
+      projectName: ms.projectName,
+      projectId: ms.projectId,
+      description: ms.description || '',
+      status: ms.status,
+      dueDate: ms.dueDate,
+      progress: ms.progress || 0,
+      ownerName: ms.owner?.name || 'Sarah Chen',
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteMilestone = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this milestone?')) return;
+    try {
+      await projectApi.deleteMilestone(id);
+      loadMilestones();
+    } catch (err) {
+      console.error('Failed to delete milestone', err);
+    }
+  };
+
+  const handleQuickUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickMilestone) return;
+    try {
+      await projectApi.updateMilestone(quickMilestone.id, {
+        progress: quickProgress,
+        status: quickStatus,
+      });
+      setIsQuickUpdateOpen(false);
+      setQuickMilestone(null);
+      loadMilestones();
+    } catch (err) {
+      console.error('Failed to update milestone progress', err);
+    }
+  };
+
   const handleCreateMilestone = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title || !formData.projectName || !formData.dueDate) return;
@@ -55,20 +110,34 @@ export default function MilestonesPage() {
         joinedDate: '2023-01-15',
       };
 
-      await projectApi.createMilestone({
-        title: formData.title,
-        projectName: formData.projectName,
-        projectId: formData.projectId,
-        description: formData.description,
-        status: formData.status,
-        dueDate: formData.dueDate,
-        startDate: new Date().toISOString().split('T')[0],
-        progress: formData.progress,
-        relatedTasksCount: 0,
-        owner,
-      });
+      if (editingMilestone) {
+        await projectApi.updateMilestone(editingMilestone.id, {
+          title: formData.title,
+          projectName: formData.projectName,
+          projectId: formData.projectId,
+          description: formData.description,
+          status: formData.status,
+          dueDate: formData.dueDate,
+          progress: formData.progress,
+          owner,
+        });
+      } else {
+        await projectApi.createMilestone({
+          title: formData.title,
+          projectName: formData.projectName,
+          projectId: formData.projectId,
+          description: formData.description,
+          status: formData.status,
+          dueDate: formData.dueDate,
+          startDate: new Date().toISOString().split('T')[0],
+          progress: formData.progress,
+          relatedTasksCount: 0,
+          owner,
+        });
+      }
 
       setIsModalOpen(false);
+      setEditingMilestone(null);
       setFormData({
         title: '',
         projectName: 'FinTech Nexus Suite',
@@ -81,7 +150,7 @@ export default function MilestonesPage() {
       });
       loadMilestones();
     } catch (err) {
-      console.error('Failed to create milestone', err);
+      console.error('Failed to save milestone', err);
     }
   };
 
@@ -98,14 +167,16 @@ export default function MilestonesPage() {
               Track project delivery targets, sprint completion dates, and key deliverable phase goals.
             </p>
           </div>
-          <Button
-            size="sm"
-            onClick={() => setIsModalOpen(true)}
-            className="bg-sky-600 hover:bg-sky-500 text-white text-xs gap-1.5 shadow-md shadow-sky-600/20"
-          >
-            <Plus className="size-4" />
-            <span>Create Milestone</span>
-          </Button>
+          {canCreateMilestone && (
+            <Button
+              size="sm"
+              onClick={() => setIsModalOpen(true)}
+              className="bg-sky-600 hover:bg-sky-500 text-white text-xs gap-1.5 shadow-md shadow-sky-600/20"
+            >
+              <Plus className="size-4" />
+              <span>Create Milestone</span>
+            </Button>
+          )}
         </div>
 
         {/* Create Milestone Modal */}
@@ -258,6 +329,42 @@ export default function MilestonesPage() {
                     <span className="text-slate-500 text-[10px] block uppercase">Linked Tasks</span>
                     <span className="font-mono text-sky-400 font-bold">{ms.relatedTasksCount || 0} Tasks</span>
                   </div>
+                  {(canEditMilestone || canUpdateMilestoneProgress || canDeleteMilestone) && (
+                    <div className="flex items-center gap-1.5 pl-2 border-l border-slate-800">
+                      {canEditMilestone && (
+                        <button
+                          onClick={() => handleEditClick(ms)}
+                          className="p-1 text-slate-400 hover:text-white transition-colors"
+                          title="Edit Milestone"
+                        >
+                          <Pencil className="size-3.5" />
+                        </button>
+                      )}
+                      {!canEditMilestone && canUpdateMilestoneProgress && (
+                        <button
+                          onClick={() => {
+                            setQuickMilestone(ms);
+                            setQuickProgress(ms.progress || 0);
+                            setQuickStatus(ms.status);
+                            setIsQuickUpdateOpen(true);
+                          }}
+                          className="px-2 py-0.5 rounded text-[10px] bg-sky-500/20 text-sky-300 hover:bg-sky-500/30 font-semibold"
+                          title="Update Progress & Status"
+                        >
+                          Update Progress
+                        </button>
+                      )}
+                      {canDeleteMilestone && (
+                        <button
+                          onClick={() => handleDeleteMilestone(ms.id)}
+                          className="p-1 text-slate-400 hover:text-rose-400 transition-colors"
+                          title="Delete Milestone"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -295,6 +402,62 @@ export default function MilestonesPage() {
             </div>
           ))}
         </div>
+
+        {/* Quick Progress/Status Update Modal for Team Lead */}
+        {isQuickUpdateOpen && quickMilestone && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+            <div className="w-full max-w-sm rounded-2xl bg-[#0b0f19] border border-slate-800 p-6 space-y-4 text-white shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 className="text-base font-bold">Update Milestone Progress</h3>
+                <button onClick={() => setIsQuickUpdateOpen(false)} className="text-slate-400 hover:text-white">
+                  <X className="size-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleQuickUpdate} className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-slate-400 mb-1">Status</label>
+                  <select
+                    value={quickStatus}
+                    onChange={(e) => setQuickStatus(e.target.value as MilestoneStatus)}
+                    className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500"
+                  >
+                    <option value="Upcoming">Upcoming</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Achieved">Achieved</option>
+                    <option value="Overdue">Overdue</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1">Progress (%)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={quickProgress}
+                    onChange={(e) => setQuickProgress(Number(e.target.value))}
+                    className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500"
+                  />
+                </div>
+
+                <div className="pt-3 flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setIsQuickUpdateOpen(false)}
+                    className="text-slate-400 text-xs"
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" className="bg-sky-600 hover:bg-sky-500 text-white text-xs">
+                    Save Changes
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </AppLayout>
   );
