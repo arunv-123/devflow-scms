@@ -25,6 +25,7 @@ import {
   Layers,
   X,
   Sun,
+  Menu,
   LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -296,20 +297,15 @@ export function AppSidebar() {
           />
         </Link>
 
-        {/* Clean Pill Sidebar Toggle Switch for Desktop (Expanded) */}
+        {/* Hamburger Sidebar Toggle Switch for Desktop (Expanded) */}
         {!collapsedState && !isMobileView && (
           <div className="relative group/toggle shrink-0">
             <button
               onClick={toggleSidebar}
-              role="switch"
-              aria-checked={true}
               aria-label="Collapse sidebar"
-              className="sidebar-theme-toggle-pill group/pill relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border border-sky-300 dark:border-sky-500/40 bg-sky-100 dark:bg-sky-950/40 p-0.5 transition-all duration-300 ease-in-out hover:border-sky-400/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#060913] shadow-sm shadow-sky-500/20"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 hover:border-slate-700/60 border border-transparent transition-all duration-200 cursor-pointer flex items-center justify-center"
             >
-              <span className="sr-only">Collapse sidebar</span>
-              <span
-                className="pointer-events-none translate-x-[20px] inline-block size-4.5 rounded-full bg-gradient-to-tr from-sky-400 to-blue-500 shadow-md shadow-sky-500/40 transition-transform duration-300 ease-in-out group-hover/pill:scale-110"
-              />
+              <Menu className="size-5 transition-transform duration-200 group-hover/toggle:scale-105" />
             </button>
 
             {/* Custom Glassmorphic Tooltip */}
@@ -342,23 +338,16 @@ export function AppSidebar() {
           collapsedState && !isMobileView ? 'px-2' : 'px-4'
         )}
       >
-        {/* Clean Pill Sidebar Toggle Switch for Desktop (Collapsed) */}
+        {/* Hamburger Sidebar Toggle Switch for Desktop (Collapsed) */}
         {collapsedState && !isMobileView && (
           <div className="relative group/toggle pb-1.5 flex justify-center">
             <button
               onClick={toggleSidebar}
-              role="switch"
-              aria-checked={false}
               aria-label="Expand sidebar"
-              className="sidebar-theme-toggle-pill group/pill relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border border-sky-300 dark:border-slate-700/80 bg-sky-100 dark:bg-[#0b0f19] p-0.5 transition-all duration-300 ease-in-out hover:border-sky-500/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 shadow-inner"
+              className="p-2 rounded-lg text-slate-400 hover:text-sky-400 hover:bg-sky-500/10 hover:border-sky-500/30 border border-transparent transition-all duration-200 cursor-pointer flex items-center justify-center shadow-sm"
             >
-              <span className="sr-only">Expand sidebar</span>
-              <span
-                className="pointer-events-none translate-x-0 inline-block size-4.5 rounded-full bg-slate-600 dark:bg-slate-600 group-hover/toggle:bg-sky-400 group-hover/toggle:shadow-sky-500/40 group-hover/toggle:shadow-md transition-all duration-300 ease-in-out"
-              />
+              <Menu className="size-5 transition-transform duration-200 group-hover/toggle:scale-105" />
             </button>
-
-
 
             {/* Custom Accessible Floating Tooltip */}
             <div className="opacity-0 scale-95 group-hover/toggle:opacity-100 group-hover/toggle:scale-100 group-hover/toggle:pointer-events-auto transition-all duration-150 pointer-events-none fixed left-16 ml-3.5 top-[84px] -translate-y-1/2 z-[100] whitespace-nowrap rounded-lg bg-[#0b0f19] border border-slate-700/90 px-3 py-1.5 text-xs font-semibold text-white shadow-2xl flex items-center gap-1.5 drop-shadow-lg">
