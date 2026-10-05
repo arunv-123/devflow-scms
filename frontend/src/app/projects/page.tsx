@@ -9,11 +9,7 @@ import {
   Grid,
   List,
   BrainCircuit,
-  X,
   Trash2,
-  AlertCircle,
-  Building2,
-  User,
 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -21,10 +17,10 @@ import { mockProjects } from '@/lib/mockData';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/context/NotificationContext';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
-import { Project, ProjectStatus, PriorityLevel, Client } from '@/types';
+import { CreateProjectModal } from '@/components/projects/CreateProjectModal';
+import { Project } from '@/types';
 import { projectApi } from '@/services/projectApi';
-import { crmApi } from '@/services/crmApi';
-import { formatCurrency, formatDate } from '@/lib/formatters';
+import { formatCurrency } from '@/lib/formatters';
 import { CountUpNumber, AnimatedProgressBar } from '@/components/common/DataAnimation';
 import { getAvatarUrl } from '@/lib/avatar';
 
@@ -51,25 +47,10 @@ export default function ProjectsPage() {
   const canDeleteProject = ['Super Admin', 'Admin'].includes(role);
 
   const [projects, setProjects] = useState<Project[]>(mockProjects);
-  const [availableClients, setAvailableClients] = useState<Client[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-
-  const [formData, setFormData] = useState({
-    name: '',
-    clientId: '',
-    clientName: '',
-    description: '',
-    startDate: new Date().toISOString().split('T')[0],
-    endDate: '2026-12-31',
-    status: 'In Progress' as ProjectStatus,
-    priority: 'High' as PriorityLevel,
-    budget: 150000,
-    techStackStr: 'Next.js, TypeScript, Node.js, MongoDB',
-  });
 
   const loadData = () => {
     projectApi
@@ -78,125 +59,11 @@ export default function ProjectsPage() {
         if (data && data.length > 0) setProjects(data);
       })
       .catch(() => {});
-
-    crmApi
-      .getClients()
-      .then((clientsList) => {
-        if (clientsList && clientsList.length > 0) {
-          setAvailableClients(clientsList);
-          setFormData((prev) => {
-            if (!prev.clientId) {
-              return {
-                ...prev,
-                clientId: clientsList[0].id,
-                clientName: clientsList[0].company,
-              };
-            }
-            return prev;
-          });
-        }
-      })
-      .catch(() => {});
   };
 
   useEffect(() => {
     loadData();
   }, []);
-
-  // Prevent underlying body scrolling while modal is open
-  useEffect(() => {
-    if (isModalOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isModalOpen]);
-
-  const handleOpenCreateModal = () => {
-    setFormError(null);
-    if (availableClients.length > 0) {
-      setFormData((prev) => ({
-        ...prev,
-        clientId: prev.clientId || availableClients[0].id,
-        clientName: prev.clientName || availableClients[0].company,
-      }));
-    }
-    setIsModalOpen(true);
-  };
-
-  const handleCreateProject = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError(null);
-
-    if (!formData.name.trim()) {
-      setFormError('Please enter a project name.');
-      return;
-    }
-
-    if (!formData.clientId || !formData.clientName) {
-      setFormError('Please select a valid client from the dropdown.');
-      return;
-    }
-
-    if (!formData.description.trim()) {
-      setFormError('Please enter a project description.');
-      return;
-    }
-
-    if (formData.budget < 0) {
-      setFormError('Budget cannot be negative.');
-      return;
-    }
-
-    if (new Date(formData.endDate) < new Date(formData.startDate)) {
-      setFormError('End Date cannot be earlier than Start Date.');
-      return;
-    }
-
-    try {
-      const techStack = formData.techStackStr
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean);
-
-      await projectApi.createProject({
-        name: formData.name.trim(),
-        clientId: formData.clientId,
-        clientName: formData.clientName,
-        description: formData.description.trim(),
-        startDate: formData.startDate,
-        endDate: formData.endDate,
-        status: formData.status,
-        priority: formData.priority,
-        budget: Number(formData.budget),
-        spent: 0,
-        progress: 10,
-        techStack,
-        healthScore: 95,
-        riskLevel: 'Low',
-      });
-
-      setIsModalOpen(false);
-      setFormData({
-        name: '',
-        clientId: availableClients[0]?.id || '',
-        clientName: availableClients[0]?.company || '',
-        description: '',
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: '2026-12-31',
-        status: 'In Progress',
-        priority: 'High',
-        budget: 150000,
-        techStackStr: 'Next.js, TypeScript, Node.js, MongoDB',
-      });
-      loadData();
-    } catch (err: any) {
-      setFormError(err.response?.data?.error || err.message || 'Failed to create project.');
-    }
-  };
 
   const handleDeleteProject = (id: string) => {
     setConfirmModal({
@@ -251,7 +118,7 @@ export default function ProjectsPage() {
           {canCreateProject && (
             <Button
               size="sm"
-              onClick={handleOpenCreateModal}
+              onClick={() => setIsModalOpen(true)}
               className="bg-sky-600 hover:bg-sky-500 text-white text-xs gap-1.5 shadow-md shadow-sky-600/20"
             >
               <Plus className="size-4" />
@@ -261,233 +128,11 @@ export default function ProjectsPage() {
         </div>
 
         {/* Modal for Creating Project */}
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 sm:p-6 overflow-y-auto devflow-backdrop-enter">
-            <div className="relative w-full max-w-xl max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 text-white shadow-2xl overflow-hidden devflow-modal-enter">
-              {/* Header */}
-              <div className="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between shrink-0 bg-[#0b0f19]">
-                <div className="flex items-center gap-2.5">
-                  <div className="size-8 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
-                    <Plus className="size-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-white">Create New Project</h3>
-                    <p className="text-[11px] text-slate-400">Initialize a client workspace, timeline, and budget allocation</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="size-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
-                >
-                  <X className="size-4.5" />
-                </button>
-              </div>
-
-              {/* Creator info banner */}
-              {user && (
-                <div className="mx-6 mt-4 flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900/80 border border-slate-800 text-[11px] text-slate-400 shrink-0">
-                  <User className="size-3.5 text-sky-400 shrink-0" />
-                  <span>
-                    Creating as{' '}
-                    <span className="text-white font-semibold">{user.name}</span>{' '}
-                    <span className="text-sky-400 font-medium">({user.role})</span>
-                  </span>
-                </div>
-              )}
-
-              {formError && (
-                <div className="mx-6 mt-3 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2 shrink-0">
-                  <AlertCircle className="size-4 shrink-0" />
-                  <span>{formError}</span>
-                </div>
-              )}
-
-              {/* Form Content */}
-              <form onSubmit={handleCreateProject} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-                <div className="p-6 overflow-y-auto space-y-4 text-xs flex-1">
-                  {/* Project Name */}
-                  <div>
-                    <label className="block font-semibold text-slate-300 mb-1.5">
-                      Project Name <span className="text-rose-400">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#060913] border border-slate-800 text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 transition-all text-xs"
-                      placeholder="e.g. FinTech Nexus Suite"
-                    />
-                  </div>
-
-                  {/* Database-Backed Client Selection */}
-                  <div>
-                    <label className="block font-semibold text-slate-300 mb-1.5">
-                      Client Account <span className="text-rose-400">*</span>
-                    </label>
-                    {availableClients.length > 0 ? (
-                      <select
-                        required
-                        value={formData.clientId}
-                        onChange={(e) => {
-                          const selected = availableClients.find((c) => c.id === e.target.value);
-                          if (selected) {
-                            setFormData({
-                              ...formData,
-                              clientId: selected.id,
-                              clientName: selected.company,
-                            });
-                          }
-                        }}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 text-xs cursor-pointer"
-                      >
-                        {availableClients.map((client) => (
-                          <option key={client.id} value={client.id} className="bg-[#0b0f19] text-white">
-                            {client.company} ({client.name})
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <div className="p-3.5 rounded-xl bg-[#060913] border border-amber-500/30 text-amber-400 text-xs flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Building2 className="size-4 shrink-0" />
-                          <span>No clients available.</span>
-                        </div>
-                        <Link href="/crm/clients" className="text-sky-400 underline hover:text-sky-300 font-semibold">
-                          Add Client
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Description */}
-                  <div>
-                    <label className="block font-semibold text-slate-300 mb-1.5">
-                      Description <span className="text-rose-400">*</span>
-                    </label>
-                    <textarea
-                      rows={3}
-                      required
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#060913] border border-slate-800 text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 transition-all text-xs resize-none"
-                      placeholder="Project overview, primary deliverables, and key goals..."
-                    />
-                  </div>
-
-                  {/* Start Date & End Date */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    <div>
-                      <label className="block font-semibold text-slate-300 mb-1.5">
-                        Start Date <span className="text-rose-400">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        required
-                        value={formData.startDate}
-                        onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-semibold text-slate-300 mb-1.5">
-                        End Date <span className="text-rose-400">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        required
-                        value={formData.endDate}
-                        onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 text-xs"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Status, Priority & Budget */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                    <div>
-                      <label className="block font-semibold text-slate-300 mb-1.5">
-                        Status <span className="text-rose-400">*</span>
-                      </label>
-                      <select
-                        value={formData.status}
-                        onChange={(e) => setFormData({ ...formData, status: e.target.value as ProjectStatus })}
-                        className="w-full px-3 py-2.5 rounded-xl bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500 text-xs cursor-pointer"
-                      >
-                        <option value="Planning">Planning</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Review">Review</option>
-                        <option value="Completed">Completed</option>
-                        <option value="On Hold">On Hold</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block font-semibold text-slate-300 mb-1.5">
-                        Priority <span className="text-rose-400">*</span>
-                      </label>
-                      <select
-                        value={formData.priority}
-                        onChange={(e) => setFormData({ ...formData, priority: e.target.value as PriorityLevel })}
-                        className="w-full px-3 py-2.5 rounded-xl bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500 text-xs cursor-pointer"
-                      >
-                        <option value="Low">Low</option>
-                        <option value="Medium">Medium</option>
-                        <option value="High">High</option>
-                        <option value="Critical">Critical</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block font-semibold text-slate-300 mb-1.5">
-                        Budget (₹) <span className="text-rose-400">*</span>
-                      </label>
-                      <input
-                        type="number"
-                        min={0}
-                        required
-                        value={formData.budget}
-                        onChange={(e) => setFormData({ ...formData, budget: Number(e.target.value) })}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 text-xs font-mono"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Tech Stack */}
-                  <div>
-                    <label className="block font-semibold text-slate-300 mb-1.5">Tech Stack (comma separated)</label>
-                    <input
-                      type="text"
-                      value={formData.techStackStr}
-                      onChange={(e) => setFormData({ ...formData, techStackStr: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 font-mono text-xs"
-                      placeholder="Next.js, TypeScript, Node.js, MongoDB"
-                    />
-                  </div>
-                </div>
-
-                {/* Sticky Action Footer */}
-                <div className="px-6 py-4 border-t border-slate-800/80 bg-[#060913] flex items-center justify-end gap-3 shrink-0">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => setIsModalOpen(false)}
-                    className="text-slate-400 hover:text-white text-xs px-4"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={availableClients.length === 0}
-                    className="bg-sky-600 hover:bg-sky-500 text-white text-xs px-5 shadow-lg shadow-sky-600/20 disabled:opacity-50 font-semibold"
-                  >
-                    Save Project
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        <CreateProjectModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onProjectCreated={loadData}
+        />
 
         {/* Filter Bar */}
         <div className="p-4 rounded-xl bg-[#0b0f19] border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
