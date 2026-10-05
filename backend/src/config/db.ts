@@ -4,15 +4,16 @@ import { seedMasterDatabase } from '../scripts/seedMasterDatabase';
 
 export const connectDB = async (): Promise<void> => {
   const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/devflow';
+  const isAtlas = mongoURI.includes('mongodb+srv://') || mongoURI.includes('mongodb.net');
 
   try {
-    // Attempt local MongoDB connection first with a 3-second timeout
+    // Attempt MongoDB connection with 15s timeout for cloud Atlas clusters
     const conn = await mongoose.connect(mongoURI, {
-      serverSelectionTimeoutMS: 3000,
+      serverSelectionTimeoutMS: isAtlas ? 15000 : 4000,
     });
     console.log(`[DevFlow DB] MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.warn(`[DevFlow DB] Local MongoDB unavailable (${(error as Error).message}). Initializing In-Memory Database...`);
+    console.warn(`[DevFlow DB] Mongo connection warning (${(error as Error).message}). Initializing fallback database...`);
     try {
       const { MongoMemoryServer } = await import('mongodb-memory-server');
       const mongoServer = await MongoMemoryServer.create();
@@ -20,7 +21,7 @@ export const connectDB = async (): Promise<void> => {
       await mongoose.connect(memoryUri);
       console.log(`[DevFlow DB] In-Memory MongoDB Connected at ${memoryUri}`);
     } catch (memError) {
-      console.error(`[DevFlow DB] Failed to start In-Memory MongoDB: ${(memError as Error).message}`);
+      console.error(`[DevFlow DB] Failed to start fallback MongoDB: ${(memError as Error).message}`);
     }
   }
 
