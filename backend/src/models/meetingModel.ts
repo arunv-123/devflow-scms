@@ -1,7 +1,7 @@
 import { Schema, model } from 'mongoose';
 import { IMeeting, MeetingStatus } from '../types/crm';
 
-const VALID_MEETING_STATUSES: MeetingStatus[] = ['Scheduled', 'Completed', 'Cancelled'];
+const VALID_MEETING_STATUSES: MeetingStatus[] = ['Scheduled', 'In Progress', 'Completed', 'Cancelled'];
 
 const meetingSchema = new Schema<IMeeting>(
   {
@@ -43,6 +43,20 @@ const meetingSchema = new Schema<IMeeting>(
       default: [],
     },
     notes: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    outcome: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    actionItems: {
+      type: [String],
+      default: [],
+    },
+    nextSteps: {
       type: String,
       trim: true,
       default: '',

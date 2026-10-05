@@ -1,5 +1,5 @@
 import { api } from './api';
-import { Project, Task, Milestone, Subtask } from '@/types';
+import { Project, Task, Milestone, Subtask, AssigneeRef } from '@/types';
 
 export const projectApi = {
   // --- PROJECTS ---
@@ -7,6 +7,7 @@ export const projectApi = {
     const res = await api.get<{ success: boolean; projects: any[] }>('/projects');
     return res.data.projects.map((p) => ({
       id: p._id || p.id,
+      clientId: p.clientId,
       name: p.name,
       clientName: p.clientName,
       description: p.description,
@@ -30,6 +31,7 @@ export const projectApi = {
     const p = res.data.project;
     return {
       id: p._id || p.id,
+      clientId: p.clientId,
       name: p.name,
       clientName: p.clientName,
       description: p.description,
@@ -53,6 +55,7 @@ export const projectApi = {
     const p = res.data.project;
     return {
       id: p._id || p.id,
+      clientId: p.clientId,
       name: p.name,
       clientName: p.clientName,
       description: p.description,
@@ -76,6 +79,7 @@ export const projectApi = {
     const p = res.data.project;
     return {
       id: p._id || p.id,
+      clientId: p.clientId,
       name: p.name,
       clientName: p.clientName,
       description: p.description,
@@ -109,9 +113,11 @@ export const projectApi = {
       title: t.title,
       description: t.description || '',
       assignee: t.assignee,
+      createdBy: t.createdBy,
       status: t.status,
       priority: t.priority,
       dueDate: t.dueDate,
+      milestoneId: t.milestoneId || '',
       tags: t.tags || [],
       subtasks: t.subtasks || [],
       commentsCount: t.commentsCount || 0,
@@ -129,14 +135,23 @@ export const projectApi = {
       title: t.title,
       description: t.description || '',
       assignee: t.assignee,
+      createdBy: t.createdBy,
       status: t.status,
       priority: t.priority,
       dueDate: t.dueDate,
+      milestoneId: t.milestoneId || '',
       tags: t.tags || [],
       subtasks: t.subtasks || [],
       commentsCount: t.commentsCount || 0,
       createdAt: t.createdAt,
     };
+  },
+
+  async getEligibleAssignees(projectId: string): Promise<AssigneeRef[]> {
+    const res = await api.get<{ success: boolean; assignees: AssigneeRef[] }>('/tasks/eligible-assignees', {
+      params: { projectId },
+    });
+    return res.data.assignees;
   },
 
   async updateTask(id: string, data: Partial<Task>): Promise<Task> {
@@ -152,6 +167,7 @@ export const projectApi = {
       status: t.status,
       priority: t.priority,
       dueDate: t.dueDate,
+      milestoneId: t.milestoneId || '',
       tags: t.tags || [],
       subtasks: t.subtasks || [],
       commentsCount: t.commentsCount || 0,
@@ -243,7 +259,12 @@ export const projectApi = {
     }));
   },
 
-  async createMilestone(data: Partial<Milestone>): Promise<Milestone> {
+  async createMilestone(
+    data: Partial<Milestone> & {
+      linkedTaskIds?: string[];
+      initialTasks?: Array<{ title: string; description?: string; priority?: string; dueDate?: string }>;
+    }
+  ): Promise<Milestone> {
     const res = await api.post<{ success: boolean; milestone: any }>('/milestones', data);
     const m = res.data.milestone;
     return {
@@ -261,7 +282,7 @@ export const projectApi = {
     };
   },
 
-  async updateMilestone(id: string, data: Partial<Milestone>): Promise<Milestone> {
+  async updateMilestone(id: string, data: Partial<Milestone> & { linkedTaskIds?: string[] }): Promise<Milestone> {
     const res = await api.put<{ success: boolean; milestone: any }>(`/milestones/${id}`, data);
     const m = res.data.milestone;
     return {

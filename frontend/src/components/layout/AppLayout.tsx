@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AppSidebar } from './AppSidebar';
 import { AppHeader } from './AppHeader';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { NotificationProvider } from '@/context/NotificationContext';
 
 import { usePathname } from 'next/navigation';
 import { getRedirectUrlForRole } from '@/context/AuthContext';
@@ -29,11 +30,12 @@ function AppLayoutInner({ children }: AppLayoutProps) {
       const isClient = role === 'Client';
       const isDev = ['Developer', 'Designer', 'QA'].includes(role);
       const isTeamLead = role === 'Team Lead';
+      const isCoordinator = role === 'Project Coordinator';
       const isPM = role === 'Project Manager';
 
-      // Client route guard: strictly allow only Client Portal, Documents, Notifications, Profile
+      // Client route guard: strictly allow Projects, Meetings, Client Portal, Documents, Notifications, Profile
       if (isClient) {
-        const allowedClientRoutes = ['/client-portal', '/documents', '/notifications', '/profile'];
+        const allowedClientRoutes = ['/client-portal', '/projects', '/crm/meetings', '/documents', '/notifications', '/profile'];
         const isAllowed = allowedClientRoutes.some((r) => pathname === r || pathname.startsWith(r + '/'));
         if (!isAllowed) {
           router.push('/client-portal');
@@ -41,12 +43,15 @@ function AppLayoutInner({ children }: AppLayoutProps) {
         }
       }
 
-      // Dev / Designer / QA route guard: block CRM, Settings, Reports, and Client Portal
+      // Dev / Designer / QA route guard: block CRM admin, Team Matcher, Team/Workload admin, Settings, Reports, Client Portal
       if (isDev) {
         if (
           pathname.startsWith('/crm') ||
           pathname.startsWith('/settings') ||
           pathname.startsWith('/reports') ||
+          pathname.startsWith('/team') ||
+          pathname.startsWith('/workload') ||
+          pathname.startsWith('/ai/team-recommendations') ||
           pathname.startsWith('/client-portal')
         ) {
           router.push('/tasks');
@@ -54,7 +59,7 @@ function AppLayoutInner({ children }: AppLayoutProps) {
         }
       }
 
-      // Team Lead route guard: block CRM, Settings, and Client Portal
+      // Team Lead route guard: block CRM admin, Settings, and Client Portal
       if (isTeamLead) {
         if (
           pathname.startsWith('/crm') ||
@@ -66,9 +71,22 @@ function AppLayoutInner({ children }: AppLayoutProps) {
         }
       }
 
-      // PM route guard: block System Settings
+      // Project Coordinator route guard: block System Settings, Client Portal, and CRM Leads/Clients
+      if (isCoordinator) {
+        if (
+          pathname.startsWith('/settings') ||
+          pathname.startsWith('/client-portal') ||
+          pathname.startsWith('/crm/leads') ||
+          pathname.startsWith('/crm/clients')
+        ) {
+          router.push('/projects');
+          return;
+        }
+      }
+
+      // PM route guard: block System Settings & Client Portal
       if (isPM) {
-        if (pathname.startsWith('/settings')) {
+        if (pathname.startsWith('/settings') || pathname.startsWith('/client-portal')) {
           router.push('/projects');
           return;
         }
@@ -99,9 +117,6 @@ function AppLayoutInner({ children }: AppLayoutProps) {
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
-  return (
-    <AuthProvider>
-      <AppLayoutInner>{children}</AppLayoutInner>
-    </AuthProvider>
-  );
+  return <AppLayoutInner>{children}</AppLayoutInner>;
 }
+

@@ -41,7 +41,7 @@ export class InvitationService {
       throw new ApiError('Admins cannot invite Super Admin accounts', 403);
     }
 
-    if (!['Super Admin', 'Admin', 'Project Manager'].includes(inviterRole)) {
+    if (!['Super Admin', 'Admin', 'Project Manager', 'Project Coordinator'].includes(inviterRole)) {
       throw new ApiError('Your role is not authorized to invite users', 403);
     }
 

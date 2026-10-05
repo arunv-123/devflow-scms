@@ -2,7 +2,7 @@ import { Document, Types } from 'mongoose';
 
 export type LeadStatus = 'New' | 'Contacted' | 'Proposal' | 'Converted' | 'Lost';
 export type ClientStatus = 'Active' | 'Inactive';
-export type MeetingStatus = 'Scheduled' | 'Completed' | 'Cancelled';
+export type MeetingStatus = 'Scheduled' | 'In Progress' | 'Completed' | 'Cancelled';
 
 export interface ILead extends Document {
   _id: Types.ObjectId;
@@ -44,6 +44,9 @@ export interface IMeeting extends Document {
   status: MeetingStatus;
   participants: string[];
   notes?: string;
+  outcome?: string;
+  actionItems?: string[];
+  nextSteps?: string;
   createdBy?: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;

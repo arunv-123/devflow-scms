@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<User>;
   refreshUser: () => Promise<User | null>;
   logout: () => Promise<void>;
 }
@@ -16,6 +17,9 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   isAuthenticated: false,
+  login: async () => {
+    throw new Error('AuthContext not initialized');
+  },
   refreshUser: async () => null,
   logout: async () => {},
 });
@@ -24,14 +28,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const login = async (email: string, password: string): Promise<User> => {
+    setLoading(true);
+    try {
+      const res = await authApi.login(email, password);
+      setUser(res.user);
+      return res.user;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const refreshUser = async (): Promise<User | null> => {
     try {
       const u = await authApi.getMe();
       setUser(u);
       return u;
-    } catch (error) {
-      setUser(null);
-      return null;
+    } catch (error: any) {
+      // Only clear user session if HTTP status is 401 Unauthorized (invalid/expired token)
+      if (error.response?.status === 401) {
+        setUser(null);
+        return null;
+      }
+      return user;
     } finally {
       setLoading(false);
     }
@@ -57,8 +76,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .then((u) => {
         if (isMounted) setUser(u);
       })
-      .catch(() => {
-        if (isMounted) setUser(null);
+      .catch((error: any) => {
+        // Only clear user session if HTTP status is 401 Unauthorized (invalid/expired token)
+        if (isMounted && error.response?.status === 401) {
+          setUser(null);
+        }
       })
       .finally(() => {
         if (isMounted) setLoading(false);
@@ -75,6 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         loading,
         isAuthenticated: !!user,
+        login,
         refreshUser,
         logout,
       }}

@@ -13,6 +13,7 @@ import {
   PhoneCall,
   UserCheck,
   Calendar,
+  Clock,
   FileText,
   Bell,
   Sparkles,
@@ -22,11 +23,15 @@ import {
   UserCircle,
   ExternalLink,
   Layers,
+  X,
+  Sun,
   LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { mockNotifications } from '@/lib/mockData';
 import { useAuth } from '@/context/AuthContext';
+import { useSidebar } from '@/context/SidebarContext';
+import { DevFlowLogo } from '@/components/common/DevFlowLogo';
 
 interface NavItem {
   name: string;
@@ -74,6 +79,7 @@ const navigationGroups: NavGroup[] = [
     title: 'Workspace & Portal',
     items: [
       { name: 'Documents', href: '/documents', icon: FileText },
+      { name: 'Activity Logs', href: '/activity-logs', icon: Clock },
       { name: 'Notifications', href: '/notifications', icon: Bell, badge: mockNotifications.filter(n => !n.read).length.toString() },
       { name: 'Reports & Analytics', href: '/reports', icon: BarChart2 },
       { name: 'Client Portal', href: '/client-portal', icon: ExternalLink },
@@ -95,18 +101,32 @@ export function AppSidebar() {
   const pathname = usePathname();
   const navRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
+  const { isCollapsed, toggleSidebar, isMobileOpen, setMobileOpen } = useSidebar();
   const role = user?.role || 'Admin';
 
   const isClient = role === 'Client';
   const isDev = ['Developer', 'Designer', 'QA'].includes(role);
   const isTeamLead = role === 'Team Lead';
+  const isCoordinator = role === 'Project Coordinator';
   const isPM = role === 'Project Manager';
-  const isAdmin = ['Super Admin', 'Admin'].includes(role);
 
-  // Filter navigation groups based on user role
+  // Filter navigation groups based on user role (Preserving existing RBAC strictly)
   const filteredGroups = navigationGroups
     .map((group) => {
       if (isClient) {
+        if (group.title === 'Core Workspace') {
+          return {
+            ...group,
+            items: group.items.filter((i) => i.href === '/projects'),
+          };
+        }
+        if (group.title === 'CRM & Clients') {
+          return {
+            ...group,
+            items: group.items.filter((i) => i.href === '/crm/meetings'),
+          };
+        }
+        if (group.title === 'AI Intelligence') return { ...group, items: [] };
         if (group.title === 'Workspace & Portal') {
           return {
             ...group,
@@ -123,11 +143,23 @@ export function AppSidebar() {
       }
 
       if (isDev) {
+        if (group.title === 'Core Workspace') {
+          return {
+            ...group,
+            items: group.items.filter((i) => ['/dashboard', '/projects', '/tasks', '/milestones'].includes(i.href)),
+          };
+        }
         if (group.title === 'CRM & Clients') return { ...group, items: [] };
+        if (group.title === 'AI Intelligence') {
+          return {
+            ...group,
+            items: group.items.filter((i) => i.href !== '/ai/team-recommendations'),
+          };
+        }
         if (group.title === 'Workspace & Portal') {
           return {
             ...group,
-            items: group.items.filter((i) => i.href !== '/reports' && i.href !== '/client-portal'),
+            items: group.items.filter((i) => ['/documents', '/activity-logs', '/notifications'].includes(i.href)),
           };
         }
         if (group.title === 'Settings') {
@@ -154,7 +186,34 @@ export function AppSidebar() {
         }
       }
 
+      if (isCoordinator) {
+        if (group.title === 'CRM & Clients') {
+          return {
+            ...group,
+            items: group.items.filter((i) => i.href === '/crm/meetings'),
+          };
+        }
+        if (group.title === 'Workspace & Portal') {
+          return {
+            ...group,
+            items: group.items.filter((i) => i.href !== '/client-portal'),
+          };
+        }
+        if (group.title === 'Settings') {
+          return {
+            ...group,
+            items: group.items.filter((i) => i.href === '/profile'),
+          };
+        }
+      }
+
       if (isPM) {
+        if (group.title === 'Workspace & Portal') {
+          return {
+            ...group,
+            items: group.items.filter((i) => i.href !== '/client-portal'),
+          };
+        }
         if (group.title === 'Settings') {
           return {
             ...group,
@@ -207,47 +266,186 @@ export function AppSidebar() {
     }
   };
 
-  return (
-    <aside className="w-64 shrink-0 border-r border-slate-800 bg-[#060913] flex flex-col h-screen sticky top-0 z-30 select-none">
+  const handleNavClick = () => {
+    if (isMobileOpen) {
+      setMobileOpen(false);
+    }
+  };
+
+  // Common inner sidebar content (works for both desktop and mobile drawer)
+  const renderSidebarContent = (collapsedState: boolean, isMobileView = false) => (
+    <div className="flex flex-col h-full w-full select-none overflow-hidden">
       {/* Brand Header */}
-      <div className="h-16 px-6 flex items-center justify-between border-b border-slate-800/80">
-        <Link href="/dashboard" className="flex items-center gap-3 group">
-          <div className="size-9 rounded-xl bg-gradient-to-tr from-sky-400 via-blue-600 to-indigo-600 p-0.5 shadow-lg shadow-sky-500/20 group-hover:scale-105 transition-transform">
-            <div className="w-full h-full bg-[#060913] rounded-[10px] flex items-center justify-center">
-              <Sparkles className="size-5 text-sky-400" />
+      <div
+        className={cn(
+          'h-16 border-b border-slate-800/80 flex items-center transition-all duration-300 shrink-0',
+          collapsedState && !isMobileView ? 'justify-center px-0' : 'justify-between px-4'
+        )}
+      >
+        <Link
+          href="/dashboard"
+          onClick={handleNavClick}
+          className="flex items-center gap-3 group overflow-hidden"
+          title="DevFlow Workspace Dashboard"
+        >
+          <DevFlowLogo
+            size={collapsedState && !isMobileView ? 38 : 42}
+            showText={!collapsedState || isMobileView}
+            subtext="SCMS Enterprise"
+            collapsed={collapsedState && !isMobileView}
+          />
+        </Link>
+
+        {/* Clean Pill Sidebar Toggle Switch for Desktop (Expanded) */}
+        {!collapsedState && !isMobileView && (
+          <div className="relative group/toggle shrink-0">
+            <button
+              onClick={toggleSidebar}
+              role="switch"
+              aria-checked={true}
+              aria-label="Collapse sidebar"
+              className="sidebar-theme-toggle-pill group/pill relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border border-sky-300 dark:border-sky-500/40 bg-sky-100 dark:bg-sky-950/40 p-0.5 transition-all duration-300 ease-in-out hover:border-sky-400/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#060913] shadow-sm shadow-sky-500/20"
+            >
+              <span className="sr-only">Collapse sidebar</span>
+              <span
+                className="pointer-events-none translate-x-[20px] inline-block size-4.5 rounded-full bg-gradient-to-tr from-sky-400 to-blue-500 shadow-md shadow-sky-500/40 transition-transform duration-300 ease-in-out group-hover/pill:scale-110"
+              />
+            </button>
+
+            {/* Custom Glassmorphic Tooltip */}
+            <div className="opacity-0 scale-95 group-hover/toggle:opacity-100 group-hover/toggle:scale-100 group-hover/toggle:pointer-events-auto transition-all duration-150 pointer-events-none fixed left-64 ml-3 top-8 -translate-y-1/2 z-[100] whitespace-nowrap rounded-lg bg-[#0b0f19] border border-slate-700/90 px-3 py-1.5 text-xs font-semibold text-white shadow-2xl flex items-center gap-1.5 drop-shadow-lg">
+              <div className="absolute -left-1 top-1/2 -translate-y-1/2 size-2 rotate-45 bg-[#0b0f19] border-l border-b border-slate-700/90" />
+              <span>Collapse sidebar</span>
+              <span className="text-[10px] text-slate-400 font-normal">(Ctrl+B)</span>
             </div>
           </div>
-          <div>
-            <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-              DevFlow
-            </span>
-            <span className="text-[10px] uppercase font-bold tracking-wider text-sky-400 block -mt-1">
-              SCMS Enterprise
-            </span>
-          </div>
-        </Link>
+        )}
+
+        {/* Mobile Close Button */}
+        {isMobileView && (
+          <button
+            onClick={() => setMobileOpen(false)}
+            aria-label="Close menu"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+          >
+            <X className="size-5" />
+          </button>
+        )}
       </div>
 
-      {/* Scrollable Navigation */}
+      {/* Scrollable Navigation Area */}
       <div
         ref={navRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-4 py-4 space-y-6"
+        className={cn(
+          'flex-1 overflow-y-auto overflow-x-hidden py-3 space-y-4 transition-all duration-300',
+          collapsedState && !isMobileView ? 'px-2' : 'px-4'
+        )}
       >
+        {/* Clean Pill Sidebar Toggle Switch for Desktop (Collapsed) */}
+        {collapsedState && !isMobileView && (
+          <div className="relative group/toggle pb-1.5 flex justify-center">
+            <button
+              onClick={toggleSidebar}
+              role="switch"
+              aria-checked={false}
+              aria-label="Expand sidebar"
+              className="sidebar-theme-toggle-pill group/pill relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border border-sky-300 dark:border-slate-700/80 bg-sky-100 dark:bg-[#0b0f19] p-0.5 transition-all duration-300 ease-in-out hover:border-sky-500/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 shadow-inner"
+            >
+              <span className="sr-only">Expand sidebar</span>
+              <span
+                className="pointer-events-none translate-x-0 inline-block size-4.5 rounded-full bg-slate-600 dark:bg-slate-600 group-hover/toggle:bg-sky-400 group-hover/toggle:shadow-sky-500/40 group-hover/toggle:shadow-md transition-all duration-300 ease-in-out"
+              />
+            </button>
+
+
+
+            {/* Custom Accessible Floating Tooltip */}
+            <div className="opacity-0 scale-95 group-hover/toggle:opacity-100 group-hover/toggle:scale-100 group-hover/toggle:pointer-events-auto transition-all duration-150 pointer-events-none fixed left-16 ml-3.5 top-[84px] -translate-y-1/2 z-[100] whitespace-nowrap rounded-lg bg-[#0b0f19] border border-slate-700/90 px-3 py-1.5 text-xs font-semibold text-white shadow-2xl flex items-center gap-1.5 drop-shadow-lg">
+              <div className="absolute -left-1 top-1/2 -translate-y-1/2 size-2 rotate-45 bg-[#0b0f19] border-l border-b border-slate-700/90" />
+              <span>Expand sidebar</span>
+              <span className="text-[10px] text-slate-400 font-normal">(Ctrl+B)</span>
+            </div>
+          </div>
+        )}
+
+
         {filteredGroups.map((group, groupIdx) => (
           <div key={groupIdx} className="space-y-1.5">
-            <h3 className="px-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-              {group.title}
-            </h3>
+            {!collapsedState || isMobileView ? (
+              <h3 className="px-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider truncate">
+                {group.title}
+              </h3>
+            ) : (
+              <div className="my-1.5 border-t border-slate-800/80 mx-2" />
+            )}
+
             <div className="space-y-1">
               {group.items.map((item) => {
-                const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href + '/'));
+                const isActive =
+                  pathname === item.href ||
+                  (item.href !== '/dashboard' && item.href !== '/crm' && pathname.startsWith(item.href + '/'));
                 const Icon = item.icon;
 
+                if (collapsedState && !isMobileView) {
+                  // Collapsed Icon-Only View with Custom Accessible Tooltip
+                  return (
+                    <div key={item.href} className="relative group/tooltip flex justify-center">
+                      <Link
+                        href={item.href}
+                        onClick={handleNavClick}
+                        className={cn(
+                          'flex items-center justify-center size-10 rounded-lg text-xs font-medium transition-all duration-150 relative mx-auto',
+                          isActive
+                            ? 'bg-sky-500/10 text-white border border-sky-500/30 shadow-sm'
+                            : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+                        )}
+                        aria-label={item.name}
+                      >
+                        <Icon
+                          className={cn(
+                            'size-5 transition-colors',
+                            isActive
+                              ? 'text-sky-400'
+                              : item.aiGlow
+                              ? 'text-cyan-400 group-hover/tooltip:text-cyan-300'
+                              : 'text-slate-400 group-hover/tooltip:text-slate-300'
+                          )}
+                        />
+
+                        {/* Notification Badge Dot / Count */}
+                        {item.badge && (
+                          <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-sky-500 text-[9px] font-bold text-white ring-2 ring-[#060913] shadow-md">
+                            {item.badge}
+                          </span>
+                        )}
+
+                        {/* AI Pulse Dot */}
+                        {item.aiGlow && !item.badge && (
+                          <span className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-cyan-400 animate-pulse ring-2 ring-[#060913] shadow-sm shadow-cyan-400/50" />
+                        )}
+                      </Link>
+
+                      {/* Custom Accessible Floating Tooltip */}
+                      <div className="opacity-0 scale-95 group-hover/tooltip:opacity-100 group-hover/tooltip:scale-100 group-hover/tooltip:pointer-events-auto transition-all duration-150 pointer-events-none fixed left-16 ml-3.5 -translate-y-1/2 z-[100] whitespace-nowrap rounded-lg bg-[#0b0f19] border border-slate-700/90 px-3 py-1.5 text-xs font-semibold text-white shadow-2xl flex items-center gap-2 drop-shadow-lg">
+                        <div className="absolute -left-1 top-1/2 -translate-y-1/2 size-2 rotate-45 bg-[#0b0f19] border-l border-b border-slate-700/90" />
+                        <span>{item.name}</span>
+                        {item.badge && (
+                          <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-sky-500 text-white font-bold">
+                            {item.badge}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                }
+
+                // Expanded View
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
+                    onClick={handleNavClick}
                     className={cn(
                       'group flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150',
                       isActive
@@ -255,10 +453,10 @@ export function AppSidebar() {
                         : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
                     )}
                   >
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0">
                       <Icon
                         className={cn(
-                          'size-4 transition-colors',
+                          'size-4 shrink-0 transition-colors',
                           isActive
                             ? 'text-sky-400'
                             : item.aiGlow
@@ -272,7 +470,7 @@ export function AppSidebar() {
                     {item.badge && (
                       <span
                         className={cn(
-                          'px-2 py-0.5 rounded-full text-[10px] font-semibold',
+                          'px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0 ml-1',
                           isActive
                             ? 'bg-sky-500 text-white'
                             : 'bg-slate-800 text-slate-300 group-hover:bg-slate-700'
@@ -283,7 +481,7 @@ export function AppSidebar() {
                     )}
 
                     {item.aiGlow && !item.badge && (
-                      <span className="size-2 rounded-full bg-cyan-400 animate-pulse shadow-sm shadow-cyan-400/50" />
+                      <span className="size-2 rounded-full bg-cyan-400 animate-pulse shadow-sm shadow-cyan-400/50 shrink-0 ml-1" />
                     )}
                   </Link>
                 );
@@ -292,19 +490,38 @@ export function AppSidebar() {
           </div>
         ))}
       </div>
+    </div>
+  );
 
-      {/* Quick AI Pro Banner */}
-      <div className="p-4 border-t border-slate-800/80 bg-slate-950/40">
-        <div className="p-3 rounded-xl bg-[#0e1424] border border-sky-500/20 space-y-2">
-          <div className="flex items-center gap-2 text-sky-300 font-semibold text-xs">
-            <BrainCircuit className="size-4 text-sky-400" />
-            <span>AI Copilot Active</span>
-          </div>
-          <p className="text-[11px] text-slate-400 leading-snug">
-            Real-time project health & workload optimizations enabled.
-          </p>
-        </div>
-      </div>
-    </aside>
+  return (
+    <>
+      {/* Mobile Backdrop */}
+      {isMobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300"
+        />
+      )}
+
+      {/* Mobile Drawer (Slide-over) */}
+      <aside
+        className={cn(
+          'fixed inset-y-0 left-0 z-50 w-64 bg-[#060913] border-r border-slate-800 flex flex-col h-full transform transition-transform duration-300 ease-in-out md:hidden shadow-2xl',
+          isMobileOpen ? 'translate-x-0' : '-translate-x-full'
+        )}
+      >
+        {renderSidebarContent(false, true)}
+      </aside>
+
+      {/* Desktop Sticky Sidebar */}
+      <aside
+        className={cn(
+          'hidden md:flex flex-col h-screen sticky top-0 z-30 select-none bg-[#060913] border-r border-slate-800 shrink-0 transition-all duration-300 ease-in-out',
+          isCollapsed ? 'w-16' : 'w-64'
+        )}
+      >
+        {renderSidebarContent(isCollapsed, false)}
+      </aside>
+    </>
   );
 }

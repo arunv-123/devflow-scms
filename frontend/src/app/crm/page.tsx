@@ -7,6 +7,8 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { mockLeads, mockClients, mockMeetings } from '@/lib/mockData';
 import { crmApi, CRMOverviewStats } from '@/services/crmApi';
+import { formatCurrency } from '@/lib/formatters';
+import { CountUpNumber } from '@/components/common/DataAnimation';
 
 export default function CRMOverviewPage() {
   const initialPipelineValue = mockLeads.reduce((acc, l) => acc + l.value, 0);
@@ -30,7 +32,7 @@ export default function CRMOverviewPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 pb-12">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -55,19 +57,27 @@ export default function CRMOverviewPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1">
             <span className="text-xs font-semibold text-slate-400 uppercase">Pipeline Value</span>
-            <div className="text-3xl font-extrabold text-white">${stats.pipelineValue.toLocaleString()}</div>
-            <div className="text-[11px] text-emerald-400">{stats.activeOpportunities} Active Opportunities</div>
+            <div className="text-3xl font-extrabold text-white">
+              <CountUpNumber value={stats.pipelineValue} formatter={formatCurrency} />
+            </div>
+            <div className="text-[11px] text-emerald-400">
+              <CountUpNumber value={stats.activeOpportunities} /> Active Opportunities
+            </div>
           </div>
 
           <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1">
             <span className="text-xs font-semibold text-slate-400 uppercase">Active Clients</span>
-            <div className="text-3xl font-extrabold text-sky-400">{stats.activeClients} Enterprise Clients</div>
+            <div className="text-3xl font-extrabold text-sky-400">
+              <CountUpNumber value={stats.activeClients} /> Enterprise Clients
+            </div>
             <div className="text-[11px] text-slate-400">100% Retainer Active</div>
           </div>
 
           <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1">
             <span className="text-xs font-semibold text-slate-400 uppercase">Upcoming Meetings</span>
-            <div className="text-3xl font-extrabold text-purple-400">{stats.scheduledMeetings} Scheduled</div>
+            <div className="text-3xl font-extrabold text-purple-400">
+              <CountUpNumber value={stats.scheduledMeetings} /> Scheduled
+            </div>
             <div className="text-[11px] text-slate-400">This Week</div>
           </div>
         </div>

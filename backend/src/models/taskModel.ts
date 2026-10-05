@@ -19,7 +19,7 @@ const assigneeSubSchema = new Schema(
     name: { type: String, required: true },
     email: { type: String, required: true },
     role: { type: String, required: true },
-    avatar: { type: String, required: true },
+    avatar: { type: String, default: '' },
   },
   { _id: false }
 );
@@ -69,6 +69,11 @@ const taskSchema = new Schema<ITask>(
     dueDate: {
       type: String,
       required: [true, 'Due date is required'],
+    },
+    milestoneId: {
+      type: String,
+      default: '',
+      index: true,
     },
     tags: {
       type: [String],

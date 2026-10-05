@@ -6,6 +6,7 @@ export type UserRole =
   | 'Admin'
   | 'Project Manager'
   | 'Team Lead'
+  | 'Project Coordinator'
   | 'Developer'
   | 'Designer'
   | 'QA'

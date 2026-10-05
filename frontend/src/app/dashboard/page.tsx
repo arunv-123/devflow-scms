@@ -19,10 +19,15 @@ import {
   Activity,
 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { dashboardApi, DashboardData } from '@/services/dashboardApi';
+import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatters';
+import { CountUpNumber, AnimatedProgressBar, AnimatedDonutScore } from '@/components/common/DataAnimation';
+import { getAvatarUrl } from '@/lib/avatar';
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -33,6 +38,13 @@ export default function DashboardPage() {
       .catch((err) => console.error('Failed to load dashboard data', err))
       .finally(() => setLoading(false));
   }, []);
+
+  const role = user?.role || '';
+  const dashboardTitle = ['Super Admin', 'Admin', 'Project Manager'].includes(role)
+    ? 'Company Dashboard'
+    : ['Team Lead', 'Project Coordinator'].includes(role)
+    ? 'Team Dashboard'
+    : 'My Workspace Dashboard';
 
   const metrics = data?.metrics || {
     totalProjects: 4,
@@ -54,12 +66,12 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-8">
+      <div className="space-y-8 devflow-page-enter">
         {/* Top Header & Actions */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-white tracking-tight">
-              Company Dashboard
+              {dashboardTitle}
             </h1>
             <p className="text-xs text-slate-400">
               Overview of active projects, AI health scores, team workload, and upcoming milestones.
@@ -87,92 +99,86 @@ export default function DashboardPage() {
 
         {/* Stitch Style Metrics Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Active Projects */}
-          <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-3">
+          {/* Active Projects KPI Card */}
+          <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-3 animate-in fade-in zoom-in-95 duration-300">
             <div className="flex items-center justify-between text-slate-400">
               <span className="text-[11px] font-semibold uppercase tracking-wider">Active Projects</span>
               <FolderKanban className="size-5 text-sky-400" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-white">{metrics.activeProjectsCount}</span>
+              <CountUpNumber value={metrics.activeProjectsCount} className="text-3xl font-extrabold text-white" />
               <span className="text-xs text-slate-400">of {metrics.totalProjects} total</span>
             </div>
-            <div className="w-full bg-[#060913] rounded-full h-1.5 overflow-hidden border border-slate-800">
-              <div
-                className="bg-sky-400 h-full rounded-full"
-                style={{
-                  width: `${metrics.totalProjects > 0 ? (metrics.activeProjectsCount / metrics.totalProjects) * 100 : 50}%`,
-                }}
-              />
-            </div>
+            <AnimatedProgressBar
+              percentage={metrics.totalProjects > 0 ? (metrics.activeProjectsCount / metrics.totalProjects) * 100 : 50}
+              className="bg-sky-400 h-full rounded-full"
+              trackClassName="w-full bg-[#060913] rounded-full h-1.5 overflow-hidden border border-slate-800"
+            />
           </div>
 
-          {/* Pending Tasks */}
-          <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-3">
+          {/* Pending Tasks KPI Card */}
+          <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-3 animate-in fade-in zoom-in-95 duration-300">
             <div className="flex items-center justify-between text-slate-400">
               <span className="text-[11px] font-semibold uppercase tracking-wider">Pending Tasks</span>
               <CheckSquare className="size-5 text-indigo-400" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-white">{metrics.pendingTasksCount}</span>
+              <CountUpNumber value={metrics.pendingTasksCount} className="text-3xl font-extrabold text-white" />
               <span className="text-xs text-amber-400 font-medium">
-                {metrics.overdueTasksCount} overdue
+                <CountUpNumber value={metrics.overdueTasksCount} /> overdue
               </span>
             </div>
-            <div className="w-full bg-[#060913] rounded-full h-1.5 overflow-hidden border border-slate-800">
-              <div className="bg-indigo-500 h-full rounded-full" style={{ width: '65%' }} />
-            </div>
+            <AnimatedProgressBar
+              percentage={65}
+              className="bg-indigo-500 h-full rounded-full"
+              trackClassName="w-full bg-[#060913] rounded-full h-1.5 overflow-hidden border border-slate-800"
+            />
           </div>
 
           {/* Stitch Radial Health Score Card */}
-          <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 flex items-center justify-between">
-            <div className="space-y-1">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Project Health</span>
-              <div className="text-2xl font-extrabold text-white">
-                {metrics.overallHealth} <span className="text-xs text-slate-500 font-normal">/ 100</span>
-              </div>
-              <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20">
-                AI-verified optimal
+          <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 flex items-center justify-between gap-4 animate-in fade-in zoom-in-95 duration-300">
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+                Project Health
               </span>
+              <div className="flex items-baseline gap-1.5">
+                <CountUpNumber value={metrics.overallHealth} className="text-3xl font-extrabold text-white tracking-tight" />
+                <span className="text-xs font-semibold text-slate-500">/ 100</span>
+              </div>
+              <div className="pt-0.5">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20 shadow-sm">
+                  <Sparkles className="size-3 text-sky-400 shrink-0" />
+                  <span>AI-verified optimal</span>
+                </span>
+              </div>
             </div>
 
-            {/* Circular Donut Metric Ring */}
-            <div className="relative size-16 flex items-center justify-center">
-              <svg className="size-full transform -rotate-90" viewBox="0 0 36 36">
-                <path
-                  className="text-slate-800"
-                  strokeWidth="3.5"
-                  stroke="currentColor"
-                  fill="none"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-                <path
-                  className="text-sky-400"
-                  strokeDasharray={`${metrics.overallHealth}, 100`}
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                  stroke="currentColor"
-                  fill="none"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-              </svg>
-              <Activity className="absolute size-5 text-sky-400" />
-            </div>
+            {/* Circular Donut Metric Ring with Centered Icon */}
+            <AnimatedDonutScore
+              score={metrics.overallHealth}
+              size={60}
+              strokeWidth={7}
+              colorClass="text-sky-400"
+              showCenterText={false}
+              centerIcon={<Activity className="size-5 text-sky-400" />}
+            />
           </div>
 
-          {/* Team Capacity */}
-          <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-3">
+          {/* Team Capacity KPI Card */}
+          <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-3 animate-in fade-in zoom-in-95 duration-300">
             <div className="flex items-center justify-between text-slate-400">
               <span className="text-[11px] font-semibold uppercase tracking-wider">Team Capacity</span>
               <Users className="size-5 text-purple-400" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-white">{metrics.avgCapacity}%</span>
+              <CountUpNumber value={metrics.avgCapacity} suffix="%" className="text-3xl font-extrabold text-white" />
               <span className="text-xs text-slate-400">{metrics.totalTeamMembersCount} Members</span>
             </div>
-            <div className="w-full bg-[#060913] rounded-full h-1.5 overflow-hidden border border-slate-800">
-              <div className="bg-purple-500 h-full rounded-full" style={{ width: `${metrics.avgCapacity}%` }} />
-            </div>
+            <AnimatedProgressBar
+              percentage={metrics.avgCapacity}
+              className="bg-purple-500 h-full rounded-full"
+              trackClassName="w-full bg-[#060913] rounded-full h-1.5 overflow-hidden border border-slate-800"
+            />
           </div>
         </div>
 
@@ -218,7 +224,7 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-2 text-[11px] text-slate-500">
                         <span>Client: {project.clientName}</span>
                         <span>•</span>
-                        <span>Budget: ${(project.budget || 0).toLocaleString()}</span>
+                        <span>Budget: {formatCurrency(project.budget || 0)}</span>
                       </div>
                     </div>
 
@@ -226,18 +232,19 @@ export default function DashboardPage() {
                       {/* Health Score */}
                       <div className="text-right">
                         <span className="text-[10px] font-semibold text-slate-400 uppercase block">Health</span>
-                        <span className="text-xs font-extrabold text-emerald-400">{project.healthScore}/100</span>
+                        <CountUpNumber value={project.healthScore} suffix="/100" className="text-xs font-extrabold text-emerald-400 block" />
                       </div>
 
                       {/* Progress Bar */}
                       <div className="w-24 space-y-1 text-right">
-                        <div className="text-xs font-semibold text-white">{project.progress}%</div>
-                        <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800">
-                          <div
-                            className="bg-gradient-to-r from-sky-400 to-blue-600 h-full rounded-full"
-                            style={{ width: `${project.progress}%` }}
-                          />
+                        <div className="text-xs font-semibold text-white">
+                          <CountUpNumber value={project.progress} suffix="%" />
                         </div>
+                        <AnimatedProgressBar
+                          percentage={project.progress}
+                          className="bg-gradient-to-r from-sky-400 to-blue-600 h-full rounded-full"
+                          trackClassName="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800"
+                        />
                       </div>
 
                       <Link href={`/projects/${project.id}`}>
@@ -297,14 +304,14 @@ export default function DashboardPage() {
                 {recentActivity.map((log) => (
                   <div key={log.id} className="flex items-start gap-3 p-3 rounded-xl bg-[#060913] border border-slate-800/60">
                     <img
-                      src={log.userAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
+                      src={getAvatarUrl(log.userAvatar, { id: log.userId, name: log.userName })}
                       alt={log.userName}
                       className="size-8 rounded-full object-cover mt-0.5"
                     />
                     <div className="flex-1 space-y-0.5">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-bold text-white">{log.userName}</span>
-                        <span className="text-[10px] text-slate-500">{log.timestamp}</span>
+                        <span className="text-[10px] text-slate-500">{formatDateTime(log.timestamp)}</span>
                       </div>
                       <p className="text-xs text-slate-300 font-medium">{log.entity}</p>
                       <p className="text-[11px] text-slate-400">{log.description}</p>
@@ -336,7 +343,7 @@ export default function DashboardPage() {
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-bold text-white">{ms.title}</span>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        Due: {ms.dueDate}
+                        Due: {formatDate(ms.dueDate)}
                       </span>
                     </div>
                     <p className="text-xs text-slate-400">{ms.description}</p>

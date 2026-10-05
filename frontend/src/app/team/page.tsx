@@ -6,14 +6,19 @@ import { Users, Search, Plus, Star, Briefcase, Mail, CheckCircle2, AlertCircle, 
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
+import { useNotifications } from '@/context/NotificationContext';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { TeamMember, UserRole } from '@/types';
 import { usersApi } from '@/services/usersApi';
+import { CountUpNumber, AnimatedProgressBar } from '@/components/common/DataAnimation';
+import { getAvatarUrl } from '@/lib/avatar';
 
 export default function TeamPage() {
   const { user: currentUser } = useAuth();
+  const { addToast } = useNotifications();
   const currentRole = currentUser?.role || 'Admin';
 
-  const canInvite = ['Super Admin', 'Admin', 'Project Manager'].includes(currentRole);
+  const canInvite = ['Super Admin', 'Admin', 'Project Manager', 'Project Coordinator'].includes(currentRole);
   const canDelete = ['Super Admin', 'Admin'].includes(currentRole);
 
   const allowedRolesForInvite: UserRole[] =
@@ -32,6 +37,22 @@ export default function TeamPage() {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [invitationNotice, setInvitationNotice] = useState<{ email: string; name: string; url: string } | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // Confirmation modal state
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    confirmVariant?: 'danger' | 'warning' | 'primary';
+    onConfirm: () => Promise<void> | void;
+    loading?: boolean;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   // Modal form state
   const [name, setName] = useState('');
@@ -92,33 +113,80 @@ export default function TeamPage() {
       const result = await usersApi.resendInvitation(member.id);
       if (result.invitationUrl) {
         setInvitationNotice({ email: member.email, name: member.name, url: result.invitationUrl });
-      } else {
-        alert(`Invitation resent to ${member.email}`);
       }
+      addToast({
+        type: 'success',
+        title: 'Invitation Sent',
+        message: `Invitation resent to ${member.email}`,
+      });
       await loadTeam();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to resend invitation');
+      addToast({
+        type: 'error',
+        title: 'Resend Failed',
+        message: err.response?.data?.error || 'Failed to resend invitation',
+      });
     }
   };
 
-  const handleCancelInvitation = async (member: TeamMember) => {
-    if (!confirm(`Are you sure you want to cancel the invitation for ${member.name}?`)) return;
-    try {
-      await usersApi.cancelInvitation(member.id);
-      await loadTeam();
-    } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to cancel invitation');
-    }
+  const handleCancelInvitation = (member: TeamMember) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Cancel Invitation',
+      message: `Are you sure you want to cancel the invitation for ${member.name}?`,
+      confirmText: 'Cancel Invitation',
+      confirmVariant: 'danger',
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, loading: true }));
+        try {
+          await usersApi.cancelInvitation(member.id);
+          addToast({
+            type: 'success',
+            title: 'Invitation Cancelled',
+            message: `Invitation for ${member.name} has been cancelled.`,
+          });
+          await loadTeam();
+        } catch (err: any) {
+          addToast({
+            type: 'error',
+            title: 'Action Failed',
+            message: err.response?.data?.error || 'Failed to cancel invitation',
+          });
+        } finally {
+          setConfirmModal((prev) => ({ ...prev, isOpen: false, loading: false }));
+        }
+      },
+    });
   };
 
-  const handleDeleteMember = async (id: string, memberName: string) => {
-    if (!confirm(`Are you sure you want to remove ${memberName} from the team?`)) return;
-    try {
-      await usersApi.deleteUser(id);
-      await loadTeam();
-    } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to remove member');
-    }
+  const handleDeleteMember = (id: string, memberName: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Remove Team Member',
+      message: `Are you sure you want to remove ${memberName} from the team?`,
+      confirmText: 'Remove Member',
+      confirmVariant: 'danger',
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, loading: true }));
+        try {
+          await usersApi.deleteUser(id);
+          addToast({
+            type: 'success',
+            title: 'Member Removed',
+            message: `${memberName} has been removed from the team.`,
+          });
+          await loadTeam();
+        } catch (err: any) {
+          addToast({
+            type: 'error',
+            title: 'Removal Failed',
+            message: err.response?.data?.error || 'Failed to remove member',
+          });
+        } finally {
+          setConfirmModal((prev) => ({ ...prev, isOpen: false, loading: false }));
+        }
+      },
+    });
   };
 
   const handleCopyUrl = (url: string) => {
@@ -268,7 +336,7 @@ export default function TeamPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
                         <img
-                          src={member.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
+                          src={getAvatarUrl(member.avatar, member)}
                           alt={member.name}
                           className="size-12 rounded-xl object-cover ring-2 ring-sky-500/30"
                         />
@@ -357,17 +425,16 @@ export default function TeamPage() {
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-slate-400">Current Workload</span>
                       <span className={`font-bold ${(member.workloadPercent || 0) > 85 ? 'text-red-400' : 'text-sky-400'}`}>
-                        {member.workloadPercent || 0}%
+                        <CountUpNumber value={member.workloadPercent || 0} suffix="%" />
                       </span>
                     </div>
-                    <div className="w-full bg-[#060913] rounded-full h-1.5 overflow-hidden border border-slate-800">
-                      <div
-                        className={`h-full rounded-full ${
-                          (member.workloadPercent || 0) > 85 ? 'bg-red-500' : 'bg-sky-400'
-                        }`}
-                        style={{ width: `${member.workloadPercent || 0}%` }}
-                      />
-                    </div>
+                    <AnimatedProgressBar
+                      percentage={member.workloadPercent || 0}
+                      className={`h-full rounded-full ${
+                        (member.workloadPercent || 0) > 85 ? 'bg-red-500' : 'bg-sky-400'
+                      }`}
+                      trackClassName="w-full bg-[#060913] rounded-full h-1.5 overflow-hidden border border-slate-800"
+                    />
                   </div>
                 </div>
               );
@@ -377,9 +444,9 @@ export default function TeamPage() {
 
         {/* Invite Member Modal */}
         {showAddModal && (
-          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="w-full max-w-md bg-[#0b0f19] border border-slate-800 rounded-2xl p-6 space-y-4 shadow-2xl relative">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen min-h-screen z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
+            <div className="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-6 text-white shadow-2xl z-10">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
                 <h3 className="text-base font-bold text-white">Invite Team Member</h3>
                 <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-white">
                   <X className="size-4" />
@@ -387,78 +454,80 @@ export default function TeamPage() {
               </div>
 
               {error && (
-                <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs">
+                <div className="mt-3 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs shrink-0">
                   {error}
                 </div>
               )}
 
-              <form onSubmit={handleInviteMember} className="space-y-3 text-xs">
-                <div className="space-y-1">
-                  <label className="text-slate-300 font-semibold">Full Name</label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Elena Rostova"
-                    required
-                    className="w-full h-9 px-3 bg-[#060913] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-sky-500"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-slate-300 font-semibold">Email Address</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="e.g. elena@company.com"
-                    required
-                    className="w-full h-9 px-3 bg-[#060913] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-sky-500"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
+              <form onSubmit={handleInviteMember} className="flex flex-col min-h-0 overflow-hidden mt-3">
+                <div className="overflow-y-auto pr-1 space-y-3.5 text-xs">
                   <div className="space-y-1">
-                    <label className="text-slate-300 font-semibold">Role</label>
-                    <select
-                      value={role}
-                      onChange={(e) => setRole(e.target.value as UserRole)}
-                      className="w-full h-9 px-3 bg-[#060913] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-sky-500"
-                    >
-                      {allowedRolesForInvite.map((r) => (
-                        <option key={r} value={r}>
-                          {r}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-slate-300 font-semibold">Department</label>
+                    <label className="text-slate-300 font-semibold">Full Name</label>
                     <input
                       type="text"
-                      value={department}
-                      onChange={(e) => setDepartment(e.target.value)}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g. Elena Rostova"
+                      required
                       className="w-full h-9 px-3 bg-[#060913] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-sky-500"
                     />
                   </div>
+
+                  <div className="space-y-1">
+                    <label className="text-slate-300 font-semibold">Email Address</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="e.g. elena@company.com"
+                      required
+                      className="w-full h-9 px-3 bg-[#060913] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-sky-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-slate-300 font-semibold">Role</label>
+                      <select
+                        value={role}
+                        onChange={(e) => setRole(e.target.value as UserRole)}
+                        className="w-full h-9 px-3 bg-[#060913] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-sky-500"
+                      >
+                        {allowedRolesForInvite.map((r) => (
+                          <option key={r} value={r}>
+                            {r}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-slate-300 font-semibold">Department</label>
+                      <input
+                        type="text"
+                        value={department}
+                        onChange={(e) => setDepartment(e.target.value)}
+                        className="w-full h-9 px-3 bg-[#060913] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-sky-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-slate-300 font-semibold">Skills (comma separated)</label>
+                    <input
+                      type="text"
+                      value={skills}
+                      onChange={(e) => setSkills(e.target.value)}
+                      className="w-full h-9 px-3 bg-[#060913] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-sky-500"
+                    />
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-sky-500/5 border border-sky-500/20 text-[11px] text-slate-400">
+                    <span>An invitation token will be generated. The invited user will create their password upon opening their invitation link.</span>
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-slate-300 font-semibold">Skills (comma separated)</label>
-                  <input
-                    type="text"
-                    value={skills}
-                    onChange={(e) => setSkills(e.target.value)}
-                    className="w-full h-9 px-3 bg-[#060913] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-sky-500"
-                  />
-                </div>
-
-                <div className="p-3 rounded-xl bg-sky-500/5 border border-sky-500/20 text-[11px] text-slate-400">
-                  <span>An invitation token will be generated. The invited user will create their password upon opening their invitation link.</span>
-                </div>
-
-                <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-800">
+                <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2 shrink-0 mt-3">
                   <Button
                     type="button"
                     variant="ghost"
@@ -480,6 +549,17 @@ export default function TeamPage() {
             </div>
           </div>
         )}
+        {/* Reusable Confirm Modal */}
+        <ConfirmModal
+          isOpen={confirmModal.isOpen}
+          onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+          onConfirm={confirmModal.onConfirm}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          confirmText={confirmModal.confirmText}
+          confirmVariant={confirmModal.confirmVariant}
+          loading={confirmModal.loading}
+        />
       </div>
     </AppLayout>
   );

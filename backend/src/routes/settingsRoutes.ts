@@ -8,7 +8,7 @@ router.use(protect);
 
 router
   .route('/')
-  .get(getSettings)
+  .get(authorize('Super Admin', 'Admin'), getSettings)
   .put(authorize('Super Admin', 'Admin'), updateSettings);
 
 export default router;

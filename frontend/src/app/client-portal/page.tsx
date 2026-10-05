@@ -5,6 +5,7 @@ import { ExternalLink, CheckCircle2, FileText, Calendar, ShieldCheck } from 'luc
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { mockProjects } from '@/lib/mockData';
+import { CountUpNumber, AnimatedProgressBar } from '@/components/common/DataAnimation';
 
 export default function ClientPortalPage() {
   const clientProject = mockProjects[0];
@@ -37,14 +38,15 @@ export default function ClientPortalPage() {
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400">Milestone Progress</span>
-              <span className="text-white font-bold">{clientProject.progress}%</span>
+              <span className="text-white font-bold">
+                <CountUpNumber value={clientProject.progress} suffix="%" />
+              </span>
             </div>
-            <div className="w-full bg-[#060913] rounded-full h-2 overflow-hidden border border-slate-800">
-              <div
-                className="bg-gradient-to-r from-sky-400 to-emerald-500 h-full rounded-full"
-                style={{ width: `${clientProject.progress}%` }}
-              />
-            </div>
+            <AnimatedProgressBar
+              percentage={clientProject.progress}
+              className="bg-gradient-to-r from-sky-400 to-emerald-500 h-full rounded-full"
+              trackClassName="w-full bg-[#060913] rounded-full h-2 overflow-hidden border border-slate-800"
+            />
           </div>
         </div>
       </div>

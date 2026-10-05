@@ -5,6 +5,7 @@ export interface SystemSettings {
   organizationName: string;
   organizationEmail?: string;
   defaultCurrency: string;
+  timezone?: string;
   strictRBAC: boolean;
   emailNotifications?: boolean;
   aiAssistantEnabled?: boolean;

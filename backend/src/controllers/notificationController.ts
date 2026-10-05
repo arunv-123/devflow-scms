@@ -3,46 +3,17 @@ import { AuthRequest } from '../types/auth';
 import { NotificationModel } from '../models/notificationModel';
 import { ApiError, asyncHandler } from '../utils/errors';
 
-// @desc    Get user notifications
+// @desc    Get authenticated user notifications
 // @route   GET /api/notifications
 // @access  Private
 export const getNotifications = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-  let notifications = await NotificationModel.find({
-    $or: [{ userId: req.user?._id }, { userId: { $exists: false } }],
-  }).sort({ createdAt: -1 });
-
-  // Seed default notifications if empty
-  if (notifications.length === 0) {
-    notifications = await NotificationModel.create([
-      {
-        userId: req.user?._id,
-        type: 'task',
-        title: 'New Task Assigned',
-        message: 'You have been assigned to "Payment Gateway Integration" on FinTech Nexus.',
-        timestamp: '10 mins ago',
-        read: false,
-        priority: 'high',
-      },
-      {
-        userId: req.user?._id,
-        type: 'milestone',
-        title: 'Milestone Achieved',
-        message: 'Milestone "Sprint 1 MVP Launch" has been marked as completed.',
-        timestamp: '1 hour ago',
-        read: false,
-        priority: 'medium',
-      },
-      {
-        userId: req.user?._id,
-        type: 'ai',
-        title: 'AI Intelligence Recommendation',
-        message: 'DevFlow Copilot suggests rebalancing workload for Marcus Vance (92% load).',
-        timestamp: '3 hours ago',
-        read: true,
-        priority: 'medium',
-      },
-    ]);
+  const userId = req.user?._id;
+  if (!userId) {
+    throw new ApiError('Authentication required', 401);
   }
+
+  // Strictly scope to authenticated user - do NOT return unowned or dummy notifications
+  const notifications = await NotificationModel.find({ userId }).sort({ createdAt: -1 });
 
   res.status(200).json({
     success: true,
@@ -53,20 +24,34 @@ export const getNotifications = asyncHandler(async (req: AuthRequest, res: Respo
       type: n.type,
       title: n.title,
       message: n.message,
-      timestamp: n.timestamp,
+      timestamp: n.timestamp || n.createdAt,
       read: n.read,
       priority: n.priority,
+      entityId: n.entityId,
+      entityType: n.entityType,
+      projectId: n.projectId,
+      actionUrl: n.actionUrl,
     })),
   });
 });
 
-// @desc    Mark notification as read
+// @desc    Mark notification as read (User must own notification)
 // @route   PUT /api/notifications/:id/read
 // @access  Private
 export const markAsRead = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+  const userId = req.user?._id;
+  if (!userId) {
+    throw new ApiError('Authentication required', 401);
+  }
+
   const notif = await NotificationModel.findById(req.params.id);
   if (!notif) {
     throw new ApiError('Notification not found', 404);
+  }
+
+  // Security check: User can only mark THEIR OWN notification as read
+  if (notif.userId.toString() !== userId.toString()) {
+    throw new ApiError('Unauthorized: You can only update your own notifications', 403);
   }
 
   notif.read = true;
@@ -81,17 +66,65 @@ export const markAsRead = asyncHandler(async (req: AuthRequest, res: Response): 
   });
 });
 
-// @desc    Mark all notifications as read
+// @desc    Mark all notifications as read for authenticated user
 // @route   PUT /api/notifications/read-all
 // @access  Private
 export const markAllAsRead = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+  const userId = req.user?._id;
+  if (!userId) {
+    throw new ApiError('Authentication required', 401);
+  }
+
   await NotificationModel.updateMany(
-    { $or: [{ userId: req.user?._id }, { userId: { $exists: false } }] },
+    { userId, read: false },
     { $set: { read: true } }
   );
 
   res.status(200).json({
     success: true,
     message: 'All notifications marked as read',
+  });
+});
+
+// @desc    Delete single notification for authenticated user
+// @route   DELETE /api/notifications/:id
+// @access  Private
+export const deleteNotification = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+  const userId = req.user?._id;
+  if (!userId) {
+    throw new ApiError('Authentication required', 401);
+  }
+
+  const notif = await NotificationModel.findById(req.params.id);
+  if (!notif) {
+    throw new ApiError('Notification not found', 404);
+  }
+
+  if (notif.userId.toString() !== userId.toString()) {
+    throw new ApiError('Unauthorized: You can only delete your own notifications', 403);
+  }
+
+  await NotificationModel.findByIdAndDelete(req.params.id);
+
+  res.status(200).json({
+    success: true,
+    message: 'Notification deleted successfully',
+  });
+});
+
+// @desc    Clear all notifications for authenticated user
+// @route   DELETE /api/notifications/clear-all
+// @access  Private
+export const clearAllNotifications = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+  const userId = req.user?._id;
+  if (!userId) {
+    throw new ApiError('Authentication required', 401);
+  }
+
+  await NotificationModel.deleteMany({ userId });
+
+  res.status(200).json({
+    success: true,
+    message: 'All notifications cleared successfully',
   });
 });

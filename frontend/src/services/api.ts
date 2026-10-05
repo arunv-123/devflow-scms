@@ -9,3 +9,14 @@ export const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 429) {
+      console.warn('[DevFlow API] Rate limit hit (HTTP 429). User session preserved.');
+      (error as any).isRateLimit = true;
+    }
+    return Promise.reject(error);
+  }
+);

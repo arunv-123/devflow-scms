@@ -19,16 +19,16 @@ router.use(protect);
 
 router
   .route('/')
-  .get(getUsers)
-  .post(authorize('Super Admin', 'Admin', 'Project Manager'), createUser);
+  .get(authorize('Super Admin', 'Admin', 'Project Manager', 'Team Lead', 'Developer', 'Designer', 'QA', 'Project Coordinator'), getUsers)
+  .post(authorize('Super Admin', 'Admin', 'Project Manager', 'Project Coordinator'), createUser);
 
-router.post('/invite', authorize('Super Admin', 'Admin', 'Project Manager'), inviteUser);
-router.post('/:id/resend-invitation', authorize('Super Admin', 'Admin', 'Project Manager'), resendInvitation);
+router.post('/invite', authorize('Super Admin', 'Admin', 'Project Manager', 'Project Coordinator'), inviteUser);
+router.post('/:id/resend-invitation', authorize('Super Admin', 'Admin', 'Project Manager', 'Project Coordinator'), resendInvitation);
 router.post('/:id/cancel-invitation', authorize('Super Admin', 'Admin'), cancelInvitation);
 
 router
   .route('/:id')
-  .get(getUserById)
+  .get(authorize('Super Admin', 'Admin', 'Project Manager', 'Team Lead', 'Developer', 'Designer', 'QA', 'Project Coordinator'), getUserById)
   .put(updateUser)
   .delete(authorize('Super Admin', 'Admin'), deleteUser);
 

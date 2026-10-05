@@ -7,8 +7,8 @@ export const notificationsApi = {
       '/notifications'
     );
     return {
-      notifications: res.data.notifications,
-      unreadCount: res.data.unreadCount,
+      notifications: res.data.notifications || [],
+      unreadCount: res.data.unreadCount || 0,
     };
   },
 
@@ -18,5 +18,13 @@ export const notificationsApi = {
 
   async markAllAsRead(): Promise<void> {
     await api.put('/notifications/read-all');
+  },
+
+  async deleteNotification(id: string): Promise<void> {
+    await api.delete(`/notifications/${id}`);
+  },
+
+  async clearAllNotifications(): Promise<void> {
+    await api.delete('/notifications/clear-all');
   },
 };

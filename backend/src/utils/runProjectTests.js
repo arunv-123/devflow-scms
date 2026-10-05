@@ -116,11 +116,24 @@ async function main() {
   console.log('7. POST /api/tasks status:', createTaskRes.status, 'task:', createTaskRes.body.task?.title);
   const createdTaskId = createTaskRes.body.task?._id;
 
+  // 7a. Test Idempotent Duplicate Task Creation (Attempting duplicate POST /api/tasks)
+  const duplicateTaskRes = await request(
+    { hostname: 'localhost', port: 5000, path: '/api/tasks', method: 'POST', headers: { Cookie: authCookie } },
+    {
+      projectId: targetProjectId,
+      projectName: 'CyberShield Quantum Firewall',
+      title: 'Architect eBPF Packet Filter Driver',
+      description: 'Duplicate attempt',
+      dueDate: '2026-10-15',
+    }
+  );
+  console.log('7a. Duplicate POST /api/tasks (Idempotent):', duplicateTaskRes.status, 'returned existing task ID:', duplicateTaskRes.body.task?._id === createdTaskId);
+
   // 8. GET /api/tasks?projectId=...
   const getTasksRes = await request(
     { hostname: 'localhost', port: 5000, path: `/api/tasks?projectId=${targetProjectId}`, method: 'GET', headers: { Cookie: authCookie } }
   );
-  console.log('8. GET /api/tasks?projectId status:', getTasksRes.status, 'count:', getTasksRes.body.count);
+  console.log('8. GET /api/tasks?projectId status:', getTasksRes.status, 'count (must still be 1):', getTasksRes.body.count);
 
   // 9. POST /api/tasks/:id/subtasks (Add Subtask)
   if (createdTaskId) {
@@ -156,11 +169,23 @@ async function main() {
   );
   console.log('11. POST /api/milestones status:', createMilestoneRes.status, 'milestone:', createMilestoneRes.body.milestone?.title);
 
+  // 11a. Test Idempotent Duplicate Milestone Creation
+  const duplicateMilestoneRes = await request(
+    { hostname: 'localhost', port: 5000, path: '/api/milestones', method: 'POST', headers: { Cookie: authCookie } },
+    {
+      projectId: targetProjectId,
+      projectName: 'CyberShield Quantum Firewall',
+      title: 'Alpha Kernel Module Release & Load Benchmark',
+      dueDate: '2026-10-30',
+    }
+  );
+  console.log('11a. Duplicate POST /api/milestones (Idempotent):', duplicateMilestoneRes.status, 'returned existing milestone ID:', duplicateMilestoneRes.body.milestone?._id === createMilestoneRes.body.milestone?._id);
+
   // 12. GET /api/milestones
   const getMilestonesRes = await request(
     { hostname: 'localhost', port: 5000, path: `/api/milestones?projectId=${targetProjectId}`, method: 'GET', headers: { Cookie: authCookie } }
   );
-  console.log('12. GET /api/milestones status:', getMilestonesRes.status, 'count:', getMilestonesRes.body.count);
+  console.log('12. GET /api/milestones status:', getMilestonesRes.status, 'count (must still be 1):', getMilestonesRes.body.count);
 
   console.log('\n=== ALL PROJECT MANAGEMENT API TESTS PASSED SUCCESSFULLY ===');
 }

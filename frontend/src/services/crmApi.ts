@@ -47,8 +47,28 @@ export const crmApi = {
     };
   },
 
+  async updateLead(id: string, data: Partial<Lead>): Promise<Lead> {
+    const res = await api.put<{ success: boolean; lead: any }>(`/crm/leads/${id}`, data);
+    const l = res.data.lead;
+    return {
+      id: l._id || l.id,
+      name: l.name,
+      company: l.company,
+      email: l.email,
+      status: l.status,
+      source: l.source,
+      value: l.value,
+      estimatedClose: l.estimatedClose,
+      assignedTo: l.assignedTo,
+    };
+  },
+
   async convertLead(id: string): Promise<void> {
     await api.post(`/crm/leads/${id}/convert`);
+  },
+
+  async deleteLead(id: string): Promise<void> {
+    await api.delete(`/crm/leads/${id}`);
   },
 
   // Clients
@@ -83,6 +103,26 @@ export const crmApi = {
     };
   },
 
+  async updateClient(id: string, data: Partial<Client>): Promise<Client> {
+    const res = await api.put<{ success: boolean; client: any }>(`/crm/clients/${id}`, data);
+    const c = res.data.client;
+    return {
+      id: c._id || c.id,
+      name: c.name,
+      company: c.company,
+      email: c.email,
+      phone: c.phone,
+      activeProjects: c.activeProjects,
+      totalValue: c.totalValue,
+      status: c.status,
+      avatar: c.avatar,
+    };
+  },
+
+  async deleteClient(id: string): Promise<void> {
+    await api.delete(`/crm/clients/${id}`);
+  },
+
   // Meetings
   async getMeetings(): Promise<Meeting[]> {
     const res = await api.get<{ success: boolean; meetings: any[] }>('/crm/meetings');
@@ -96,6 +136,9 @@ export const crmApi = {
       status: m.status,
       participants: m.participants,
       notes: m.notes,
+      outcome: m.outcome,
+      actionItems: m.actionItems,
+      nextSteps: m.nextSteps,
     }));
   },
 
@@ -112,6 +155,32 @@ export const crmApi = {
       status: m.status,
       participants: m.participants,
       notes: m.notes,
+      outcome: m.outcome,
+      actionItems: m.actionItems,
+      nextSteps: m.nextSteps,
     };
+  },
+
+  async updateMeeting(id: string, data: Partial<Meeting>): Promise<Meeting> {
+    const res = await api.put<{ success: boolean; meeting: any }>(`/crm/meetings/${id}`, data);
+    const m = res.data.meeting;
+    return {
+      id: m._id || m.id,
+      title: m.title,
+      clientName: m.clientName,
+      date: m.date,
+      time: m.time,
+      duration: m.duration,
+      status: m.status,
+      participants: m.participants,
+      notes: m.notes,
+      outcome: m.outcome,
+      actionItems: m.actionItems,
+      nextSteps: m.nextSteps,
+    };
+  },
+
+  async deleteMeeting(id: string): Promise<void> {
+    await api.delete(`/crm/meetings/${id}`);
   },
 };

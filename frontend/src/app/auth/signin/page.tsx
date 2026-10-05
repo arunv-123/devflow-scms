@@ -3,40 +3,56 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Sparkles, ArrowRight, Lock, Mail, ShieldCheck } from 'lucide-react';
+import { Sparkles, ArrowRight, Lock, Mail, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { authApi } from '@/services/authApi';
-import { getRedirectUrlForRole } from '@/context/AuthContext';
+import { getRedirectUrlForRole, useAuth } from '@/context/AuthContext';
+import { DevFlowLogo } from '@/components/common/DevFlowLogo';
 
 export default function SignInPage() {
   const router = useRouter();
+  const { login, user, isAuthenticated } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     // If already authenticated, redirect based on user role
-    authApi
-      .getMe()
-      .then((user) => {
-        router.push(getRedirectUrlForRole(user.role));
-      })
-      .catch(() => {});
-  }, [router]);
+    if (isAuthenticated && user) {
+      router.push(getRedirectUrlForRole(user.role));
+    }
+  }, [isAuthenticated, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
     setError('');
-    setLoading(true);
 
     try {
-      const res = await authApi.login(email, password);
-      router.push(getRedirectUrlForRole(res.user?.role));
+      const loggedUser = await login(email.trim(), password.trim());
+      const redirectUrl = getRedirectUrlForRole(loggedUser.role);
+      router.push(redirectUrl);
     } catch (err: any) {
-      setError(err.response?.data?.error || err.message || 'Invalid email or password');
+      if (!err.response) {
+        if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+          setError('Server took too long to respond. Please try again.');
+        } else {
+          setError('Unable to connect to the server. Please check that the backend is running.');
+        }
+      } else if (err.response.status === 401) {
+        setError('Invalid email or password.');
+      } else if (err.response.status === 403) {
+        setError(err.response.data?.error || 'Account access restricted. Please contact your administrator.');
+      } else if (err.response.status >= 500) {
+        setError('Something went wrong on the server. Please try again.');
+      } else {
+        setError(err.response.data?.error || 'Authentication failed. Please try again.');
+      }
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -48,19 +64,7 @@ export default function SignInPage() {
       {/* Brand Header */}
       <div className="mb-8 text-center space-y-2 relative z-10">
         <Link href="/" className="inline-flex items-center gap-3 group">
-          <div className="size-10 rounded-xl bg-gradient-to-tr from-sky-400 via-blue-600 to-indigo-600 p-0.5 shadow-lg shadow-sky-500/20 group-hover:scale-105 transition-transform">
-            <div className="w-full h-full bg-[#060913] rounded-[10px] flex items-center justify-center">
-              <Sparkles className="size-5 text-sky-400" />
-            </div>
-          </div>
-          <div className="text-left">
-            <span className="font-bold text-xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
-              DevFlow
-            </span>
-            <span className="text-[10px] uppercase font-bold tracking-widest text-sky-400 block -mt-1">
-              SCMS Enterprise
-            </span>
-          </div>
+          <DevFlowLogo size={40} showText={true} subtext="SCMS Enterprise" />
         </Link>
         <p className="text-xs text-slate-400 pt-2">Sign in to your enterprise software management workspace</p>
       </div>
@@ -97,22 +101,30 @@ export default function SignInPage() {
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-500" />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full h-11 pl-9 pr-4 text-xs bg-[#060913] border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-sky-500"
+                className="w-full h-11 pl-9 pr-10 text-xs bg-[#060913] border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-sky-500"
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 focus:outline-none transition-colors"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
             </div>
           </div>
 
           <Button
             type="submit"
-            disabled={loading}
-            className="w-full h-11 bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-sky-600/25 gap-2 mt-2"
+            disabled={isSubmitting}
+            className="w-full h-11 bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-sky-600/25 gap-2 mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span>{loading ? 'Authenticating...' : 'Sign In to Workspace'}</span>
+            <span>{isSubmitting ? 'Authenticating...' : 'Sign In to Workspace'}</span>
             <ArrowRight className="size-4" />
           </Button>
         </form>

@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../types/auth';
 import { User } from '../models/userModel';
+import { Project } from '../models/projectModel';
 import { ActivityLogModel } from '../models/activityLogModel';
 import { InvitationService } from '../services/invitationService';
 import { ApiError, asyncHandler } from '../utils/errors';
@@ -19,6 +20,9 @@ export const getUsers = asyncHandler(async (req: AuthRequest, res: Response): Pr
 
   if (role && role !== 'All') {
     filter.role = role;
+  } else {
+    // Exclude external Client accounts from internal team directory / resource utilization matrix
+    filter.role = { $ne: 'Client' };
   }
 
   if (status && status !== 'All') {
@@ -35,26 +39,41 @@ export const getUsers = asyncHandler(async (req: AuthRequest, res: Response): Pr
     ];
   }
 
-  const users = await User.find(filter).select('-password').sort({ createdAt: -1 });
+  const [users, allProjects] = await Promise.all([
+    User.find(filter).select('-password').sort({ createdAt: -1 }),
+    Project.find().select('members manager name'),
+  ]);
 
   res.status(200).json({
     success: true,
     count: users.length,
-    users: users.map((u) => ({
-      id: u._id.toString(),
-      name: u.name,
-      email: u.email,
-      role: u.role,
-      avatar: u.avatar,
-      department: u.department,
-      skills: u.skills || [],
-      assignedProjects: u.assignedProjects || [],
-      workloadPercent: u.workloadPercent || 0,
-      availability: u.availability || 'Available',
-      status: u.status || 'active',
-      performanceRating: u.performanceRating || 5.0,
-      joinedDate: u.createdAt ? u.createdAt.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-    })),
+    users: users.map((u) => {
+      const userIdStr = u._id.toString();
+      const userProjects = allProjects.filter((p) => {
+        const isManager = p.manager && (p.manager.id === userIdStr || p.manager.email === u.email);
+        const isMember = Array.isArray(p.members) && p.members.some((m: any) => m.id === userIdStr || m.email === u.email);
+        return isManager || isMember;
+      });
+
+      const liveAssignedProjects = userProjects.map((p) => p._id);
+      const assignedProjects = liveAssignedProjects.length > 0 ? liveAssignedProjects : (u.assignedProjects || []);
+
+      return {
+        id: userIdStr,
+        name: u.name,
+        email: u.email,
+        role: u.role,
+        avatar: u.avatar,
+        department: u.department,
+        skills: u.skills || [],
+        assignedProjects,
+        workloadPercent: u.workloadPercent || 0,
+        availability: u.availability || 'Available',
+        status: u.status || 'active',
+        performanceRating: u.performanceRating || 5.0,
+        joinedDate: u.createdAt ? u.createdAt.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      };
+    }),
   });
 });
 
@@ -115,7 +134,9 @@ export const createUser = asyncHandler(async (req: AuthRequest, res: Response): 
 // @access  Private
 export const updateUser = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   const currentUser = req.user!;
-  if (currentUser.role === 'Client') {
+  const isSelf = currentUser._id.toString() === req.params.id;
+
+  if (!isSelf && currentUser.role === 'Client') {
     throw new ApiError("Role 'Client' is not authorised to access user management.", 403);
   }
 
@@ -124,7 +145,6 @@ export const updateUser = asyncHandler(async (req: AuthRequest, res: Response): 
     throw new ApiError('User not found', 404);
   }
 
-  const isSelf = currentUser._id.toString() === req.params.id;
   const isSuperAdmin = currentUser.role === 'Super Admin';
   const isAdmin = currentUser.role === 'Admin';
   const isAdminOrSuperAdmin = isSuperAdmin || isAdmin;
@@ -135,7 +155,7 @@ export const updateUser = asyncHandler(async (req: AuthRequest, res: Response): 
   }
 
   // 2. Admin cannot modify a Super Admin user
-  if (isAdmin && targetUser.role === 'Super Admin') {
+  if (isAdmin && !isSelf && targetUser.role === 'Super Admin') {
     throw new ApiError('Admins cannot modify Super Admin accounts', 403);
   }
 
@@ -174,7 +194,7 @@ export const updateUser = asyncHandler(async (req: AuthRequest, res: Response): 
     }
   }
 
-  const allowedUpdates = ['name', 'department', 'skills', 'workloadPercent', 'availability', 'performanceRating', 'role', 'status'];
+  const allowedUpdates = ['name', 'avatar', 'department', 'skills', 'workloadPercent', 'availability', 'performanceRating', 'role', 'status'];
   const updateData: any = {};
   for (const key of allowedUpdates) {
     if (req.body[key] !== undefined) {

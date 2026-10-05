@@ -7,6 +7,7 @@ const VALID_ROLES: UserRole[] = [
   'Admin',
   'Project Manager',
   'Team Lead',
+  'Project Coordinator',
   'Developer',
   'Designer',
   'QA',
@@ -100,6 +101,10 @@ const userSchema = new Schema<IUser>(
 // Encrypt password using bcrypt before save
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password') || !this.password) {
+    return next();
+  }
+  // Safeguard: Do not re-hash if string is already a valid bcrypt hash
+  if (/^\$2[ayb]\$.{56}$/.test(this.password)) {
     return next();
   }
   try {

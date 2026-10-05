@@ -3,6 +3,7 @@ export type UserRole =
   | 'Admin' 
   | 'Project Manager' 
   | 'Team Lead' 
+  | 'Project Coordinator'
   | 'Developer' 
   | 'Designer' 
   | 'QA' 
@@ -44,6 +45,7 @@ export interface TeamMember {
 
 export interface Project {
   id: string;
+  clientId?: string;
   name: string;
   clientName: string;
   description: string;
@@ -74,13 +76,25 @@ export interface Task {
   title: string;
   description: string;
   assignee: TeamMember;
+  createdBy?: string; // userId of the authenticated user who created the task
   status: TaskStatus;
   priority: PriorityLevel;
   dueDate: string;
+  milestoneId?: string;
   tags: string[];
   subtasks: Subtask[];
   commentsCount: number;
   createdAt: string;
+}
+
+/** Lightweight reference used when building the assignee payload for task creation */
+export interface AssigneeRef {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole | string;
+  avatar: string;
+  workloadPercent?: number;
 }
 
 export interface Milestone {
@@ -121,6 +135,8 @@ export interface Client {
   avatar: string;
 }
 
+export type MeetingStatus = 'Scheduled' | 'In Progress' | 'Completed' | 'Cancelled';
+
 export interface Meeting {
   id: string;
   title: string;
@@ -128,9 +144,12 @@ export interface Meeting {
   date: string;
   time: string;
   duration: string;
-  status: 'Scheduled' | 'Completed' | 'Cancelled';
+  status: MeetingStatus;
   participants: string[];
   notes?: string;
+  outcome?: string;
+  actionItems?: string[];
+  nextSteps?: string;
 }
 
 export interface DocumentItem {
@@ -138,28 +157,51 @@ export interface DocumentItem {
   name: string;
   category: 'Requirement' | 'Architecture' | 'Contract' | 'Design' | 'Report';
   size: string;
+  sizeBytes?: number;
   uploadedBy: string;
   uploadDate: string;
   projectName: string;
+  projectId?: string;
   fileType: string;
+  originalFilename?: string;
+  url?: string;
 }
 
 export interface NotificationItem {
   id: string;
-  type: 'task' | 'project' | 'milestone' | 'ai' | 'system';
+  userId?: string;
+  type: 'task' | 'project' | 'milestone' | 'meeting' | 'ai' | 'system' | string;
   title: string;
   message: string;
   timestamp: string;
   read: boolean;
   priority: 'low' | 'medium' | 'high';
+  entityId?: string;
+  entityType?: 'task' | 'milestone' | 'project' | 'meeting' | 'ai' | 'system';
+  projectId?: string;
+  actionUrl?: string;
 }
 
 export interface ActivityLogItem {
   id: string;
   userName: string;
   userAvatar: string;
+  userRole?: string;
+  userId?: string;
   action: string;
   entity: string;
+  entityId?: string;
+  projectId?: string;
+  projectName?: string;
   timestamp: string;
   description: string;
+  metadata?: {
+    previousTechStack?: string[];
+    newTechStack?: string[];
+    additions?: string[];
+    removals?: string[];
+    reason?: string;
+    [key: string]: any;
+  };
+  createdAt?: string;
 }

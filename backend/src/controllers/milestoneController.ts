@@ -5,7 +5,7 @@ import { ApiError, asyncHandler } from '../utils/errors';
 
 // ─── Role helpers ─────────────────────────────────────────────────────────────
 
-const FULL_MILESTONE_ROLES = ['Super Admin', 'Admin', 'Project Manager', 'Team Lead'] as const;
+const FULL_MILESTONE_ROLES = ['Super Admin', 'Admin', 'Project Manager', 'Team Lead', 'Project Coordinator'] as const;
 
 // ─── MILESTONES ───────────────────────────────────────────────────────────────
 
@@ -62,6 +62,8 @@ export const getMilestoneById = asyncHandler(
   }
 );
 
+import { NotificationService } from '../services/notificationService';
+
 /**
  * @desc   Create new milestone
  * @route  POST /api/milestones
@@ -82,6 +84,17 @@ export const createMilestone = asyncHandler(
       req.body,
       req.user!._id.toString()
     );
+
+    try {
+      await NotificationService.notifyMilestoneCreated({
+        milestone,
+        actorUserId: req.user?._id?.toString(),
+        actorName: req.user?.name,
+      });
+    } catch (e) {
+      console.error('Failed to notify milestone creation:', e);
+    }
+
     res.status(201).json({
       success: true,
       milestone,
@@ -127,7 +140,25 @@ export const updateMilestone = asyncHandler(
       }
     }
 
+    const prevMilestone = await ProjectService.getMilestoneById(id);
+    const oldStatus = prevMilestone.status;
+
     const milestone = await ProjectService.updateMilestone(id, req.body);
+
+    if (req.body.status && req.body.status !== oldStatus) {
+      try {
+        await NotificationService.notifyMilestoneStatusChanged({
+          milestone,
+          oldStatus,
+          newStatus: req.body.status,
+          actorUserId: req.user?._id?.toString(),
+          actorName: req.user?.name,
+        });
+      } catch (e) {
+        console.error('Failed to notify milestone status change:', e);
+      }
+    }
+
     res.status(200).json({
       success: true,
       milestone,

@@ -25,6 +25,10 @@ const memberSubSchema = new Schema(
 
 const projectSchema = new Schema<IProject>(
   {
+    clientId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Client',
+    },
     name: {
       type: String,
       required: [true, 'Project name is required'],

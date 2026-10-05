@@ -8,7 +8,12 @@ export interface IDocument extends Document {
   category: DocumentCategory;
   projectName: string;
   projectId?: Types.ObjectId;
+  originalFilename?: string;
+  storedFilename?: string;
+  filePath?: string;
+  mimeType?: string;
   size: string;
+  sizeBytes?: number;
   uploadedBy: string;
   uploadedById?: Types.ObjectId;
   uploadDate: string;
@@ -28,11 +33,16 @@ const documentSchema = new Schema<IDocument>(
     },
     projectName: { type: String, required: [true, 'Project name is required'], trim: true },
     projectId: { type: Schema.Types.ObjectId, ref: 'Project' },
-    size: { type: String, default: '1.2 MB' },
+    originalFilename: { type: String },
+    storedFilename: { type: String },
+    filePath: { type: String },
+    mimeType: { type: String },
+    size: { type: String, default: '0 KB' },
+    sizeBytes: { type: Number, default: 0 },
     uploadedBy: { type: String, required: true },
     uploadedById: { type: Schema.Types.ObjectId, ref: 'User' },
     uploadDate: { type: String, default: () => new Date().toISOString().split('T')[0] },
-    fileType: { type: String, default: 'PDF' },
+    fileType: { type: String, default: 'FILE' },
     url: { type: String, default: '' },
   },
   { timestamps: true }

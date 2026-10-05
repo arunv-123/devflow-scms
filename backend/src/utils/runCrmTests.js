@@ -75,13 +75,60 @@ async function main() {
       company: 'Dunder Mifflin Paper',
       email: 'm.scott@dundermifflin.com',
       value: 75000,
-      status: 'Proposal',
+      status: 'New',
       source: 'Inbound Web Contact',
       assignedTo: 'Sarah Chen',
     }
   );
-  console.log('5. POST /api/crm/leads status:', createLeadRes.status, 'created lead:', createLeadRes.body.lead?.company);
+  console.log('5. POST /api/crm/leads status:', createLeadRes.status, 'created lead status:', createLeadRes.body.lead?.status);
   const createdLeadId = createLeadRes.body.lead?._id;
+
+  // 5a. Test status transitions: New -> Contacted -> Proposal -> Converted
+  if (createdLeadId) {
+    const update1 = await request(
+      { hostname: 'localhost', port: 5000, path: `/api/crm/leads/${createdLeadId}`, method: 'PUT', headers: { Cookie: authCookie } },
+      { status: 'Contacted' }
+    );
+    console.log('5a. PUT status to Contacted:', update1.status, 'status:', update1.body.lead?.status);
+
+    const update2 = await request(
+      { hostname: 'localhost', port: 5000, path: `/api/crm/leads/${createdLeadId}`, method: 'PUT', headers: { Cookie: authCookie } },
+      { status: 'Proposal' }
+    );
+    console.log('5b. PUT status to Proposal:', update2.status, 'status:', update2.body.lead?.status);
+
+    const update3 = await request(
+      { hostname: 'localhost', port: 5000, path: `/api/crm/leads/${createdLeadId}`, method: 'PUT', headers: { Cookie: authCookie } },
+      { status: 'Converted' }
+    );
+    console.log('5c. PUT status to Converted:', update3.status, 'status:', update3.body.lead?.status);
+  }
+
+  // 5b. Test flow: Create Lead -> New -> Contacted -> Lost
+  const lostLeadRes = await request(
+    { hostname: 'localhost', port: 5000, path: '/api/crm/leads', method: 'POST', headers: { Cookie: authCookie } },
+    {
+      name: 'Dwight Schrute',
+      company: 'Schrute Farms',
+      email: 'dwight@schrute.com',
+      value: 30000,
+      status: 'New',
+      source: 'Direct Contact',
+      assignedTo: 'Alex Morgan',
+    }
+  );
+  const lostLeadId = lostLeadRes.body.lead?._id;
+  if (lostLeadId) {
+    await request(
+      { hostname: 'localhost', port: 5000, path: `/api/crm/leads/${lostLeadId}`, method: 'PUT', headers: { Cookie: authCookie } },
+      { status: 'Contacted' }
+    );
+    const lostUpdate = await request(
+      { hostname: 'localhost', port: 5000, path: `/api/crm/leads/${lostLeadId}`, method: 'PUT', headers: { Cookie: authCookie } },
+      { status: 'Lost' }
+    );
+    console.log('5d. PUT status to Lost:', lostUpdate.status, 'status:', lostUpdate.body.lead?.status);
+  }
 
   // 6. Test POST /api/crm/leads/:id/convert (Convert Lead)
   if (createdLeadId) {
@@ -111,6 +158,22 @@ async function main() {
     }
   );
   console.log('8. POST /api/crm/clients status:', createClientRes.status, 'client:', createClientRes.body.client?.company);
+  const createdClientId = createClientRes.body.client?._id;
+
+  // 8a. Test PUT /api/crm/clients/:id (Update Client)
+  if (createdClientId) {
+    const updateClientRes = await request(
+      { hostname: 'localhost', port: 5000, path: `/api/crm/clients/${createdClientId}`, method: 'PUT', headers: { Cookie: authCookie } },
+      { name: 'Bruce Wayne', totalValue: 400000 }
+    );
+    console.log('8a. PUT /api/crm/clients/:id status:', updateClientRes.status, 'updated value:', updateClientRes.body.client?.totalValue);
+
+    // 8b. Test DELETE /api/crm/clients/:id (Delete Client)
+    const deleteClientRes = await request(
+      { hostname: 'localhost', port: 5000, path: `/api/crm/clients/${createdClientId}`, method: 'DELETE', headers: { Cookie: authCookie } }
+    );
+    console.log('8b. DELETE /api/crm/clients/:id status:', deleteClientRes.status, 'message:', deleteClientRes.body.message);
+  }
 
   // 9. Test GET /api/crm/meetings
   const meetingsRes = await request(
@@ -133,6 +196,43 @@ async function main() {
     }
   );
   console.log('10. POST /api/crm/meetings status:', createMeetingRes.status, 'meeting:', createMeetingRes.body.meeting?.title);
+  const createdMtgId = createMeetingRes.body.meeting?._id;
+
+  // 10a. Test Meeting Status Workflow: Scheduled -> In Progress -> Completed
+  if (createdMtgId) {
+    const startMtgRes = await request(
+      { hostname: 'localhost', port: 5000, path: `/api/crm/meetings/${createdMtgId}`, method: 'PUT', headers: { Cookie: authCookie } },
+      { status: 'In Progress' }
+    );
+    console.log('10a. Start Meeting (Scheduled -> In Progress):', startMtgRes.status, 'status:', startMtgRes.body.meeting?.status);
+
+    // 10b. Test validation failure when Notes/Outcome are missing on completion
+    const invalidCompleteRes = await request(
+      { hostname: 'localhost', port: 5000, path: `/api/crm/meetings/${createdMtgId}`, method: 'PUT', headers: { Cookie: authCookie } },
+      { status: 'Completed', notes: '', outcome: '' }
+    );
+    console.log('10b. Complete Meeting missing notes/outcome (400 Expected):', invalidCompleteRes.status, invalidCompleteRes.body.error);
+
+    // 10c. Successful completion with notes, outcome, action items, and next steps
+    const completeMtgRes = await request(
+      { hostname: 'localhost', port: 5000, path: `/api/crm/meetings/${createdMtgId}`, method: 'PUT', headers: { Cookie: authCookie } },
+      {
+        status: 'Completed',
+        notes: 'Tony Stark discussed requirements for a real-time cybersecurity monitoring platform.',
+        outcome: 'Client is interested and requested a technical proposal.',
+        actionItems: ['Prepare technical proposal', 'Estimate development timeline', 'Prepare architecture'],
+        nextSteps: 'Schedule proposal review with Tony Stark.',
+      }
+    );
+    console.log(
+      '10c. Complete Meeting (In Progress -> Completed):',
+      completeMtgRes.status,
+      'status:',
+      completeMtgRes.body.meeting?.status,
+      'nextSteps:',
+      completeMtgRes.body.meeting?.nextSteps
+    );
+  }
 
   console.log('\n=== ALL CRM API TESTS PASSED SUCCESSFULLY ===');
 }

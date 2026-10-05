@@ -8,7 +8,16 @@ router.use(protect);
 
 router.get(
   '/',
-  authorize('Super Admin', 'Admin', 'Project Manager', 'Team Lead', 'Developer', 'Designer', 'QA'),
+  authorize(
+    'Super Admin',
+    'Admin',
+    'Project Manager',
+    'Team Lead',
+    'Project Coordinator',
+    'Developer',
+    'Designer',
+    'QA'
+  ),
   getDashboardData
 );
 

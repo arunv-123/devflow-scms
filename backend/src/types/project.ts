@@ -17,6 +17,7 @@ export interface ITeamMemberRef {
 
 export interface IProject extends Document {
   _id: Types.ObjectId;
+  clientId?: Types.ObjectId | string;
   name: string;
   clientName: string;
   description: string;
@@ -54,6 +55,7 @@ export interface ITask extends Document {
   status: TaskStatus;
   priority: PriorityLevel;
   dueDate: string;
+  milestoneId?: string;
   tags: string[];
   subtasks: ISubtask[];
   commentsCount: number;

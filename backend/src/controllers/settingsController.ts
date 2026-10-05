@@ -11,11 +11,27 @@ export const getSettings = asyncHandler(async (_req: AuthRequest, res: Response)
   if (!settings) {
     settings = await SettingsModel.create({
       organizationName: 'DevFlow Enterprise SCMS',
-      defaultCurrency: 'USD ($)',
+      organizationEmail: 'admin@devflow.local',
+      defaultCurrency: 'INR (₹)',
+      timezone: 'Asia/Kolkata (IST)',
       strictRBAC: true,
       emailNotifications: true,
       aiAssistantEnabled: true,
     });
+  } else {
+    // Ensure default currency and timezone exist if missing
+    let modified = false;
+    if (!settings.defaultCurrency) {
+      settings.defaultCurrency = 'INR (₹) — Indian Rupee';
+      modified = true;
+    }
+    if (!settings.timezone) {
+      settings.timezone = 'Asia/Kolkata (IST, UTC+05:30)';
+      modified = true;
+    }
+    if (modified) {
+      await settings.save();
+    }
   }
 
   res.status(200).json({
@@ -25,6 +41,7 @@ export const getSettings = asyncHandler(async (_req: AuthRequest, res: Response)
       organizationName: settings.organizationName,
       organizationEmail: settings.organizationEmail,
       defaultCurrency: settings.defaultCurrency,
+      timezone: settings.timezone || 'Asia/Kolkata (IST)',
       strictRBAC: settings.strictRBAC,
       emailNotifications: settings.emailNotifications,
       aiAssistantEnabled: settings.aiAssistantEnabled,
@@ -53,6 +70,7 @@ export const updateSettings = asyncHandler(async (req: AuthRequest, res: Respons
       organizationName: settings.organizationName,
       organizationEmail: settings.organizationEmail,
       defaultCurrency: settings.defaultCurrency,
+      timezone: settings.timezone || 'Asia/Kolkata (IST)',
       strictRBAC: settings.strictRBAC,
       emailNotifications: settings.emailNotifications,
       aiAssistantEnabled: settings.aiAssistantEnabled,

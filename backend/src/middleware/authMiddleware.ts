@@ -32,12 +32,14 @@ export const protect = asyncHandler(
 
       const user = await User.findById(decoded.id).select('-password');
       if (!user) {
+        _res.cookie('token', '', { expires: new Date(0), httpOnly: true, path: '/' });
         return next(new ApiError('User belonging to this token no longer exists.', 401));
       }
 
       req.user = user;
       next();
     } catch (err) {
+      _res.cookie('token', '', { expires: new Date(0), httpOnly: true, path: '/' });
       return next(new ApiError('Not authorized to access this route. Invalid or expired token.', 401));
     }
   }

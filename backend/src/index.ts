@@ -20,6 +20,7 @@ import reportsRoutes from './routes/reportsRoutes';
 import settingsRoutes from './routes/settingsRoutes';
 import aiRoutes from './routes/aiRoutes';
 import invitationRoutes from './routes/invitationRoutes';
+import searchRoutes from './routes/searchRoutes';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -29,9 +30,21 @@ const PORT = process.env.PORT || 5000;
 
 // Security & Utility Middleware
 app.use(helmet());
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+].filter(Boolean) as string[];
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+        return callback(null, true);
+      }
+      return callback(new Error('CORS origin not allowed'));
+    },
     credentials: true,
   })
 );
@@ -39,13 +52,29 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Rate Limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: { error: 'Too many requests, please try again later.' },
+// Rate Limiting Configuration
+// 1. Dedicated rate limiter for sensitive authentication endpoints (brute-force protection)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: process.env.NODE_ENV === 'production' ? 20 : 500, // 500 attempts in development mode
+  message: { error: 'Too many authentication attempts. Please try again in 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
-app.use('/api', limiter);
+
+// 2. Global rate limiter for standard workspace API navigation & data operations
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // 1000 requests per 15 minutes per IP for normal SPA usage
+  message: { error: 'Too many requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/invitations/accept', authLimiter);
+app.use('/api', apiLimiter);
 
 // Routes
 app.use('/api/health', healthRoutes);
@@ -63,6 +92,7 @@ app.use('/api/reports', reportsRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/invitations', invitationRoutes);
+app.use('/api/search', searchRoutes);
 
 // Base route
 app.get('/', (_req, res) => {

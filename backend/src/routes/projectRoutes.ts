@@ -15,12 +15,12 @@ router.use(protect);
 router
   .route('/')
   .get(getProjects)
-  .post(authorize('Super Admin', 'Admin', 'Project Manager'), createProject);
+  .post(authorize('Super Admin', 'Admin', 'Project Manager', 'Project Coordinator'), createProject);
 
 router
   .route('/:id')
   .get(getProjectById)
-  .put(authorize('Super Admin', 'Admin', 'Project Manager', 'Team Lead'), updateProject)
+  .put(authorize('Super Admin', 'Admin', 'Project Manager', 'Team Lead', 'Project Coordinator'), updateProject)
   .delete(authorize('Super Admin', 'Admin'), deleteProject);
 
 export default router;

@@ -28,7 +28,8 @@ export const getDashboardData = asyncHandler(async (req: AuthRequest, res: Respo
     ActivityLogModel.find().sort({ createdAt: -1 }),
   ]);
 
-  const isExecutive = ['Super Admin', 'Admin', 'Project Manager', 'Team Lead'].includes(role);
+  // Executive Scope: Company-wide overview
+  const isExecutive = ['Super Admin', 'Admin', 'Project Manager'].includes(role);
 
   if (isExecutive) {
     const activeProjects = projects.filter((p: any) => p.status === 'In Progress');
@@ -94,56 +95,101 @@ export const getDashboardData = asyncHandler(async (req: AuthRequest, res: Respo
     return;
   }
 
-  // Contributor view: Developer, Designer, QA
+  // Non-Executive Scoping (Team Leads, Project Coordinators, Developers, Designers, QA)
   const userIdStr = user._id.toString();
+  const userEmailLower = (user.email || '').toLowerCase();
+  const userNameLower = (user.name || '').toLowerCase();
 
-  // Tasks assigned to this contributor
-  const userTasks = tasks.filter((t: any) => {
-    if (!t.assignee) return false;
-    return (
-      (t.assignee.id && t.assignee.id.toString() === userIdStr) ||
-      (t.assignee.email && t.assignee.email === user.email) ||
-      (t.assignee._id && t.assignee._id.toString() === userIdStr)
+  // Helper: check if a task is assigned to or created by the user
+  const isTaskAssignedToUser = (t: any): boolean => {
+    if (!t) return false;
+    const aId = t.assignee?.id ? t.assignee.id.toString() : (t.assignee?._id ? t.assignee._id.toString() : '');
+    const aEmail = t.assignee?.email ? t.assignee.email.toLowerCase() : '';
+    const isCreated = t.createdBy && t.createdBy.toString() === userIdStr;
+    return aId === userIdStr || (!!aEmail && aEmail === userEmailLower) || isCreated;
+  };
+
+  // Helper: check if user is manager, member, or assigned to a project
+  const isUserInProject = (p: any): boolean => {
+    if (!p) return false;
+    const pIdStr = p._id.toString();
+    const isManager = p.manager && (
+      (p.manager.id && p.manager.id.toString() === userIdStr) ||
+      (p.manager.email && p.manager.email.toLowerCase() === userEmailLower)
     );
-  });
-
-  const pendingTasks = userTasks.filter((t: any) => t.status !== 'Completed');
-  const completedTasks = userTasks.filter((t: any) => t.status === 'Completed');
-  const overdueTasks = userTasks.filter(
-    (t: any) => t.status !== 'Completed' && new Date(t.dueDate) < new Date()
-  );
-
-  // Projects relevant to this contributor
-  const userProjectIds = new Set<string>([
-    ...userTasks.map((t: any) => t.projectId).filter(Boolean),
-    ...(user.assignedProjects || []).map((id: any) => id.toString()),
-  ]);
-
-  const relevantProjects = projects.filter((p: any) => {
-    const pId = p._id.toString();
-    const isAssignedPrj = userProjectIds.has(pId);
-    const isMember = (p.members || []).some(
-      (m: any) =>
-        (m.id && m.id.toString() === userIdStr) ||
-        (m.email && m.email === user.email)
+    const isMember = (p.members || []).some((m: any) =>
+      (m.id && m.id.toString() === userIdStr) ||
+      (m.email && m.email.toLowerCase() === userEmailLower)
     );
-    return isAssignedPrj || isMember;
-  });
+    const isCreated = p.createdBy && p.createdBy.toString() === userIdStr;
+    const isAssigned = (user.assignedProjects || []).some((apId: any) => apId.toString() === pIdStr);
+    return isManager || isMember || isCreated || isAssigned;
+  };
 
-  const relevantPrjIdSet = new Set<string>(relevantProjects.map((p: any) => p._id.toString()));
+  const isTeamOrProjectScoped = ['Team Lead', 'Project Coordinator'].includes(role);
+
+  let relevantProjects: any[] = [];
+  let scopedTasks: any[] = [];
+
+  if (isTeamOrProjectScoped) {
+    relevantProjects = projects.filter(isUserInProject);
+    if (relevantProjects.length === 0) {
+      const assignedTaskPrjIds = new Set(tasks.filter(isTaskAssignedToUser).map((t: any) => t.projectId).filter(Boolean));
+      relevantProjects = projects.filter((p: any) => assignedTaskPrjIds.has(p._id.toString()));
+    }
+    const relevantPrjIdSet = new Set(relevantProjects.map((p: any) => p._id.toString()));
+    scopedTasks = tasks.filter((t: any) => (t.projectId && relevantPrjIdSet.has(t.projectId.toString())) || isTaskAssignedToUser(t));
+  } else {
+    // Individual Contributor (Developer, Designer, QA)
+    scopedTasks = tasks.filter(isTaskAssignedToUser);
+    const assignedPrjIds = new Set(scopedTasks.map((t: any) => t.projectId).filter(Boolean));
+    relevantProjects = projects.filter((p: any) => isUserInProject(p) || assignedPrjIds.has(p._id.toString()));
+  }
+
+  const relevantPrjIdSet = new Set(relevantProjects.map((p: any) => p._id.toString()));
+
   const activeProjects = relevantProjects.filter((p: any) => p.status === 'In Progress');
   const completedProjects = relevantProjects.filter((p: any) => p.status === 'Completed');
+
+  const pendingTasks = scopedTasks.filter((t: any) => t.status !== 'Completed');
+  const completedTasks = scopedTasks.filter((t: any) => t.status === 'Completed');
+  const overdueTasks = scopedTasks.filter(
+    (t: any) => t.status !== 'Completed' && new Date(t.dueDate) < new Date()
+  );
 
   const totalHealth = relevantProjects.reduce((acc: number, p: any) => acc + (p.healthScore || 85), 0);
   const overallHealth = relevantProjects.length > 0 ? Math.round(totalHealth / relevantProjects.length) : 85;
 
-  const relevantMilestones = milestones.filter(
-    (m: any) => m.projectId && relevantPrjIdSet.has(m.projectId.toString())
-  );
+  // Filter milestones belonging to relevant projects or owned by user
+  const relevantMilestones = milestones.filter((m: any) => {
+    const isPrjMatch = m.projectId && relevantPrjIdSet.has(m.projectId.toString());
+    const isOwnerMatch = m.owner && (
+      (m.owner.id && m.owner.id.toString() === userIdStr) ||
+      (m.owner.email && m.owner.email.toLowerCase() === userEmailLower)
+    );
+    return isPrjMatch || isOwnerMatch;
+  });
 
-  const userActivityLogs = activityLogs.filter(
-    (log: any) => log.userName === user.name
-  );
+  // Filter activity logs relevant to projects or user
+  const relevantActivityLogs = activityLogs.filter((log: any) => {
+    const isPrjMatch = log.projectId && relevantPrjIdSet.has(log.projectId.toString());
+    const isUserMatch = (log.userId && log.userId.toString() === userIdStr) ||
+      (log.userName && log.userName.toLowerCase() === userNameLower);
+    return isPrjMatch || isUserMatch;
+  });
+
+  // Calculate dynamic metrics
+  const distinctClientNames = new Set(relevantProjects.map((p: any) => p.clientName).filter(Boolean));
+  const distinctMemberIds = new Set<string>();
+  relevantProjects.forEach((p: any) => {
+    if (p.manager?.id) distinctMemberIds.add(p.manager.id.toString());
+    (p.members || []).forEach((m: any) => {
+      if (m.id) distinctMemberIds.add(m.id.toString());
+    });
+  });
+
+  const totalClientsCount = distinctClientNames.size || (relevantProjects.length > 0 ? 1 : 0);
+  const totalTeamMembersCount = distinctMemberIds.size || 1;
 
   res.status(200).json({
     success: true,
@@ -152,14 +198,14 @@ export const getDashboardData = asyncHandler(async (req: AuthRequest, res: Respo
         totalProjects: relevantProjects.length,
         activeProjectsCount: activeProjects.length,
         completedProjectsCount: completedProjects.length,
-        totalTasks: userTasks.length,
+        totalTasks: scopedTasks.length,
         pendingTasksCount: pendingTasks.length,
         completedTasksCount: completedTasks.length,
         overdueTasksCount: overdueTasks.length,
-        totalClientsCount: 0,
-        totalTeamMembersCount: 0,
+        totalClientsCount,
+        totalTeamMembersCount,
         overallHealth,
-        avgCapacity: user.workloadPercent || 50,
+        avgCapacity: user.workloadPercent || 65,
       },
       activeProjects: relevantProjects.slice(0, 5).map((p: any) => ({
         id: p._id.toString(),
@@ -167,7 +213,7 @@ export const getDashboardData = asyncHandler(async (req: AuthRequest, res: Respo
         clientName: p.clientName,
         status: p.status,
         description: p.description,
-        budget: 0,
+        budget: p.budget || 0,
         progress: p.progress,
         healthScore: p.healthScore || 85,
       })),
@@ -180,7 +226,7 @@ export const getDashboardData = asyncHandler(async (req: AuthRequest, res: Respo
         progress: m.progress,
         owner: m.owner ? { name: (m.owner as any).name || 'Team Lead' } : { name: 'Team Lead' },
       })),
-      recentActivity: (userActivityLogs.length > 0 ? userActivityLogs : activityLogs).slice(0, 6).map((log: any) => ({
+      recentActivity: (relevantActivityLogs.length > 0 ? relevantActivityLogs : activityLogs).slice(0, 6).map((log: any) => ({
         id: log._id.toString(),
         userName: log.userName,
         userAvatar: log.userAvatar,

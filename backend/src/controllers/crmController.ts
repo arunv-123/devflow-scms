@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../types/auth';
 import { CRMService } from '../services/crmService';
+import { NotificationService } from '../services/notificationService';
 import { asyncHandler } from '../utils/errors';
 
 // @desc    Get CRM summary overview statistics
@@ -139,6 +140,17 @@ export const getMeetingById = asyncHandler(async (req: AuthRequest, res: Respons
 // @access  Private
 export const createMeeting = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   const meeting = await CRMService.createMeeting(req.body, req.user?._id?.toString());
+  try {
+    await NotificationService.notifyMeetingEvent({
+      meeting,
+      eventType: 'created',
+      actorUserId: req.user?._id?.toString(),
+      actorName: req.user?.name,
+    });
+  } catch (e) {
+    console.error('Failed to notify meeting creation:', e);
+  }
+
   res.status(201).json({ success: true, meeting, message: 'Meeting scheduled successfully' });
 });
 
@@ -148,6 +160,19 @@ export const createMeeting = asyncHandler(async (req: AuthRequest, res: Response
 export const updateMeeting = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   const id = req.params.id as string;
   const meeting = await CRMService.updateMeeting(id, req.body);
+  const eventType = req.body.status === 'Cancelled' ? 'cancelled' : 'updated';
+
+  try {
+    await NotificationService.notifyMeetingEvent({
+      meeting,
+      eventType,
+      actorUserId: req.user?._id?.toString(),
+      actorName: req.user?.name,
+    });
+  } catch (e) {
+    console.error('Failed to notify meeting update:', e);
+  }
+
   res.status(200).json({ success: true, meeting, message: 'Meeting updated successfully' });
 });
 
@@ -156,6 +181,25 @@ export const updateMeeting = asyncHandler(async (req: AuthRequest, res: Response
 // @access  Private
 export const deleteMeeting = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   const id = req.params.id as string;
+  let existingMeeting: any = null;
+  try {
+    existingMeeting = await CRMService.getMeetingById(id);
+  } catch (_) {}
+
   await CRMService.deleteMeeting(id);
+
+  if (existingMeeting) {
+    try {
+      await NotificationService.notifyMeetingEvent({
+        meeting: existingMeeting,
+        eventType: 'cancelled',
+        actorUserId: req.user?._id?.toString(),
+        actorName: req.user?.name,
+      });
+    } catch (e) {
+      console.error('Failed to notify meeting deletion:', e);
+    }
+  }
+
   res.status(200).json({ success: true, message: 'Meeting deleted successfully' });
 });

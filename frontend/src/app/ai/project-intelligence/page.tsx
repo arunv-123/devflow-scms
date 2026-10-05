@@ -5,6 +5,7 @@ import { BrainCircuit, ShieldAlert, Sparkles, AlertTriangle, CheckCircle2, Refre
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { aiApi, OverallHealthSummary } from '@/services/aiApi';
+import { CountUpNumber } from '@/components/common/DataAnimation';
 
 export default function ProjectIntelligencePage() {
   const [summary, setSummary] = useState<OverallHealthSummary | null>(null);
@@ -86,7 +87,7 @@ export default function ProjectIntelligencePage() {
         ) : summary ? (
           <>
             {/* AI Health Summary Card */}
-            <div className="p-6 rounded-2xl bg-[#0b0f19] border border-purple-500/30 space-y-4">
+            <div className="p-6 rounded-2xl bg-[#0b0f19] border border-purple-500/30 space-y-4 animate-in fade-in zoom-in-95 duration-300">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-purple-300 uppercase tracking-wider">
                   Company Project Health Rating
@@ -100,19 +101,19 @@ export default function ProjectIntelligencePage() {
                       : 'bg-red-500/10 text-red-400 border-red-500/20'
                   }`}
                 >
-                  {summary.overallHealthScore}/100 ({summary.overallStatus})
+                  <CountUpNumber value={summary.overallHealthScore} />/100 ({summary.overallStatus})
                 </span>
               </div>
 
               <p className="text-xs text-slate-300 leading-relaxed">
-                AI analysis examined {summary.totalActiveProjects} active projects and {summary.totalTasksAnalyzed} sprint tasks across team capacity. Overall delivery probability is calculated at {summary.deliveryProbability}%.
+                AI analysis examined {summary.totalActiveProjects} active projects and {summary.totalTasksAnalyzed} sprint tasks across team capacity. Overall delivery probability is calculated at <CountUpNumber value={summary.deliveryProbability} suffix="%" />.
               </p>
             </div>
 
             {/* Project Health Score Breakdown */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {summary.projectHealthList.map((p) => (
-                <div key={p.projectId} className="p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-4">
+                <div key={p.projectId} className="p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-4 animate-in fade-in zoom-in-95 duration-300">
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-[10px] font-semibold text-slate-400 block uppercase">
@@ -130,7 +131,7 @@ export default function ProjectIntelligencePage() {
                             : 'text-red-400'
                         }`}
                       >
-                        {p.healthScore}/100
+                        <CountUpNumber value={p.healthScore} suffix="/100" />
                       </span>
                       <span className="text-[10px] text-slate-400 block">Risk: {p.riskLevel}</span>
                     </div>
@@ -140,7 +141,9 @@ export default function ProjectIntelligencePage() {
                   <div className="p-3 rounded-xl bg-[#060913] border border-slate-800/80 flex items-center justify-between text-xs text-slate-300">
                     <div>
                       <span className="text-slate-400 block text-[10px]">Completion</span>
-                      <span className="font-semibold text-white">{p.completionRate}%</span>
+                      <span className="font-semibold text-white">
+                        <CountUpNumber value={p.completionRate} suffix="%" />
+                      </span>
                     </div>
                     <div>
                       <span className="text-slate-400 block text-[10px]">Total Tasks</span>

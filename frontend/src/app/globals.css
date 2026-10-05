@@ -98,14 +98,48 @@
   --sidebar-accent-foreground: #f8fafc;
   --sidebar-border: #1e293b;
   --sidebar-ring: #38bdf8;
+  color-scheme: dark;
+}
+
+.light {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #0284c7;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #0ea5e9;
+  --accent-foreground: #0284c7;
+  --destructive: #ef4444;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #0284c7;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #0284c7;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f1f5f9;
+  --sidebar-accent-foreground: #0f172a;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #0284c7;
+  color-scheme: light;
 }
 
 @layer base {
   * {
     @apply border-border;
   }
+  html {
+    scroll-behavior: auto !important;
+  }
   body {
-    @apply bg-background text-foreground antialiased selection:bg-cyan-500/20 selection:text-cyan-400 font-sans;
+    @apply bg-background text-foreground antialiased selection:bg-cyan-500/20 selection:text-cyan-400 font-sans transition-colors duration-200;
   }
 }
 
@@ -115,6 +149,12 @@
   backdrop-filter: blur(16px);
   border: 1px solid #1e293b;
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+.light .stitch-card {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.05) !important;
 }
 
 .stitch-card-hover {
@@ -127,7 +167,7 @@
 }
 
 .cyan-gradient-text {
-  background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -138,6 +178,367 @@
 
 .blue-cta-gradient {
   background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+}
+
+/* ==========================================================================
+   DevFlow Landing Page — Scroll-Reveal & Micro-Animation System
+   ========================================================================== */
+
+.reveal-base {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-base.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-slide-left {
+  opacity: 0;
+  transform: translateX(-30px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-slide-left.is-revealed {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.reveal-slide-right {
+  opacity: 0;
+  transform: translateX(30px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-slide-right.is-revealed {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.96) translateY(12px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-scale.is-revealed {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+/* Stagger Delays */
+.delay-100 { transition-delay: 100ms; }
+.delay-150 { transition-delay: 150ms; }
+.delay-200 { transition-delay: 200ms; }
+.delay-250 { transition-delay: 250ms; }
+.delay-300 { transition-delay: 300ms; }
+.delay-400 { transition-delay: 400ms; }
+.delay-500 { transition-delay: 500ms; }
+
+/* Micro Card Hover Animation */
+.landing-card-hover {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.landing-card-hover:hover {
+  transform: translateY(-3px);
+}
+
+/* Hero Section Background GPU-Accelerated Multi-Directional Diagonal Drift */
+@keyframes heroDiagonalShift {
+  0% {
+    transform: translate3d(-72%, -20%, 0);
+  }
+  16.6% {
+    transform: translate3d(-50%, 0, 0);
+  }
+  33.3% {
+    transform: translate3d(-28%, 20%, 0);
+  }
+  50% {
+    transform: translate3d(-50%, 0, 0);
+  }
+  66.6% {
+    transform: translate3d(-28%, -20%, 0);
+  }
+  83.3% {
+    transform: translate3d(-72%, 20%, 0);
+  }
+  100% {
+    transform: translate3d(-72%, -20%, 0);
+  }
+}
+
+.hero-diagonal-gradient {
+  background: radial-gradient(
+    ellipse 90% 70% at 50% 30%,
+    rgba(14, 165, 233, 0.20) 0%,
+    rgba(56, 189, 248, 0.12) 30%,
+    rgba(2, 132, 199, 0.05) 55%,
+    transparent 75%
+  );
+  animation: heroDiagonalShift 25s ease-in-out infinite;
+  will-change: transform;
+}
+
+html.light .hero-diagonal-gradient {
+  background: radial-gradient(
+    ellipse 90% 70% at 50% 30%,
+    rgba(2, 132, 199, 0.18) 0%,
+    rgba(14, 165, 233, 0.10) 30%,
+    rgba(56, 189, 248, 0.04) 55%,
+    transparent 75%
+  );
+  opacity: 0.85;
+}
+
+/* ==========================================================================
+   DevFlow Application — Enterprise Micro-Interaction & Animation System
+   ========================================================================== */
+
+/* 1. Global Page & Section Fade-Up Reveals */
+@keyframes devflowFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.devflow-page-enter {
+  animation: devflowFadeUp 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.devflow-section-enter {
+  animation: devflowFadeUp 350ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 2. Interactive Card Hover Lift */
+.devflow-card-interactive {
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 200ms ease,
+              box-shadow 200ms ease,
+              background-color 200ms ease;
+  will-change: transform;
+}
+
+.devflow-card-interactive:hover {
+  transform: translateY(-2px);
+}
+
+/* 3. Modal / Dialog Entrance */
+@keyframes devflowModalEnter {
+  0% {
+    opacity: 0;
+    transform: scale(0.98) translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.devflow-modal-enter {
+  animation: devflowModalEnter 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Backdrop Fade */
+@keyframes devflowBackdropFade {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.devflow-backdrop-enter {
+  animation: devflowBackdropFade 180ms ease-out forwards;
+}
+
+/* ==========================================================================
+   Global DevFlow Modal & Dialog Architecture Engine
+   Root-level fix for modal height auto-fit, scrolling overflow, and pinned footers app-wide.
+   ========================================================================== */
+
+/* 1. Modal Backdrop Overlay Container (Centered, view-port safe) */
+div[class*="fixed"][class*="inset-0"][class*="z-50"] {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 1rem !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+}
+
+/* 2. Modal Dialog Window Card (Auto-height when short, max-h constrained when tall) */
+.devflow-modal-enter,
+div[class*="fixed"][class*="inset-0"][class*="z-50"] > div[class*="relative"][class*="max-h-"] {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  max-height: calc(100vh - 2rem) !important;
+  max-height: 90vh !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin-top: auto !important;
+  margin-bottom: auto !important;
+  box-sizing: border-box !important;
+}
+
+/* 3. Modal Form Container Layout (Flex column with shrink/scroll support) */
+div[class*="fixed"][class*="inset-0"][class*="z-50"] > div[class*="relative"][class*="max-h-"] > form {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* 4. Fixed Header & Banners at Top of Modal (Never shrink or hide) */
+div[class*="fixed"][class*="inset-0"][class*="z-50"] > div[class*="relative"][class*="max-h-"] > div:first-child,
+div[class*="fixed"][class*="inset-0"][class*="z-50"] > div[class*="relative"][class*="max-h-"] > form > div:first-child:not([class*="overflow-y-auto"]) {
+  flex-shrink: 0 !important;
+}
+
+/* 5. Scrollable Content Body Area inside Modal Card */
+div[class*="fixed"][class*="inset-0"][class*="z-50"] > div[class*="relative"][class*="max-h-"] [class*="overflow-y-auto"] {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overscroll-behavior: contain !important;
+}
+
+/* 6. Footer & Action Buttons (Pinned at bottom, 100% visible, never clipped) */
+div[class*="fixed"][class*="inset-0"][class*="z-50"] > div[class*="relative"][class*="max-h-"] [class*="border-t"][class*="shrink-0"],
+div[class*="fixed"][class*="inset-0"][class*="z-50"] > div[class*="relative"][class*="max-h-"] form > div:last-child {
+  flex-shrink: 0 !important;
+  position: sticky !important;
+  bottom: 0 !important;
+  background-color: #0b0f19 !important;
+  z-index: 10 !important;
+}
+
+html.light div[class*="fixed"][class*="inset-0"][class*="z-50"] > div[class*="relative"][class*="max-h-"] [class*="border-t"][class*="shrink-0"],
+html.light div[class*="fixed"][class*="inset-0"][class*="z-50"] > div[class*="relative"][class*="max-h-"] form > div:last-child {
+  background-color: #ffffff !important;
+}
+
+/* 4. Dropdown Entrance */
+@keyframes devflowDropdownEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.devflow-dropdown-enter {
+  animation: devflowDropdownEnter 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top;
+}
+
+/* 5. Toasts & Notifications */
+@keyframes devflowToastSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.devflow-toast-enter {
+  animation: devflowToastSlide 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Badge Scale Pop */
+@keyframes devflowBadgePop {
+  0% { transform: scale(0.85); opacity: 0.7; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.devflow-badge-pop {
+  animation: devflowBadgePop 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 6. AI Message Fade & Slide */
+@keyframes devflowAiMessage {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.devflow-ai-message {
+  animation: devflowAiMessage 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* AI Thinking Dots Pulse */
+@keyframes devflowDotPulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+.devflow-dot-1 { animation: devflowDotPulse 1.2s infinite ease-in-out; }
+.devflow-dot-2 { animation: devflowDotPulse 1.2s infinite ease-in-out 0.2s; }
+.devflow-dot-3 { animation: devflowDotPulse 1.2s infinite ease-in-out 0.4s; }
+
+/* 7. Stagger Delays for Grid / List Items */
+.devflow-stagger-1 { animation-delay: 40ms; }
+.devflow-stagger-2 { animation-delay: 80ms; }
+.devflow-stagger-3 { animation-delay: 120ms; }
+.devflow-stagger-4 { animation-delay: 160ms; }
+
+/* Reduced Motion Accessibility Override */
+@media (prefers-reduced-motion: reduce) {
+  .devflow-page-enter,
+  .devflow-section-enter,
+  .devflow-modal-enter,
+  .devflow-backdrop-enter,
+  .devflow-dropdown-enter,
+  .devflow-toast-enter,
+  .devflow-badge-pop,
+  .devflow-ai-message,
+  .reveal-base,
+  .reveal-slide-left,
+  .reveal-slide-right,
+  .reveal-scale,
+  .landing-card-hover,
+  .devflow-card-interactive {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: opacity 0.1s ease !important;
+    animation: none !important;
+  }
+  .hero-diagonal-gradient,
+  .devflow-dot-1,
+  .devflow-dot-2,
+  .devflow-dot-3 {
+    animation: none !important;
+  }
 }
 
 /* Custom Scrollbar */
@@ -154,4 +555,997 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #334155;
+}
+
+.light ::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+.light ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ==========================================================================
+   Comprehensive Professional Light Theme Overrides (html.light)
+   ========================================================================== */
+
+/* Main Containers & Backgrounds */
+html.light body,
+html.light main {
+  background-color: #f4f6f9 !important;
+  color: #0f172a !important;
+}
+
+html.light header {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03) !important;
+}
+
+html.light header nav {
+  background-color: transparent !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+html.light header nav a {
+  color: #334155 !important;
+}
+
+html.light header nav a:hover {
+  color: #0284c7 !important;
+}
+
+html.light aside nav {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03) !important;
+}
+
+html.light aside {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Sidebar navigation styling */
+html.light aside [class*="text-xs"][class*="tracking-wider"],
+html.light aside [class*="uppercase"] {
+  color: #64748b !important;
+  font-weight: 600 !important;
+}
+
+/* Light Theme Sidebar Navigation Hover Text: Make unselected navigation text white (#ffffff) on hover */
+html.light aside a:not([class*="bg-sky-500"]):hover span.truncate,
+html.light aside button:not([class*="bg-sky-500"]):hover span.truncate {
+  color: #ffffff !important;
+}
+
+/* Active sidebar item hover text in light mode: preserve active blue (#0284c7) text color */
+html.light aside a[class*="bg-sky-500"]:hover span.truncate,
+html.light aside button[class*="bg-sky-500"]:hover span.truncate {
+  color: #0284c7 !important;
+}
+
+/* Light Theme Sidebar Inactive Count Badges */
+html.light aside a:not([class*="bg-sky-500"]) span[class*="bg-slate-800"],
+html.light aside button:not([class*="bg-sky-500"]) span[class*="bg-slate-800"] {
+  background-color: #f0f9ff !important;
+  color: #0284c7 !important;
+  border: 1px solid #bae6fd !important;
+  font-weight: 700 !important;
+}
+
+/* Header & Search Bar */
+html.light header input,
+html.light nav input {
+  background-color: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+html.light header input::placeholder,
+html.light nav input::placeholder {
+  color: #64748b !important;
+}
+
+/* Generic Dark Surface Replacements for Light Mode */
+html.light [class*="bg-[#060913]"] {
+  background-color: #f4f6f9 !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light [class*="bg-[#0b0f19]"] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light .bg-slate-950,
+html.light .bg-slate-900 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light .bg-slate-900\/50,
+html.light .bg-slate-900\/80,
+html.light .bg-slate-950\/50 {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light .bg-slate-800 {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light .bg-slate-800\/50,
+html.light .bg-slate-800\/80 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Kanban Columns & Containers */
+html.light [class*="min-w-"][class*="rounded"],
+html.light [class*="p-4"][class*="rounded-2xl"][class*="bg-[#0b0f19]"] {
+  background-color: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+/* Kanban Column Header Count Badges */
+html.light [class*="bg-slate-900"][class*="text-slate-300"] {
+  background-color: #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+/* Cards & Surfaces */
+html.light .stitch-card,
+html.light [class*="p-4"][class*="rounded-xl"][class*="bg-[#060913]"] {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04) !important;
+}
+
+html.light .stitch-card-hover:hover,
+html.light [class*="p-4"][class*="rounded-xl"][class*="bg-[#060913]"]:hover {
+  border-color: #0284c7 !important;
+  box-shadow: 0 4px 12px -2px rgba(2, 132, 199, 0.12) !important;
+}
+
+/* View Mode Switcher Buttons (Grid/List) */
+html.light .bg-\[\#060913\].p-1.rounded-lg,
+html.light [class*="bg-[#060913]"][class*="p-1"] {
+  background-color: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+html.light button.bg-slate-800.text-sky-400,
+html.light button[class*="bg-slate-800"][class*="text-sky-400"] {
+  background-color: #ffffff !important;
+  color: #0284c7 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Text Hierarchy */
+html.light h1, html.light h2, html.light h3, html.light h4, html.light h5, html.light h6 {
+  color: #0f172a !important;
+}
+
+html.light .text-white {
+  color: #0f172a !important;
+}
+
+html.light .text-slate-100,
+html.light .text-slate-200 {
+  color: #1e293b !important;
+}
+
+html.light .text-slate-300 {
+  color: #334155 !important;
+}
+
+html.light .text-slate-400 {
+  color: #475569 !important;
+}
+
+html.light .text-slate-500 {
+  color: #64748b !important;
+}
+
+html.light .text-slate-600 {
+  color: #94a3b8 !important;
+}
+
+/* Hover States for Interactive Icons */
+html.light .hover\:text-sky-400:hover {
+  color: #0284c7 !important;
+}
+
+html.light .hover\:text-rose-400:hover {
+  color: #be123c !important;
+}
+
+/* Preserve White Text for Primary Buttons & Solid Badges */
+html.light button.bg-sky-600,
+html.light button.bg-sky-500,
+html.light button.bg-cyan-600,
+html.light button.bg-blue-600,
+html.light button.bg-emerald-600,
+html.light button.bg-red-600,
+html.light button.bg-rose-600,
+html.light button.bg-purple-600,
+html.light button.bg-indigo-600,
+html.light button.bg-primary,
+html.light a.bg-sky-600,
+html.light a.bg-sky-500,
+html.light .bg-sky-600,
+html.light .bg-sky-600 *,
+html.light .bg-sky-500,
+html.light .bg-sky-500 *,
+html.light .bg-emerald-600,
+html.light .bg-emerald-600 *,
+html.light .bg-emerald-500,
+html.light .bg-emerald-500 *,
+html.light .bg-rose-600,
+html.light .bg-rose-600 *,
+html.light .bg-red-600,
+html.light .bg-red-600 *,
+html.light .bg-indigo-600,
+html.light .bg-indigo-600 *,
+html.light .bg-purple-600,
+html.light .bg-purple-600 * {
+  color: #ffffff !important;
+}
+
+/* Form Controls & Inputs */
+html.light input[type="text"],
+html.light input[type="email"],
+html.light input[type="number"],
+html.light input[type="date"],
+html.light input[type="password"],
+html.light textarea,
+html.light select {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #64748b !important;
+}
+
+html.light input:focus,
+html.light textarea:focus,
+html.light select:focus {
+  border-color: #0284c7 !important;
+  ring-color: #0284c7 !important;
+}
+
+/* Borders & Dividers */
+html.light .border-slate-800,
+html.light .border-slate-700,
+html.light .border-slate-800\/80,
+html.light .border-slate-700\/80,
+html.light .border-slate-800\/60 {
+  border-color: #e2e8f0 !important;
+}
+
+html.light .divide-slate-800 > :not([hidden]) ~ :not([hidden]),
+html.light .divide-slate-700 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #e2e8f0 !important;
+}
+
+/* Modals, Popovers, Tooltips & Dropdowns */
+html.light [class*="fixed"] [class*="bg-[#0b0f19]"],
+html.light [class*="absolute"] [class*="bg-[#0b0f19]"],
+html.light [class*="fixed"] [class*="bg-slate-900"],
+html.light [class*="absolute"] [class*="bg-slate-900"],
+html.light [class*="fixed"][class*="rounded-lg"][class*="bg-[#0b0f19]"] {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Soft Badges & Highlights */
+html.light [class*="bg-sky-500/10"],
+html.light [class*="bg-sky-500/20"],
+html.light [class*="bg-cyan-500/10"] {
+  background-color: #f0f9ff !important;
+  color: #0369a1 !important;
+  border-color: #bae6fd !important;
+}
+
+html.light [class*="bg-emerald-500/10"],
+html.light [class*="bg-emerald-500/20"] {
+  background-color: #ecfdf5 !important;
+  color: #047857 !important;
+  border-color: #a7f3d0 !important;
+}
+
+html.light [class*="bg-amber-500/10"],
+html.light [class*="bg-amber-500/20"],
+html.light [class*="bg-amber-400/10"] {
+  background-color: #fffbeb !important;
+  color: #b45309 !important;
+  border-color: #fde68a !important;
+}
+
+html.light [class*="bg-rose-500/10"],
+html.light [class*="bg-rose-500/20"],
+html.light [class*="bg-red-500/10"] {
+  background-color: #fff1f2 !important;
+  color: #be123c !important;
+  border-color: #fecdd3 !important;
+}
+
+html.light [class*="bg-purple-500/10"],
+html.light [class*="bg-purple-500/20"] {
+  background-color: #faf5ff !important;
+  color: #7e22ce !important;
+  border-color: #e9d5ff !important;
+}
+
+html.light [class*="bg-indigo-500/10"],
+html.light [class*="bg-indigo-500/20"] {
+  background-color: #eef2ff !important;
+  color: #4338ca !important;
+  border-color: #c7d2fe !important;
+}
+
+/* Avatar Fallback Badge in Light Mode */
+html.light [class*="bg-[#0b0f19]"][class*="border-slate-700"] {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #0284c7 !important;
+}
+
+/* Theme Switcher Controls — Light Mode Hover Effects */
+html.light .light-theme-switcher-bg {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light .light-active-theme-btn {
+  background-color: #ffffff !important;
+  color: #0284c7 !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.2s ease !important;
+}
+
+html.light .light-active-theme-btn:hover {
+  background-color: #ffffff !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25) !important;
+  transform: translateY(-1px) !important;
+}
+
+html.light .light-theme-btn-hover {
+  color: #475569 !important;
+  transition: all 0.2s ease !important;
+}
+
+html.light .light-theme-btn-hover:hover {
+  color: #0284c7 !important;
+  background-color: #e0f2fe !important;
+  border-color: #bae6fd !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.15) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Navbar Theme Switcher Button Hover Effect (Light Mode ONLY) */
+html.light .navbar-theme-btn {
+  background-color: transparent !important;
+  border-color: #cbd5e1 !important;
+  color: #0284c7 !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
+}
+
+html.light .navbar-theme-btn:hover {
+  background-color: rgba(14, 165, 233, 0.12) !important;
+  border-color: rgba(14, 165, 233, 0.4) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+html.light .navbar-theme-btn:hover svg {
+  color: #0284c7 !important;
+}
+
+/* Sidebar Theme Toggle Pill Hover Effect (Light Mode ONLY) */
+html.light .sidebar-theme-toggle-pill {
+  background-color: #e0f2fe !important;
+  border-color: #38bdf8 !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+html.light .sidebar-theme-toggle-pill:hover {
+  background-color: #bae6fd !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 12px 2px rgba(2, 132, 199, 0.35) !important;
+}
+
+/* AI Components & Smart Team Matcher Light Mode Styling */
+html.light [class*="bg-gradient-to-r"][class*="from-purple-950"] {
+  background: linear-gradient(135deg, #f5f3ff 0%, #f0f9ff 100%) !important;
+  border-color: #d8b4fe !important;
+  box-shadow: 0 4px 12px -2px rgba(147, 51, 234, 0.08) !important;
+}
+
+html.light [class*="bg-gradient-to-r"][class*="from-purple-950"] h2,
+html.light [class*="bg-gradient-to-r"][class*="from-purple-950"] [class*="text-purple-200"] {
+  color: #581c87 !important;
+}
+
+html.light [class*="bg-purple-950/25"],
+html.light [class*="bg-purple-950/60"],
+html.light [class*="bg-purple-950/40"],
+html.light [class*="bg-purple-900/30"] {
+  background-color: #faf5ff !important;
+  border-color: #e9d5ff !important;
+}
+
+html.light [class*="text-purple-300"] {
+  color: #7e22ce !important;
+}
+
+html.light [class*="text-purple-200"] {
+  color: #6b21a8 !important;
+}
+
+html.light [class*="w-[340px]"][class*="bg-[#060913]"],
+html.light [class*="w-[340px]"][class*="bg-gradient-to-b"] {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light [class*="w-[340px]"][class*="border-emerald-500"] {
+  border-color: #10b981 !important;
+  background: #f0fdf4 !important;
+}
+
+/* Smart Team Matcher Role Carousel Container & Controls in Light Mode */
+html.light [class*="space-y-4"][class*="bg-[#0b0f19]"] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light [class*="space-y-4"][class*="bg-[#0b0f19]"] h2 {
+  color: #0f172a !important;
+}
+
+html.light [class*="space-y-4"][class*="bg-[#0b0f19]"] .border-b {
+  border-color: #f1f5f9 !important;
+}
+
+/* Candidate Count Badge in Light Mode */
+html.light [class*="space-y-4"][class*="bg-[#0b0f19]"] span[class*="bg-slate-900"] {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #334155 !important;
+}
+
+/* Smart Team Matcher Slide Arrow Navigation Buttons in Light Mode */
+html.light .matcher-arrow-btn {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #475569 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+html.light .matcher-arrow-btn:hover {
+  background-color: #0284c7 !important;
+  border-color: #0284c7 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px -2px rgba(2, 132, 199, 0.35) !important;
+}
+
+html.light .matcher-arrow-btn svg {
+  color: #475569 !important;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease !important;
+}
+
+html.light .matcher-arrow-btn:hover svg {
+  color: #ffffff !important;
+}
+
+/* Navbar Notification Bell Button in Light Mode */
+html.light .navbar-notif-btn {
+  color: #475569 !important;
+  background-color: transparent !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+html.light .navbar-notif-btn:hover {
+  background-color: #475569 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(71, 85, 105, 0.25) !important;
+}
+
+html.light .navbar-notif-btn:hover .navbar-notif-icon,
+html.light .navbar-notif-btn:hover svg.navbar-notif-icon {
+  color: #ffffff !important;
+}
+
+/* Navbar Notification Badge in Light Mode strictly scoped */
+html.light span.navbar-notif-count,
+html.light .navbar-notif-btn span.navbar-notif-count,
+html.light .navbar-notif-btn:hover span.navbar-notif-count,
+html.light button.navbar-notif-btn span.navbar-notif-count {
+  background-color: #0ea5e9 !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.4) !important;
+  z-index: 10 !important;
+}
+
+html.light button.navbar-notif-btn:hover span.navbar-notif-count {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.6) !important;
+}
+
+/* Tables & Lists in Light Mode */
+html.light table,
+html.light tr {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light th {
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light td {
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+html.light tbody tr:hover {
+  background-color: #f8fafc !important;
+}
+
+/* Progress Bar Tracks in Light Mode */
+html.light [class*="bg-slate-900"][class*="h-1"],
+html.light [class*="bg-slate-900"][class*="h-2"],
+html.light [class*="bg-slate-900"][class*="h-2.5"] {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* ==========================================================================
+   AI Project Copilot Assistant Page — Light Theme Refinements
+   ========================================================================== */
+
+/* Page header border */
+html.light .max-w-4xl .border-b.border-slate-800 {
+  border-color: #e2e8f0 !important;
+}
+
+/* AI icon container: keep purple identity */
+html.light [class*="bg-purple-500/10"] {
+  background-color: #faf5ff !important;
+  border-color: #d8b4fe !important;
+}
+
+/* AI message bubble: subtle blue-tinted white surface */
+html.light [class*="rounded-tl-xs"][class*="bg-[#060913]"],
+html.light .rounded-2xl.rounded-tl-xs {
+  background-color: #f0f7ff !important;
+  border-color: #bfdbfe !important;
+  color: #0f172a !important;
+}
+
+/* Chat messages container panel */
+html.light [class*="flex-1"][class*="overflow-y-auto"][class*="rounded-2xl"][class*="bg-[#0b0f19]"] {
+  background-color: #ffffff !important;
+  border: 1px solid #bfdbfe !important;
+  box-shadow: 0 0 0 1px rgba(2, 132, 199, 0.05), 0 4px 16px -4px rgba(2, 132, 199, 0.08) !important;
+}
+
+/* Loading indicator (AI thinking) */
+html.light [class*="animate-pulse"][class*="text-purple-300"] {
+  color: #7e22ce !important;
+}
+html.light [class*="animate-pulse"] [class*="bg-[#060913]"] {
+  background-color: #f0f7ff !important;
+  border-color: #bfdbfe !important;
+}
+
+/* Chat input field */
+html.light form [class*="bg-[#0b0f19]"][class*="h-12"] {
+  background-color: #ffffff !important;
+  border-color: #bfdbfe !important;
+  color: #0f172a !important;
+}
+html.light form [class*="bg-[#0b0f19]"][class*="h-12"]:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.1) !important;
+}
+
+/* Quick Action Suggestion Chips — base state */
+html.light [class*="bg-purple-950\/40"] {
+  background-color: #faf5ff !important;
+  border-color: #d8b4fe !important;
+  color: #7e22ce !important;
+  transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease !important;
+}
+html.light [class*="bg-sky-950\/40"] {
+  background-color: #f0f9ff !important;
+  border-color: #bae6fd !important;
+  color: #0369a1 !important;
+  transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease !important;
+}
+html.light [class*="bg-emerald-950\/40"] {
+  background-color: #ecfdf5 !important;
+  border-color: #6ee7b7 !important;
+  color: #047857 !important;
+  transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease !important;
+}
+html.light [class*="bg-amber-950\/40"] {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #b45309 !important;
+  transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease !important;
+}
+
+/* Quick Action Suggestion Chips — hover micro-animations */
+html.light [class*="bg-purple-950\/40"]:hover {
+  background-color: #f3e8ff !important;
+  border-color: #c084fc !important;
+  color: #6b21a8 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 14px -3px rgba(147, 51, 234, 0.22) !important;
+}
+html.light [class*="bg-sky-950\/40"]:hover {
+  background-color: #e0f2fe !important;
+  border-color: #7dd3fc !important;
+  color: #0284c7 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 14px -3px rgba(2, 132, 199, 0.22) !important;
+}
+html.light [class*="bg-emerald-950\/40"]:hover {
+  background-color: #d1fae5 !important;
+  border-color: #34d399 !important;
+  color: #065f46 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 14px -3px rgba(16, 185, 129, 0.22) !important;
+}
+html.light [class*="bg-amber-950\/40"]:hover {
+  background-color: #fef3c7 !important;
+  border-color: #fbbf24 !important;
+  color: #92400e !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 14px -3px rgba(245, 158, 11, 0.22) !important;
+}
+
+/* AI Subtask Panel inside message bubble */
+html.light [class*="bg-slate-950/70"][class*="border-sky-500/30"] {
+  background-color: #f0f9ff !important;
+  border-color: #bae6fd !important;
+}
+html.light [class*="bg-slate-950/70"][class*="border-sky-500/30"] .border-b.border-slate-800 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Tech Stack panel inside message bubble */
+html.light [class*="bg-slate-950/70"][class*="border-emerald-500/30"] {
+  background-color: #ecfdf5 !important;
+  border-color: #6ee7b7 !important;
+}
+
+/* Existing tech stack sub-panel */
+html.light [class*="bg-slate-900/80"][class*="border-slate-800"] {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* AI Recommended Stack sub-panel */
+html.light [class*="bg-emerald-950/20"][class*="border-emerald-500/20"] {
+  background-color: #f0fdf4 !important;
+  border-color: #6ee7b7 !important;
+}
+
+/* Tech stack inner diff panel */
+html.light [class*="bg-[#060913]"][class*="border-slate-800"][class*="rounded-lg"] {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Tech stack badge chips inside panels */
+html.light [class*="bg-slate-800"][class*="text-slate-300"][class*="border-slate-700"] {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+  border-color: #cbd5e1 !important;
+}
+html.light [class*="bg-emerald-950/60"][class*="text-emerald-300"][class*="border-emerald-500/40"] {
+  background-color: #d1fae5 !important;
+  color: #065f46 !important;
+  border-color: #6ee7b7 !important;
+}
+
+/* AI Executive Summary panel */
+html.light [class*="bg-purple-950/30"][class*="border-purple-500/20"] {
+  background-color: #faf5ff !important;
+  border-color: #ddd6fe !important;
+}
+html.light [class*="bg-purple-950/30"] .text-purple-200 {
+  color: #6b21a8 !important;
+}
+html.light [class*="bg-purple-950/30"] .text-slate-300 {
+  color: #374151 !important;
+}
+
+/* Milestone & Task generated item panels in AI messages */
+html.light [class*="bg-sky-950/20"],
+html.light [class*="bg-sky-500/5"] {
+  background-color: #f0f9ff !important;
+  border-color: #bae6fd !important;
+}
+
+/* Milestone/Task header borders inside AI bubbles */
+html.light [class*="border-t"][class*="border-slate-800/80"] {
+  border-color: #e2e8f0 !important;
+}
+
+/* AI Project Copilot Modals (Edit Milestone, Task, Tech Stack) */
+html.light [class*="fixed"][class*="inset-0"][class*="bg-black/75"] [class*="rounded-2xl"] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.12) !important;
+}
+html.light [class*="fixed"][class*="inset-0"][class*="bg-black/75"] [class*="rounded-2xl"] label {
+  color: #475569 !important;
+}
+html.light [class*="fixed"][class*="inset-0"][class*="bg-black/75"] [class*="rounded-2xl"] .border-b.border-slate-800 {
+  border-color: #e2e8f0 !important;
+}
+html.light [class*="fixed"][class*="inset-0"][class*="bg-black/75"] [class*="rounded-2xl"] .border-t.border-slate-800 {
+  border-color: #e2e8f0 !important;
+}
+html.light [class*="fixed"][class*="inset-0"][class*="bg-black/75"] [class*="bg-slate-900/60"] {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+html.light [class*="fixed"][class*="inset-0"][class*="bg-black/75"] [class*="bg-[#060913]"][class*="rounded-xl"] {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+html.light [class*="fixed"][class*="inset-0"][class*="bg-black/75"] [class*="bg-emerald-950/70"] {
+  background-color: #d1fae5 !important;
+  border-color: #6ee7b7 !important;
+  color: #065f46 !important;
+}
+
+/* ==========================================================================
+   DevFlow Landing Page — Light Theme Styling System
+   ========================================================================== */
+
+/* Overall Landing Page Background & Container */
+html.light div.min-h-screen.bg-\[\#060913\] {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Background Glow Blurs in Light Theme (subtle pastel glows) */
+html.light .bg-gradient-to-b.from-sky-500\/15 {
+  background: linear-gradient(180deg, rgba(14, 165, 233, 0.08) 0%, rgba(37, 99, 235, 0.04) 60%, transparent 100%) !important;
+}
+
+/* Landing Page Header Navigation Bar */
+html.light header.bg-\[\#060913\]\/90 {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light header nav a {
+  color: #475569 !important;
+}
+
+html.light header nav a:hover {
+  color: #0284c7 !important;
+}
+
+html.light header button[class*="variant-ghost"],
+html.light header button[class*="text-slate-300"] {
+  color: #475569 !important;
+}
+
+html.light header button[class*="variant-ghost"]:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+/* Hero Section Badge */
+html.light .inline-flex.bg-slate-900\/90 {
+  background-color: #f0f9ff !important;
+  border-color: #bae6fd !important;
+  color: #0369a1 !important;
+}
+
+html.light .inline-flex.bg-slate-900\/90 span[class*="bg-sky-500/20"] {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+/* Hero Headings & Typography */
+html.light h1.text-white,
+html.light h1[class*="text-white"],
+html.light h2.text-white,
+html.light h3.text-white {
+  color: #0f172a !important;
+}
+
+html.light p.text-slate-400 {
+  color: #475569 !important;
+}
+
+/* Hero Secondary CTA Button */
+html.light a button[class*="bg-slate-900"] {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+html.light a button[class*="bg-slate-900"]:hover {
+  background-color: #f8fafc !important;
+  border-color: #0284c7 !important;
+  color: #0284c7 !important;
+}
+
+/* Dashboard Mockup Outer Container */
+html.light div.rounded-2xl.bg-\[\#0b0f19\] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03) !important;
+}
+
+/* Mockup Header & Inner Card Surfaces */
+html.light div.bg-\[\#0e1424\],
+html.light div[class*="bg-[#0e1424]"],
+html.light div.bg-\[\#0b0f19\] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Text elements inside dashboard mockup */
+html.light div.text-slate-300,
+html.light span.text-slate-300,
+html.light p.text-slate-300 {
+  color: #334155 !important;
+}
+
+html.light div.text-slate-400,
+html.light span.text-slate-400 {
+  color: #475569 !important;
+}
+
+html.light div.text-slate-500,
+html.light span.text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Dashboard Mockup Progress Bar Tracks */
+html.light div.bg-slate-900 {
+  background-color: #e2e8f0 !important;
+}
+
+/* Divider Borders across Landing Page Sections */
+html.light section.border-t {
+  border-color: #e2e8f0 !important;
+}
+
+/* Requirement Analyzer AI Component in Light Theme */
+html.light div.bg-\[\#060913\] {
+  background-color: #f0f9ff !important;
+  border-color: #bae6fd !important;
+}
+
+/* Workflow Step Cards in Light Theme */
+html.light .grid div.bg-\[\#0b0f19\] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.04) !important;
+}
+
+html.light .grid div.bg-\[\#0b0f19\]:hover {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 8px 24px -4px rgba(14, 165, 233, 0.15) !important;
+}
+
+/* Final Blue/Cyan CTA Section */
+html.light div.blue-cta-gradient {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 16px 36px -4px rgba(2, 132, 199, 0.35) !important;
+}
+
+html.light div.blue-cta-gradient h2,
+html.light div.blue-cta-gradient p {
+  color: #ffffff !important;
+}
+
+html.light div.blue-cta-gradient button[class*="bg-slate-950"] {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  border-color: #38bdf8 !important;
+}
+
+html.light div.blue-cta-gradient button[class*="bg-slate-950"]:hover {
+  background-color: #0369a1 !important;
+  box-shadow: 0 4px 16px rgba(2, 132, 199, 0.4) !important;
+}
+
+html.light div.blue-cta-gradient button[class*="bg-slate-950"] svg {
+  color: #ffffff !important;
+}
+
+/* Landing Page Footer in Light Theme */
+html.light footer.bg-\[\#060913\],
+html.light footer.border-t {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light footer h4.text-white {
+  color: #0f172a !important;
+}
+
+html.light footer a {
+  color: #64748b !important;
+}
+
+html.light footer a:hover {
+  color: #0284c7 !important;
+}
+
+html.light footer div.border-t {
+  border-color: #f1f5f9 !important;
+}
+
+/* SVG Donut Track & Graphic colors in Light Mode */
+html.light svg path.text-slate-800 {
+  color: #e2e8f0 !important;
+  stroke: #e2e8f0 !important;
+}
+
+/* Team Matcher Member Avatar circle in Light Theme */
+html.light .space-y-3 .rounded-full.bg-slate-800 {
+  background-color: #e0f2fe !important;
+  color: #0284c7 !important;
+}
+
+/* Workflow Step Numbers in Light Theme */
+html.light .grid div.bg-\[\#0b0f19\] .text-slate-500 {
+  color: #0284c7 !important;
+  font-weight: 700 !important;
+}
+
+/* Final CTA secondary outline button in Light Theme */
+html.light div.blue-cta-gradient button[class*="border-white"] {
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #ffffff !important;
+  background-color: transparent !important;
+}
+
+html.light div.blue-cta-gradient button[class*="border-white"]:hover {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Mockup inner borders and list dividers in Light Theme */
+html.light div.border-slate-800,
+html.light div.border-slate-800\/80,
+html.light div.border-slate-800\/60 {
+  border-color: #f1f5f9 !important;
 }

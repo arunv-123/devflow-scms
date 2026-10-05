@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { Sparkles, ArrowRight, Lock, ShieldCheck, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { authApi } from '@/services/authApi';
+import { DevFlowLogo } from '@/components/common/DevFlowLogo';
 
 function AcceptInvitationContent() {
   const searchParams = useSearchParams();
@@ -76,19 +77,7 @@ function AcceptInvitationContent() {
       {/* Brand Header */}
       <div className="mb-8 text-center space-y-2 relative z-10">
         <Link href="/" className="inline-flex items-center gap-3 group">
-          <div className="size-10 rounded-xl bg-gradient-to-tr from-sky-400 via-blue-600 to-indigo-600 p-0.5 shadow-lg shadow-sky-500/20 group-hover:scale-105 transition-transform">
-            <div className="w-full h-full bg-[#060913] rounded-[10px] flex items-center justify-center">
-              <Sparkles className="size-5 text-sky-400" />
-            </div>
-          </div>
-          <div className="text-left">
-            <span className="font-bold text-xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
-              DevFlow
-            </span>
-            <span className="text-[10px] uppercase font-bold tracking-widest text-sky-400 block -mt-1">
-              SCMS Enterprise
-            </span>
-          </div>
+          <DevFlowLogo size={40} showText={true} subtext="SCMS Enterprise" />
         </Link>
         <p className="text-xs text-slate-400 pt-2">Activate your workspace invitation and set your password</p>
       </div>

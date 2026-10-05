@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { User } from '../models/userModel';
+import { seedMasterDatabase } from '../scripts/seedMasterDatabase';
 
 export const connectDB = async (): Promise<void> => {
   const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/devflow';
@@ -23,42 +24,24 @@ export const connectDB = async (): Promise<void> => {
     }
   }
 
-  // Seed default demo users if database is empty
+  // Ensure database has canonical presentation dataset and no legacy test data
   try {
     if (mongoose.connection.readyState === 1) {
+      const hasLegacyUsers = await User.exists({
+        $or: [
+          { name: /Test User|Dev Test|QA Test|Coord Test|RBAC Proj|Michael Scott|Dwight Schrute/i },
+          { email: /test.*@|example.com|dunder.com/i },
+        ],
+      });
+
       const userCount = await User.countDocuments();
-      if (userCount === 0) {
-        console.log('[DevFlow DB] Seeding default demo accounts...');
-        await User.create([
-          {
-            name: 'Admin User',
-            email: 'admin@devflow.local',
-            password: 'password123',
-            role: 'Admin',
-            department: 'Management',
-            skills: ['Leadership', 'Architecture', 'Strategy'],
-          },
-          {
-            name: 'Dev User',
-            email: 'dev@devflow.local',
-            password: 'password123',
-            role: 'Developer',
-            department: 'Engineering',
-            skills: ['TypeScript', 'React', 'Node.js', 'MongoDB'],
-          },
-          {
-            name: 'Acme Corp Client',
-            email: 'client@devflow.local',
-            password: 'password123',
-            role: 'Client',
-            department: 'Client Representative',
-            skills: ['Product Ownership', 'Acceptance Testing'],
-          },
-        ]);
-        console.log('[DevFlow DB] Demo accounts seeded: admin@devflow.local, dev@devflow.local, client@devflow.local (Password: password123)');
+
+      if (hasLegacyUsers || userCount === 0 || process.env.RESET_DB === 'true') {
+        console.log('[DevFlow DB] Performing automatic DB reset & seeding canonical presentation dataset...');
+        await seedMasterDatabase(false);
       }
     }
   } catch (seedErr) {
-    console.warn(`[DevFlow DB] Error seeding initial users: ${(seedErr as Error).message}`);
+    console.warn(`[DevFlow DB] Error verifying/seeding DB: ${(seedErr as Error).message}`);
   }
 };
