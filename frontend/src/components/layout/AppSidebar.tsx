@@ -301,26 +301,6 @@ export function AppSidebar() {
           />
         </Link>
 
-        {/* Hamburger Sidebar Toggle Switch for Desktop (Expanded) */}
-        {!collapsedState && !isMobileView && (
-          <div className="relative group/toggle shrink-0">
-            <button
-              onClick={toggleSidebar}
-              aria-label="Collapse sidebar"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 hover:border-slate-700/60 border border-transparent transition-all duration-200 cursor-pointer flex items-center justify-center"
-            >
-              <Menu className="size-5 transition-transform duration-200 group-hover/toggle:scale-105" />
-            </button>
-
-            {/* Custom Glassmorphic Tooltip */}
-            <div className="opacity-0 scale-95 group-hover/toggle:opacity-100 group-hover/toggle:scale-100 group-hover/toggle:pointer-events-auto transition-all duration-150 pointer-events-none fixed left-64 ml-3 top-8 -translate-y-1/2 z-[100] whitespace-nowrap rounded-lg bg-[#0b0f19] border border-slate-700/90 px-3 py-1.5 text-xs font-semibold text-white shadow-2xl flex items-center gap-1.5 drop-shadow-lg">
-              <div className="absolute -left-1 top-1/2 -translate-y-1/2 size-2 rotate-45 bg-[#0b0f19] border-l border-b border-slate-700/90" />
-              <span>Collapse sidebar</span>
-              <span className="text-[10px] text-slate-400 font-normal">(Ctrl+B)</span>
-            </div>
-          </div>
-        )}
-
         {/* Mobile Close Button */}
         {isMobileView && (
           <button
@@ -342,25 +322,6 @@ export function AppSidebar() {
           collapsedState && !isMobileView ? 'px-2' : 'px-4'
         )}
       >
-        {/* Hamburger Sidebar Toggle Switch for Desktop (Collapsed) */}
-        {collapsedState && !isMobileView && (
-          <div className="relative group/toggle pb-1.5 flex justify-center">
-            <button
-              onClick={toggleSidebar}
-              aria-label="Expand sidebar"
-              className="p-2 rounded-lg text-slate-400 hover:text-sky-400 hover:bg-sky-500/10 hover:border-sky-500/30 border border-transparent transition-all duration-200 cursor-pointer flex items-center justify-center shadow-sm"
-            >
-              <Menu className="size-5 transition-transform duration-200 group-hover/toggle:scale-105" />
-            </button>
-
-            {/* Custom Accessible Floating Tooltip */}
-            <div className="opacity-0 scale-95 group-hover/toggle:opacity-100 group-hover/toggle:scale-100 group-hover/toggle:pointer-events-auto transition-all duration-150 pointer-events-none fixed left-16 ml-3.5 top-[84px] -translate-y-1/2 z-[100] whitespace-nowrap rounded-lg bg-[#0b0f19] border border-slate-700/90 px-3 py-1.5 text-xs font-semibold text-white shadow-2xl flex items-center gap-1.5 drop-shadow-lg">
-              <div className="absolute -left-1 top-1/2 -translate-y-1/2 size-2 rotate-45 bg-[#0b0f19] border-l border-b border-slate-700/90" />
-              <span>Expand sidebar</span>
-              <span className="text-[10px] text-slate-400 font-normal">(Ctrl+B)</span>
-            </div>
-          </div>
-        )}
 
 
         {filteredGroups.map((group, groupIdx) => (
