@@ -32,6 +32,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
   const [availableClients, setAvailableClients] = useState<Client[]>([]);
   const [isLoadingClients, setIsLoadingClients] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
@@ -117,6 +118,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const techStack = formData.techStackStr
         .split(',')
@@ -166,6 +168,8 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
       setFormError(
         err.response?.data?.error || err.message || 'Failed to create project. Please try again.'
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -217,7 +221,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500"
+                className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500 text-xs"
                 placeholder="e.g. FinTech Nexus Suite"
               />
             </div>
@@ -277,7 +281,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                 required
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500"
+                className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500 text-xs"
                 placeholder="Project overview, primary deliverables, and key goals..."
               />
             </div>
@@ -310,8 +314,8 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
               </div>
             </div>
 
-            {/* Status, Priority & Budget */}
-            <div className="grid grid-cols-3 gap-3">
+            {/* Status & Priority */}
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-slate-400 mb-1">
                   Status <span className="text-rose-400">*</span>
@@ -321,11 +325,11 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                   onChange={(e) => setFormData({ ...formData, status: e.target.value as ProjectStatus })}
                   className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500 text-xs cursor-pointer"
                 >
-                  <option value="Planning">Planning</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Review">Review</option>
-                  <option value="Completed">Completed</option>
-                  <option value="On Hold">On Hold</option>
+                  <option value="Planning" className="bg-[#0b0f19] text-white">Planning</option>
+                  <option value="In Progress" className="bg-[#0b0f19] text-white">In Progress</option>
+                  <option value="Review" className="bg-[#0b0f19] text-white">Review</option>
+                  <option value="Completed" className="bg-[#0b0f19] text-white">Completed</option>
+                  <option value="On Hold" className="bg-[#0b0f19] text-white">On Hold</option>
                 </select>
               </div>
               <div>
@@ -337,25 +341,27 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                   onChange={(e) => setFormData({ ...formData, priority: e.target.value as PriorityLevel })}
                   className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500 text-xs cursor-pointer"
                 >
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                  <option value="Critical">Critical</option>
+                  <option value="Low" className="bg-[#0b0f19] text-white">Low</option>
+                  <option value="Medium" className="bg-[#0b0f19] text-white">Medium</option>
+                  <option value="High" className="bg-[#0b0f19] text-white">High</option>
+                  <option value="Critical" className="bg-[#0b0f19] text-white">Critical</option>
                 </select>
               </div>
-              <div>
-                <label className="block text-slate-400 mb-1">
-                  Budget (₹) <span className="text-rose-400">*</span>
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  required
-                  value={formData.budget}
-                  onChange={(e) => setFormData({ ...formData, budget: Number(e.target.value) })}
-                  className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500 text-xs font-mono"
-                />
-              </div>
+            </div>
+
+            {/* Budget */}
+            <div>
+              <label className="block text-slate-400 mb-1">
+                Budget (₹) <span className="text-rose-400">*</span>
+              </label>
+              <input
+                type="number"
+                min={0}
+                required
+                value={formData.budget}
+                onChange={(e) => setFormData({ ...formData, budget: Number(e.target.value) })}
+                className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500 text-xs font-mono"
+              />
             </div>
 
             {/* Tech Stack */}
@@ -377,16 +383,24 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
               type="button"
               variant="ghost"
               onClick={onClose}
+              disabled={isSubmitting}
               className="text-slate-400 text-xs"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={availableClients.length === 0}
+              disabled={availableClients.length === 0 || isSubmitting}
               className="bg-sky-600 hover:bg-sky-500 text-white text-xs disabled:opacity-50"
             >
-              Save Project
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="size-3.5 animate-spin mr-1.5" />
+                  Saving...
+                </>
+              ) : (
+                'Save Project'
+              )}
             </Button>
           </div>
         </form>
