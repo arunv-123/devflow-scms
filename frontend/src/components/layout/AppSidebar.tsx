@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useRef, useState, useEffect, useLayoutEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -103,6 +103,10 @@ export function AppSidebar() {
   const navRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const { isCollapsed, toggleSidebar, isMobileOpen, setMobileOpen } = useSidebar();
+  const [isHovered, setIsHovered] = useState<boolean>(false);
+
+  // Effective collapsed state: collapsed by default, expands automatically on hover or when manually pinned open
+  const effectiveCollapsed = isCollapsed && !isHovered;
   const role = user?.role || 'Admin';
 
   const isClient = role === 'Client';
@@ -502,14 +506,16 @@ export function AppSidebar() {
         {renderSidebarContent(false, true)}
       </aside>
 
-      {/* Desktop Sticky Sidebar */}
+      {/* Desktop Sticky Sidebar with Smooth Hover-to-Expand Animation */}
       <aside
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         className={cn(
-          'hidden md:flex flex-col h-screen sticky top-0 z-30 select-none bg-[#060913] border-r border-slate-800 shrink-0 transition-all duration-300 ease-in-out',
-          isCollapsed ? 'w-16' : 'w-64'
+          'hidden md:flex flex-col h-screen sticky top-0 z-30 select-none bg-[#060913] border-r border-slate-800 shrink-0 transition-all duration-300 ease-in-out shadow-2xl',
+          effectiveCollapsed ? 'w-16' : 'w-64'
         )}
       >
-        {renderSidebarContent(isCollapsed, false)}
+        {renderSidebarContent(effectiveCollapsed, false)}
       </aside>
     </>
   );
