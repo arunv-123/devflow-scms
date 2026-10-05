@@ -4,8 +4,8 @@ import React, { useState, useEffect } from 'react';
 import {
   X,
   AlertCircle,
-  Building2,
   User,
+  Building2,
   Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -32,7 +32,6 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
   const [availableClients, setAvailableClients] = useState<Client[]>([]);
   const [isLoadingClients, setIsLoadingClients] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
@@ -59,17 +58,6 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
       document.body.style.overflow = '';
     };
   }, [isOpen]);
-
-  // Handle Escape key
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
 
   // Load clients when modal opens
   useEffect(() => {
@@ -129,8 +117,6 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
       return;
     }
 
-    setIsSubmitting(true);
-
     try {
       const techStack = formData.techStackStr
         .split(',')
@@ -180,26 +166,18 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
       setFormError(
         err.response?.data?.error || err.message || 'Failed to create project. Please try again.'
       );
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-      className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen min-h-screen z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto devflow-backdrop-enter"
-    >
+    <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen min-h-screen z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto devflow-backdrop-enter">
       <div className="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-6 text-white shadow-2xl z-10 devflow-modal-enter">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
           <h3 className="text-base font-bold">Create New Project</h3>
           <button
-            type="button"
             onClick={onClose}
             className="text-slate-400 hover:text-white transition-colors"
           >
@@ -213,7 +191,8 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             <User className="size-3.5 text-slate-500 shrink-0" />
             <span>
               Creating as{' '}
-              <span className="text-white font-semibold">{user.name}</span>{' '}
+              <span className="text-white font-semibold">{user.name}</span>
+              {' '}
               <span className="text-sky-400">({user.role})</span>
             </span>
           </div>
@@ -250,7 +229,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
               </label>
               {isLoadingClients ? (
                 <div className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-slate-500 text-xs flex items-center gap-2">
-                  <Loader2 className="size-3.5 animate-spin text-sky-400" />
+                  <Loader2 className="size-3.5 animate-spin" />
                   Loading clients...
                 </div>
               ) : availableClients.length > 0 ? (
@@ -331,8 +310,8 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
               </div>
             </div>
 
-            {/* Status & Priority */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Status, Priority & Budget */}
+            <div className="grid grid-cols-3 gap-3">
               <div>
                 <label className="block text-slate-400 mb-1">
                   Status <span className="text-rose-400">*</span>
@@ -342,14 +321,13 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                   onChange={(e) => setFormData({ ...formData, status: e.target.value as ProjectStatus })}
                   className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500 text-xs cursor-pointer"
                 >
-                  <option value="Planning" className="bg-[#0b0f19]">Planning</option>
-                  <option value="In Progress" className="bg-[#0b0f19]">In Progress</option>
-                  <option value="Review" className="bg-[#0b0f19]">Review</option>
-                  <option value="Completed" className="bg-[#0b0f19]">Completed</option>
-                  <option value="On Hold" className="bg-[#0b0f19]">On Hold</option>
+                  <option value="Planning">Planning</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Review">Review</option>
+                  <option value="Completed">Completed</option>
+                  <option value="On Hold">On Hold</option>
                 </select>
               </div>
-
               <div>
                 <label className="block text-slate-400 mb-1">
                   Priority <span className="text-rose-400">*</span>
@@ -359,27 +337,25 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                   onChange={(e) => setFormData({ ...formData, priority: e.target.value as PriorityLevel })}
                   className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500 text-xs cursor-pointer"
                 >
-                  <option value="Low" className="bg-[#0b0f19]">Low</option>
-                  <option value="Medium" className="bg-[#0b0f19]">Medium</option>
-                  <option value="High" className="bg-[#0b0f19]">High</option>
-                  <option value="Critical" className="bg-[#0b0f19]">Critical</option>
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                  <option value="Critical">Critical</option>
                 </select>
               </div>
-            </div>
-
-            {/* Budget */}
-            <div>
-              <label className="block text-slate-400 mb-1">
-                Budget (₹) <span className="text-rose-400">*</span>
-              </label>
-              <input
-                type="number"
-                min={0}
-                required
-                value={formData.budget}
-                onChange={(e) => setFormData({ ...formData, budget: Number(e.target.value) })}
-                className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500 font-mono text-xs"
-              />
+              <div>
+                <label className="block text-slate-400 mb-1">
+                  Budget (₹) <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  required
+                  value={formData.budget}
+                  onChange={(e) => setFormData({ ...formData, budget: Number(e.target.value) })}
+                  className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500 text-xs font-mono"
+                />
+              </div>
             </div>
 
             {/* Tech Stack */}
@@ -395,7 +371,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             </div>
           </div>
 
-          {/* Buttons Footer */}
+          {/* Buttons */}
           <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2 shrink-0 mt-3">
             <Button
               type="button"
@@ -407,10 +383,10 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             </Button>
             <Button
               type="submit"
-              disabled={availableClients.length === 0 || isSubmitting}
+              disabled={availableClients.length === 0}
               className="bg-sky-600 hover:bg-sky-500 text-white text-xs disabled:opacity-50"
             >
-              {isSubmitting ? 'Saving...' : 'Save Project'}
+              Save Project
             </Button>
           </div>
         </form>
