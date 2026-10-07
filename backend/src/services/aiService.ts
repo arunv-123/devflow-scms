@@ -22,6 +22,7 @@ import {
   AutoLinkMilestoneResponse,
   ChatMessageHistoryItem,
 } from '../types/ai';
+import { groqProvider } from './groqProvider';
 
 const getGeminiClient = (): GoogleGenAI | null => {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -696,7 +697,7 @@ export class AIService {
           if (user.availability) availability = user.availability;
           if (user.avatar) avatar = user.avatar;
         }
-      } catch (_) {}
+      } catch (_) { }
 
       // 1. Tech Stack / Skills match against task skills or project tech stack
       const matchingSkills = userSkills.filter((s) =>
@@ -1038,7 +1039,7 @@ export class AIService {
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         projectId: task.projectId,
       });
-    } catch (_) {}
+    } catch (_) { }
 
     // Send AI Action Committed Notification
     try {
@@ -1070,8 +1071,15 @@ export class AIService {
     messages?: ChatMessageHistoryItem[];
     user: IUser;
   }): Promise<AssistantChatResponse> {
-    console.log(`[AI Provider] Request received from ${input.user.name} (${input.user.role}): "${(input.prompt || input.action || '').slice(0, 50)}"`);
+    const selectedProvider = (process.env.AI_PROVIDER || 'gemini').toLowerCase().trim();
+    console.log(`[AI Provider Selection] AI_PROVIDER="${selectedProvider}" | Request from ${input.user.name} (${input.user.role}): "${(input.prompt || input.action || '').slice(0, 50)}"`);
 
+    if (selectedProvider === 'groq') {
+      console.log(`[AI Provider Selection] Routing request to GROQ provider (Model: ${groqProvider.getGroqModel()} | Endpoint: https://api.groq.com/openai/v1)...`);
+      return groqProvider.processAssistantChat(input);
+    }
+
+    console.log(`[AI Provider Selection] Routing request to GEMINI provider (Model: ${this.getValidGeminiModel()})...`);
     const isFallbackEnabled = process.env.AI_FALLBACK_ENABLED !== 'false';
     const ai = getGeminiClient();
 
@@ -1209,18 +1217,35 @@ export class AIService {
     const role = user.role;
     const userIdStr = user._id.toString();
 
-    const systemInstruction = `You are DevFlow AI Copilot, an intelligent software engineering and project management assistant for DevFlow SCMS.
+    const systemInstruction = `You are DevFlow AI Assistant, an intelligent hybrid AI copilot for DevFlow SCMS, software engineering, and general technical guidance.
 Authenticated User Context:
 - Name: ${user.name}
 - Email: ${user.email}
 - Role: ${user.role}
 - User ID: ${userIdStr}
 
-Instructions:
-1. Provide natural, accurate, and professional conversational responses to greetings ("Hi", "How are you?"), programming technical queries ("What is JWT?", "Explain REST APIs", debugging strategies), and software concepts.
-2. For workspace and project management operations, call the appropriate tool.
-3. MANDATORY SECURITY & PERMISSION RULE: If a tool call returns a PERMISSION DENIED result, inform the user politely that their role (${user.role}) is not authorized to execute that action, and state which roles (e.g. Project Manager, Team Lead) possess authorization. Never override or bypass permissions.
-4. Keep responses clean, professional, and formatted in GitHub Markdown. Do not reveal private keys or internal database IDs.`;
+Core Behavior & Hybrid Guidelines:
+1. HYBRID SCOPE & GENERAL KNOWLEDGE:
+   - For identity questions ("Who are you?"): Introduce yourself as "DevFlow AI Assistant, an AI copilot for DevFlow and software engineering. I can help with your DevFlow projects as well as general technical and programming questions."
+   - For general software engineering/technical questions (e.g. "What is React?", "Explain JWT", "REST vs GraphQL", "How does Docker work?", "MongoDB indexing", "Binary search tree", "async/await", "machine learning"): Answer naturally using model knowledge. Do NOT force these general questions into DevFlow project context unless the user specifically asks about their DevFlow project.
+   - For reasonable general knowledge or learning questions (e.g. "What is the capital of Japan?", "How do I learn Python?"): Answer normally and helpfully.
+   - For DevFlow/project-specific operations (health, tasks, subtasks, milestones, team recommendations, workload, meeting summaries, tech stack suggestions): Use project context or call the appropriate tool.
+
+2. REAL-TIME & LIVE DATA LIMITATIONS:
+   - For questions requiring real-time or current external information (such as live weather, current stock/crypto prices, live sports scores, breaking news, current exchange rates, or live external availability):
+     • Do not provide estimated, typical, historical, or guessed information as if it were current.
+     • If no live-data tool is available, clearly state that live information is currently unavailable.
+     • Do not fabricate or hallucinate current conditions.
+
+3. PROJECT DATA INTEGRITY (NO HALLUCINATIONS):
+   - Never invent or hallucinate project data (project names, task names, statuses, milestone dates, client info, team assignments, health scores, database records).
+   - If the user asks about a specific DevFlow project item or metric and that data is not provided or unavailable via tool/context, state clearly that the project information is currently unavailable instead of guessing.
+
+4. SECURITY & PERMISSIONS:
+   - If a tool call returns a PERMISSION DENIED result, inform the user politely that their role (${user.role}) is not authorized for that action and state which roles possess authorization. Never override or bypass permissions.
+
+5. RESPONSE FORMATTING:
+   - Provide clean, professional responses formatted in GitHub Markdown. Never reveal API keys, secret tokens, or internal database connection strings.`;
 
     const contents: any[] = [];
 

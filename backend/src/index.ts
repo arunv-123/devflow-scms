@@ -1,9 +1,11 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express, { Express } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
-import dotenv from 'dotenv';
 import { connectDB } from './config/db';
 import healthRoutes from './routes/healthRoutes';
 import authRoutes from './routes/authRoutes';
@@ -23,7 +25,10 @@ import invitationRoutes from './routes/invitationRoutes';
 import searchRoutes from './routes/searchRoutes';
 import { errorHandler } from './middleware/errorHandler';
 
-dotenv.config();
+console.log('[DevFlow Startup] AI Provider Configuration:');
+console.log(`  AI_PROVIDER: ${process.env.AI_PROVIDER || 'gemini (default)'}`);
+console.log(`  GROQ_MODEL: ${process.env.GROQ_MODEL || 'openai/gpt-oss-120b'}`);
+console.log(`  GROQ_API_KEY configured: ${Boolean(process.env.GROQ_API_KEY && process.env.GROQ_API_KEY !== 'your_groq_key_here')}`);
 
 const app: Express = express();
 const PORT = process.env.PORT || 5000;

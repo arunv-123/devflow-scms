@@ -29,6 +29,7 @@ import { Project, Milestone, Task, PriorityLevel } from '@/types';
 import { classifySuggestion, ClassificationType, computeTechStackDiff } from '@/utils/duplicateDetector';
 import { useAuth } from '@/context/AuthContext';
 import { getAvatarUrl } from '@/lib/avatar';
+import { MarkdownMessage } from '@/components/common/MarkdownMessage';
 
 export interface GeneratedMilestoneItem {
   tempId: string;
@@ -929,10 +930,14 @@ export default function AIAssistantPage() {
                   className={
                     isUser
                       ? 'px-4.5 py-3 sm:px-5 sm:py-3.5 rounded-2xl rounded-tr-xs bg-gradient-to-r from-blue-600 via-sky-600 to-cyan-600 text-white font-normal text-xs sm:text-[13px] leading-relaxed shadow-md shadow-sky-950/30 border border-cyan-300/30 hover:border-cyan-200/50 transition-all duration-200 select-text max-w-[85%] sm:max-w-xl md:max-w-2xl break-words whitespace-pre-wrap'
-                      : 'p-4 rounded-2xl rounded-tl-xs bg-[#060913] text-slate-200 border border-slate-800 text-xs sm:text-[13px] leading-relaxed space-y-3 max-w-2xl'
+                      : 'p-4 sm:p-5 rounded-2xl rounded-tl-xs bg-[#060913] text-slate-200 border border-slate-800 text-xs sm:text-[13px] leading-relaxed max-w-2xl w-full'
                   }
                 >
-                  <div className="whitespace-pre-line">{m.text}</div>
+                  {isUser ? (
+                    <div className="whitespace-pre-wrap">{m.text}</div>
+                  ) : (
+                    <MarkdownMessage content={m.text} />
+                  )}
 
                   {/* AI GENERATED SUBTASKS CONFIRMATION PANEL */}
                   {m.suggestedSubtasks && m.suggestedSubtasks.length > 0 && m.taskId && (
