@@ -127,13 +127,6 @@ export default function ProjectsPage() {
           )}
         </div>
 
-        {/* Modal for Creating Project */}
-        <CreateProjectModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onProjectCreated={loadData}
-        />
-
         {/* Filter Bar */}
         <div className="p-4 rounded-xl bg-[#0b0f19] border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3 w-full md:w-auto flex-1">
@@ -378,6 +371,12 @@ export default function ProjectsPage() {
           loading={confirmModal.loading}
         />
       </div>
+
+      <CreateProjectModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onProjectCreated={loadData}
+      />
     </AppLayout>
   );
 }
