@@ -20,27 +20,22 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setIsMounted(true);
+    // Automatically clean up obsolete localStorage key from legacy desktop toggle button
     try {
-      const savedState = localStorage.getItem('devflow_sidebar_collapsed');
-      if (savedState !== null) {
-        setIsCollapsed(savedState === 'true');
+      if (typeof window !== 'undefined' && localStorage.getItem('devflow_sidebar_collapsed') !== null) {
+        localStorage.removeItem('devflow_sidebar_collapsed');
       }
     } catch (e) {
-      console.error('Failed to read sidebar state from localStorage:', e);
+      // Ignore localStorage access errors
     }
   }, []);
 
   const setCollapsed = (collapsed: boolean) => {
     setIsCollapsed(collapsed);
-    try {
-      localStorage.setItem('devflow_sidebar_collapsed', String(collapsed));
-    } catch (e) {
-      console.error('Failed to save sidebar state to localStorage:', e);
-    }
   };
 
   const toggleSidebar = () => {
-    setCollapsed(!isCollapsed);
+    setIsCollapsed((prev) => !prev);
   };
 
   const setMobileOpen = (open: boolean) => {
