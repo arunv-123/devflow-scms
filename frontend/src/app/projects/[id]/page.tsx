@@ -234,7 +234,7 @@ export default function ProjectDetailsPage() {
               <p className="text-xs text-slate-400 mt-1">Client: {project.clientName} • Manager: {project.manager?.name || 'Alex Morgan'}</p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <Link href="/ai/project-intelligence">
                 <Button size="sm" variant="outline" className="border-purple-500/30 bg-purple-950/20 text-purple-300 hover:bg-purple-900/40 text-xs gap-1.5">
                   <BrainCircuit className="size-4 text-purple-400" />
@@ -267,7 +267,7 @@ export default function ProjectDetailsPage() {
         </div>
 
         {/* Tab Navigation Bar */}
-        <div className="border-b border-slate-800 flex items-center gap-2 overflow-x-auto">
+        <div className="border-b border-slate-800 flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-thin">
           {[
             { id: 'overview', label: 'Overview', icon: FolderKanban },
             { id: 'tasks', label: `Tasks (${projectTasks.length})`, icon: CheckSquare },
@@ -282,7 +282,7 @@ export default function ProjectDetailsPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition-all whitespace-nowrap ${
+                className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition-all whitespace-nowrap shrink-0 ${
                   isActive
                     ? 'border-sky-500 text-white bg-sky-500/5'
                     : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -299,7 +299,7 @@ export default function ProjectDetailsPage() {
         {activeTab === 'overview' && (
           <div className="space-y-6">
             {/* Overview Stats Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="p-4 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1">
                 <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Total Budget</span>
                 <div className="text-xl font-bold text-white">{formatCurrency(project.budget || 0)}</div>
@@ -335,7 +335,7 @@ export default function ProjectDetailsPage() {
             </div>
 
             {/* Description & Tech Stack */}
-            <div className="p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-4">
+            <div className="p-4 sm:p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-4">
               <h3 className="text-sm font-bold text-white">Project Description</h3>
               <p className="text-xs text-slate-300 leading-relaxed">{project.description}</p>
 

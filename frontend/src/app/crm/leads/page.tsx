@@ -357,9 +357,9 @@ export default function LeadsPage() {
         </div>
 
         {/* Filter Bar */}
-        <div className="p-4 rounded-xl bg-[#0b0f19] border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3 w-full md:w-auto flex-1">
-            <div className="relative w-full max-w-xs">
+        <div className="p-3.5 sm:p-4 rounded-xl bg-[#0b0f19] border border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full flex-1">
+            <div className="relative w-full sm:max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
               <input
                 type="text"
@@ -373,7 +373,7 @@ export default function LeadsPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-9 px-3 text-xs bg-[#060913] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-sky-500"
+              className="w-full sm:w-auto h-9 px-3 text-xs bg-[#060913] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-sky-500 cursor-pointer"
             >
               <option value="All">All Statuses</option>
               {leadStatuses.map((s) => (
@@ -387,8 +387,8 @@ export default function LeadsPage() {
 
         {/* Modal for Creating Lead */}
         {isModalOpen && (
-          <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen min-h-screen z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
-            <div className="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-6 text-white shadow-2xl z-10">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-3.5 sm:p-4 overflow-y-auto animate-fadeIn">
+            <div className="relative w-full max-w-md max-h-[88dvh] sm:max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-4 sm:p-6 text-white shadow-2xl z-10">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
                 <h3 className="text-base font-bold">Add New Prospect Lead</h3>
                 <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white">
@@ -431,7 +431,7 @@ export default function LeadsPage() {
                       placeholder="e.g. eleanor@acme.com"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-slate-400 mb-1">Estimated Value (₹)</label>
                       <input
@@ -446,7 +446,7 @@ export default function LeadsPage() {
                       <select
                         value={formData.status}
                         onChange={(e) => setFormData({ ...formData, status: e.target.value as LeadStatus })}
-                        className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500"
+                        className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500 cursor-pointer"
                       >
                         {leadStatuses.map((s) => (
                           <option key={s} value={s}>
@@ -478,8 +478,8 @@ export default function LeadsPage() {
 
         {/* Modal for Editing Lead */}
         {editingLead && (
-          <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen min-h-screen z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
-            <div className="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-6 text-white shadow-2xl z-10">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-3.5 sm:p-4 overflow-y-auto animate-fadeIn">
+            <div className="relative w-full max-w-md max-h-[88dvh] sm:max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-4 sm:p-6 text-white shadow-2xl z-10">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
                 <h3 className="text-base font-bold">Edit Lead Details</h3>
                 <button onClick={() => setEditingLead(null)} className="text-slate-400 hover:text-white">
@@ -519,7 +519,7 @@ export default function LeadsPage() {
                       className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-slate-400 mb-1">Estimated Value (₹)</label>
                       <input
@@ -560,7 +560,7 @@ export default function LeadsPage() {
         )}
 
         {/* 5 Column Pipeline Board */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-start">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 items-start">
           {leadStatuses.map((status) => {
             const statusLeads = filteredLeads.filter((l) => l.status === status);
             const isConvertedStage = status === 'Converted';

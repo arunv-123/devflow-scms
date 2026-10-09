@@ -70,12 +70,12 @@ function AcceptInvitationContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#060913] text-slate-100 flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
+    <div className="min-h-[100dvh] bg-[#060913] text-slate-100 flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden font-sans">
       {/* Background Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-sky-500/10 blur-[150px] pointer-events-none" />
 
       {/* Brand Header */}
-      <div className="mb-8 text-center space-y-2 relative z-10">
+      <div className="mb-6 sm:mb-8 text-center space-y-2 relative z-10">
         <Link href="/" className="inline-flex items-center gap-3 group">
           <DevFlowLogo size={40} showText={true} subtext="SCMS Enterprise" />
         </Link>
@@ -83,7 +83,7 @@ function AcceptInvitationContent() {
       </div>
 
       {/* Card Container */}
-      <div className="w-full max-w-md p-8 rounded-2xl bg-[#0b0f19] border border-slate-800 shadow-2xl space-y-6 relative z-10">
+      <div className="w-full max-w-md p-5 sm:p-8 rounded-2xl bg-[#0b0f19] border border-slate-800 shadow-2xl space-y-6 relative z-10">
         {loading ? (
           <div className="text-center py-8 space-y-3">
             <div className="size-8 border-2 border-sky-400 border-t-transparent rounded-full animate-spin mx-auto" />

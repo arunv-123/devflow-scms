@@ -129,15 +129,15 @@ const RoleCarousel: React.FC<RoleCarouselProps> = ({
   }
 
   return (
-    <div className="space-y-4 bg-[#0b0f19]/80 border border-slate-800 rounded-2xl p-5 shadow-xl">
+    <div className="space-y-4 bg-[#0b0f19]/80 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl">
       {/* Role Carousel Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
-        <div className="flex items-center gap-3">
-          <div className="size-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0">
+        <div className="flex items-start sm:items-center gap-3">
+          <div className="size-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
             <Briefcase className="size-4 text-purple-400" />
           </div>
-          <div>
-            <div className="flex flex-wrap items-center gap-2.5">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-base font-bold text-white tracking-tight">
                 {group.role}s
               </h2>
@@ -150,9 +150,9 @@ const RoleCarousel: React.FC<RoleCarouselProps> = ({
         </div>
 
         {/* Carousel Navigation Controls & Total Count */}
-        <div className="flex items-center gap-3 self-end sm:self-auto">
+        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
           {/* Total Candidates Count Badge (No 1/7 pagination numbers) */}
-          <span className="text-xs text-slate-300 font-bold font-mono bg-slate-900 px-3.5 py-1.5 rounded-xl border border-slate-800">
+          <span className="text-xs text-slate-300 font-bold font-mono bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800">
             {group.candidates.length} candidates
           </span>
 
@@ -181,7 +181,7 @@ const RoleCarousel: React.FC<RoleCarouselProps> = ({
       {/* Horizontally Scrollable Carousel Container */}
       <div
         ref={scrollContainerRef}
-        className="flex gap-6 overflow-x-auto pb-4 pt-1 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-purple-500/20 scrollbar-track-transparent scroll-smooth"
+        className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 pt-1 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-purple-500/20 scrollbar-track-transparent scroll-smooth"
         style={{ scrollbarGutter: 'stable' }}
       >
         {group.candidates.map((m) => {
@@ -193,7 +193,7 @@ const RoleCarousel: React.FC<RoleCarouselProps> = ({
           return (
             <div
               key={m.memberId}
-              className={`w-[340px] shrink-0 snap-start p-5 rounded-2xl border transition-all space-y-4 shadow-xl flex flex-col justify-between ${
+              className={`w-[calc(100vw-3.5rem)] max-w-[340px] shrink-0 snap-start p-4 sm:p-5 rounded-2xl border transition-all space-y-4 shadow-xl flex flex-col justify-between ${
                 isMemberOfProject
                   ? 'bg-gradient-to-b from-emerald-950/20 to-slate-950/90 border-emerald-500/40'
                   : 'bg-[#060913] border-slate-800/90 hover:border-purple-500/40'
@@ -201,28 +201,28 @@ const RoleCarousel: React.FC<RoleCarouselProps> = ({
             >
               <div className="space-y-3.5">
                 {/* Header: Avatar + Role + Availability */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
                     <img
                       src={getAvatarUrl(m.avatar, m)}
                       alt={m.name}
-                      className="size-11 rounded-xl object-cover ring-2 ring-purple-500/30"
+                      className="size-10 sm:size-11 rounded-xl object-cover ring-2 ring-purple-500/30 shrink-0"
                     />
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <h3 className="text-sm font-bold text-white">{m.name}</h3>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <h3 className="text-sm font-bold text-white truncate">{m.name}</h3>
                         {isMemberOfProject && (
-                          <span className="px-1.5 py-0.2 rounded text-[9px] bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
-                            ✓ Team Member
+                          <span className="px-1.5 py-0.2 rounded text-[9px] bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30 whitespace-nowrap">
+                            ✓ Member
                           </span>
                         )}
                       </div>
-                      <span className="text-xs text-sky-400 font-semibold block">{m.role}</span>
+                      <span className="text-xs text-sky-400 font-semibold block truncate">{m.role}</span>
                     </div>
                   </div>
 
                   <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
                       m.availability === 'Available'
                         ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                         : m.availability === 'Busy'
@@ -592,12 +592,12 @@ export default function TeamRecommendationsPage() {
           </div>
 
           {/* Project Selector Dropdown */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-400 font-medium">Target Project:</span>
+          <div className="flex flex-col xs:flex-row xs:items-center gap-2 w-full sm:w-auto">
+            <span className="text-xs text-slate-400 font-medium shrink-0">Target Project:</span>
             <select
               value={selectedProjectId}
               onChange={(e) => setSelectedProjectId(e.target.value)}
-              className="h-10 px-3 text-xs bg-[#0b0f19] border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-purple-500 font-semibold cursor-pointer"
+              className="h-10 px-3 text-xs bg-[#0b0f19] border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-purple-500 font-semibold cursor-pointer w-full sm:w-auto max-w-full"
             >
               {projects.map((p) => (
                 <option key={p.id || p._id} value={p.id || p._id}>
@@ -618,12 +618,12 @@ export default function TeamRecommendationsPage() {
 
         {/* PROJECT TEAM REQUIREMENTS SUMMARY HEADER CARD */}
         {selectedProjectObj && matcherResult && (
-          <div className="p-6 rounded-2xl bg-gradient-to-r from-purple-950/50 via-slate-900 to-slate-950 border border-purple-500/30 space-y-4 shadow-xl">
+          <div className="p-4 sm:p-6 rounded-2xl bg-gradient-to-r from-purple-950/50 via-slate-900 to-slate-950 border border-purple-500/30 space-y-4 shadow-xl">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
-              <div className="flex items-center gap-2.5">
-                <Building className="size-5 text-purple-400" />
-                <div>
-                  <h2 className="font-bold text-sm text-purple-200 tracking-wide uppercase">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Building className="size-5 text-purple-400 shrink-0" />
+                <div className="min-w-0">
+                  <h2 className="font-bold text-sm text-purple-200 tracking-wide uppercase truncate">
                     PROJECT TEAM REQUIREMENTS: {selectedProjectObj.name}
                   </h2>
                   {selectedProjectObj.description && (
@@ -635,14 +635,13 @@ export default function TeamRecommendationsPage() {
               </div>
 
               {/* Total Team Count Summary Badge */}
-              <div className="flex items-center gap-2 bg-[#060913] px-4 py-2 rounded-xl border border-purple-500/30">
-                <Users className="size-4 text-purple-400" />
-                <span className="text-xs text-slate-300 font-medium">
-                  Current Team Size:{' '}
-                  <strong className="text-white font-bold text-sm">
-                    {projectMembers.length} / {matcherResult.totalRequiredCount}
-                  </strong>{' '}
-                  members
+              <div className="flex items-center justify-between sm:justify-start gap-2 bg-[#060913] px-3.5 py-2 rounded-xl border border-purple-500/30 shrink-0">
+                <div className="flex items-center gap-1.5">
+                  <Users className="size-4 text-purple-400" />
+                  <span className="text-xs text-slate-300 font-medium">Current Team Size:</span>
+                </div>
+                <span className="text-white font-bold text-sm font-mono">
+                  {projectMembers.length} / {matcherResult.totalRequiredCount}
                 </span>
               </div>
             </div>
@@ -709,8 +708,8 @@ export default function TeamRecommendationsPage() {
 
         {/* EXCEED REQUIREMENT CONFIRMATION MODAL */}
         {exceedCandidate && (
-          <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen min-h-screen z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
-            <div className="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-amber-500/40 p-6 text-white shadow-2xl z-10">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-3.5 sm:p-4 overflow-y-auto animate-fadeIn">
+            <div className="relative w-full max-w-md max-h-[88dvh] sm:max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-amber-500/40 p-4 sm:p-6 text-white shadow-2xl z-10">
               <div className="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
                 <div className="flex items-center gap-2 text-amber-400 font-bold text-base">
                   <AlertCircle className="size-5 shrink-0" />

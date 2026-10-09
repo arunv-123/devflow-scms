@@ -49,8 +49,8 @@ export default function WorkloadPage() {
         </div>
 
         {/* Capacity Summary Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1 animate-in fade-in zoom-in-95 duration-300">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1 animate-in fade-in zoom-in-95 duration-300">
             <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Optimal Capacity</span>
             <div className="text-3xl font-extrabold text-emerald-400">
               <CountUpNumber value={optimalMembers.length} suffix=" Members" />
@@ -58,7 +58,7 @@ export default function WorkloadPage() {
             <div className="text-[11px] text-slate-400">Operating between 50% - 85%</div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1 animate-in fade-in zoom-in-95 duration-300">
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1 animate-in fade-in zoom-in-95 duration-300">
             <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Overloaded Warning</span>
             <div className="text-3xl font-extrabold text-red-400">
               <CountUpNumber value={overloadedMembers.length} suffix=" Members" />
@@ -66,7 +66,7 @@ export default function WorkloadPage() {
             <div className="text-[11px] text-red-400/80 font-medium">Above 85% bandwidth</div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1 animate-in fade-in zoom-in-95 duration-300">
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1 animate-in fade-in zoom-in-95 duration-300">
             <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Average Utilization</span>
             <div className="text-3xl font-extrabold text-sky-400">
               <CountUpNumber value={avgUtilization} decimals={1} suffix="%" />
@@ -76,7 +76,7 @@ export default function WorkloadPage() {
         </div>
 
         {/* Member Capacity Breakdown Table */}
-        <div className="p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-4 animate-in fade-in zoom-in-95 duration-300">
+        <div className="p-4 sm:p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-4 animate-in fade-in zoom-in-95 duration-300">
           <h3 className="text-base font-bold text-white flex items-center gap-2">
             <Users className="size-4 text-sky-400" />
             <span>Resource Utilization Matrix</span>
@@ -95,15 +95,15 @@ export default function WorkloadPage() {
                       <img
                         src={getAvatarUrl(member.avatar, member)}
                         alt={member.name}
-                        className="size-8 rounded-full object-cover"
+                        className="size-8 rounded-full object-cover shrink-0"
                       />
-                      <div>
-                        <span className="font-bold text-white block">{member.name}</span>
-                        <span className="text-slate-400">{member.role}</span>
+                      <div className="min-w-0">
+                        <span className="font-bold text-white block truncate">{member.name}</span>
+                        <span className="text-slate-400 truncate block">{member.role}</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                       <span className="text-slate-400">Assigned Projects: {(member.assignedProjects || []).length}</span>
                       <span className={`font-mono font-bold ${(member.workloadPercent || 0) > 85 ? 'text-red-400' : 'text-emerald-400'}`}>
                         <CountUpNumber value={member.workloadPercent || 0} suffix="% Allocated" />

@@ -330,9 +330,9 @@ export default function TasksPage() {
         />
 
         {/* Filter Bar */}
-        <div className="p-4 rounded-xl bg-[#0b0f19] border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3 w-full md:w-auto flex-1">
-            <div className="relative w-full max-w-xs">
+        <div className="p-3.5 sm:p-4 rounded-xl bg-[#0b0f19] border border-slate-800 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full md:w-auto flex-1">
+            <div className="relative w-full sm:max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
               <input
                 type="text"
@@ -346,7 +346,7 @@ export default function TasksPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-9 px-3 text-xs bg-[#060913] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-sky-500"
+              className="w-full sm:w-auto h-9 px-3 text-xs bg-[#060913] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-sky-500 cursor-pointer"
             >
               <option value="All">All Statuses</option>
               <option value="Todo">Todo</option>
@@ -356,16 +356,16 @@ export default function TasksPage() {
             </select>
           </div>
 
-          <div className="flex items-center gap-1 border border-slate-800 bg-[#060913] p-1 rounded-lg">
+          <div className="flex items-center justify-end gap-1 border border-slate-800 bg-[#060913] p-1 rounded-lg shrink-0 self-end md:self-auto">
             <button
               onClick={() => setViewMode('kanban')}
-              className={`p-1.5 rounded ${viewMode === 'kanban' ? 'bg-slate-800 text-sky-400' : 'text-slate-400'}`}
+              className={`p-1.5 rounded transition-colors ${viewMode === 'kanban' ? 'bg-slate-800 text-sky-400' : 'text-slate-400 hover:text-white'}`}
             >
               <Grid className="size-4" />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-slate-800 text-sky-400' : 'text-slate-400'}`}
+              className={`p-1.5 rounded transition-colors ${viewMode === 'list' ? 'bg-slate-800 text-sky-400' : 'text-slate-400 hover:text-white'}`}
             >
               <List className="size-4" />
             </button>
@@ -374,7 +374,7 @@ export default function TasksPage() {
 
         {/* Kanban View */}
         {viewMode === 'kanban' ? (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
             {columns.map((colStatus) => {
               const colTasks = filteredTasks.filter((t) => t.status === colStatus);
               const isOver = dragOverColumn === colStatus;
@@ -559,8 +559,8 @@ export default function TasksPage() {
           </div>
         ) : (
           /* List View */
-          <div className="rounded-2xl bg-[#0b0f19] border border-slate-800 overflow-hidden">
-            <table className="w-full text-left text-xs">
+          <div className="rounded-2xl bg-[#0b0f19] border border-slate-800 overflow-x-auto">
+            <table className="w-full min-w-[700px] text-left text-xs">
               <thead className="bg-[#060913] border-b border-slate-800 text-slate-400 uppercase text-[10px] font-semibold">
                 <tr>
                   <th className="py-3 px-4">Task Title</th>

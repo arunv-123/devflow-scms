@@ -150,7 +150,7 @@ export default function SettingsPage() {
         {loading ? (
           <div className="p-8 text-center text-xs text-slate-400">Loading system settings...</div>
         ) : (
-          <form onSubmit={handleSave} className="p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-6">
+          <form onSubmit={handleSave} className="p-4 sm:p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-6">
             {/* 1. ORGANIZATION CONFIGURATION */}
             <div className="space-y-4">
               <h3 className="text-sm font-bold text-white flex items-center gap-2 border-b border-slate-800/80 pb-2.5">

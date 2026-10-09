@@ -413,8 +413,8 @@ export default function MilestonesPage() {
 
         {/* Create / Edit Milestone Modal */}
         {isModalOpen && (
-          <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen min-h-screen z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
-            <div className="relative w-full max-w-lg max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-6 text-white shadow-2xl z-10">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-3.5 sm:p-4 overflow-y-auto animate-fadeIn">
+            <div className="relative w-full max-w-lg max-h-[88dvh] sm:max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-4 sm:p-6 text-white shadow-2xl z-10">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
                 <h3 className="text-base font-bold">
                   {editingMilestone ? 'Edit Milestone' : 'Create New Milestone'}
@@ -477,7 +477,7 @@ export default function MilestonesPage() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-slate-400 mb-1">Target Due Date</label>
                       <input
@@ -715,8 +715,8 @@ export default function MilestonesPage() {
 
         {/* Quick Progress/Status Update Modal for Team Lead */}
         {isQuickUpdateOpen && quickMilestone && (
-          <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen min-h-screen z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
-            <div className="relative w-full max-w-sm max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-6 text-white shadow-2xl z-10">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-3.5 sm:p-4 overflow-y-auto animate-fadeIn">
+            <div className="relative w-full max-w-sm max-h-[88dvh] sm:max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-4 sm:p-6 text-white shadow-2xl z-10">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
                 <h3 className="text-base font-bold">Update Milestone Progress</h3>
                 <button onClick={() => setIsQuickUpdateOpen(false)} className="text-slate-400 hover:text-white">
@@ -773,8 +773,8 @@ export default function MilestonesPage() {
 
         {/* AI Milestone Assignment Summary & Approval Modal */}
         {isAutoLinkModalOpen && autoLinkResult && (
-          <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen min-h-screen z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
-            <div className="relative w-full max-w-3xl max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-6 text-white shadow-2xl z-10">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-3.5 sm:p-4 overflow-y-auto animate-fadeIn">
+            <div className="relative w-full max-w-3xl max-h-[88dvh] sm:max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-4 sm:p-6 text-white shadow-2xl z-10">
               {/* Header */}
               <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
                 <div className="flex items-center gap-2">

@@ -128,9 +128,9 @@ export default function ProjectsPage() {
         </div>
 
         {/* Filter Bar */}
-        <div className="p-4 rounded-xl bg-[#0b0f19] border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3 w-full md:w-auto flex-1">
-            <div className="relative w-full max-w-xs">
+        <div className="p-3.5 sm:p-4 rounded-xl bg-[#0b0f19] border border-slate-800 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full md:w-auto flex-1">
+            <div className="relative w-full sm:max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
               <input
                 type="text"
@@ -141,12 +141,12 @@ export default function ProjectsPage() {
               />
             </div>
 
-            <div className="flex items-center gap-2">
-              <Filter className="size-4 text-slate-400 hidden sm:block" />
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Filter className="size-4 text-slate-400 hidden sm:block shrink-0" />
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-9 px-3 text-xs bg-[#060913] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-sky-500 cursor-pointer"
+                className="w-full sm:w-auto h-9 px-3 text-xs bg-[#060913] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-sky-500 cursor-pointer"
               >
                 <option value="All">All Statuses</option>
                 <option value="In Progress">In Progress</option>
@@ -158,7 +158,7 @@ export default function ProjectsPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-1 border border-slate-800 bg-[#060913] p-1 rounded-lg">
+          <div className="flex items-center justify-end gap-1 border border-slate-800 bg-[#060913] p-1 rounded-lg shrink-0 self-end md:self-auto">
             <button
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded transition-colors ${
@@ -182,11 +182,11 @@ export default function ProjectsPage() {
 
         {/* Grid View */}
         {viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {filteredProjects.map((project) => (
               <div
                 key={project.id}
-                className="p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 hover:border-sky-500/40 transition-all duration-200 space-y-4 flex flex-col justify-between group"
+                className="p-4 sm:p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 hover:border-sky-500/40 transition-all duration-200 space-y-4 flex flex-col justify-between group"
               >
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-3">
@@ -303,8 +303,8 @@ export default function ProjectsPage() {
           </div>
         ) : (
           /* Table View */
-          <div className="rounded-2xl bg-[#0b0f19] border border-slate-800 overflow-hidden">
-            <table className="w-full text-left text-xs">
+          <div className="rounded-2xl bg-[#0b0f19] border border-slate-800 overflow-x-auto">
+            <table className="w-full min-w-[640px] text-left text-xs">
               <thead className="bg-[#060913] border-b border-slate-800 text-slate-400 uppercase text-[10px] font-semibold">
                 <tr>
                   <th className="py-3 px-4">Project</th>

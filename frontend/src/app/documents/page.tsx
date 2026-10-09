@@ -339,7 +339,7 @@ export default function DocumentsPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+              <table className="w-full min-w-[700px] text-left text-xs">
                 <thead className="bg-[#060913] border-b border-slate-800 text-slate-400 uppercase text-[10px] font-semibold">
                   <tr>
                     <th className="py-3 px-4">Document Name</th>
@@ -404,8 +404,8 @@ export default function DocumentsPage() {
 
         {/* Real File Upload Modal */}
         {showUploadModal && (
-          <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen min-h-screen z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
-            <div className="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-6 text-white shadow-2xl z-10">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-3.5 sm:p-4 overflow-y-auto animate-fadeIn">
+            <div className="relative w-full max-w-md max-h-[88dvh] sm:max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-4 sm:p-6 text-white shadow-2xl z-10">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
                 <h3 className="text-base font-bold text-white">Upload Document</h3>
                 <button
@@ -505,7 +505,7 @@ export default function DocumentsPage() {
                   </div>
 
                   {/* Category & Project */}
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <label className="text-slate-300 font-semibold">Category</label>
                       <select

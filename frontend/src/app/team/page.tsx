@@ -324,13 +324,13 @@ export default function TeamPage() {
             No team members found.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredTeam.map((member) => {
               const status = member.status || 'active';
               return (
                 <div
                   key={member.id}
-                  className="p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 hover:border-slate-700 transition-colors space-y-4 flex flex-col justify-between relative"
+                  className="p-4 sm:p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 hover:border-slate-700 transition-colors space-y-4 flex flex-col justify-between relative"
                 >
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
@@ -444,8 +444,8 @@ export default function TeamPage() {
 
         {/* Invite Member Modal */}
         {showAddModal && (
-          <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen min-h-screen z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
-            <div className="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-6 text-white shadow-2xl z-10">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-3.5 sm:p-4 overflow-y-auto animate-fadeIn">
+            <div className="relative w-full max-w-md max-h-[88dvh] sm:max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-4 sm:p-6 text-white shadow-2xl z-10">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
                 <h3 className="text-base font-bold text-white">Invite Team Member</h3>
                 <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-white">
@@ -485,13 +485,13 @@ export default function TeamPage() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <label className="text-slate-300 font-semibold">Role</label>
                       <select
                         value={role}
                         onChange={(e) => setRole(e.target.value as UserRole)}
-                        className="w-full h-9 px-3 bg-[#060913] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-sky-500"
+                        className="w-full h-9 px-3 bg-[#060913] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-sky-500 cursor-pointer"
                       >
                         {allowedRolesForInvite.map((r) => (
                           <option key={r} value={r}>

@@ -113,8 +113,8 @@ export default function ReportsPage() {
         )}
 
         {/* Executive Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1 animate-in fade-in zoom-in-95 duration-300">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1 animate-in fade-in zoom-in-95 duration-300">
             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Total Revenue</span>
             <div className="text-2xl font-bold text-white">
               <CountUpNumber value={metrics.totalRevenue || 605000} prefix="$" />
@@ -122,7 +122,7 @@ export default function ReportsPage() {
             <div className="text-[11px] text-emerald-400">+18% YoY Growth</div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1 animate-in fade-in zoom-in-95 duration-300">
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1 animate-in fade-in zoom-in-95 duration-300">
             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Sprint Velocity</span>
             <div className="text-2xl font-bold text-sky-400">
               <CountUpNumber value={42} suffix=" Story Pts/Wk" />
@@ -130,7 +130,7 @@ export default function ReportsPage() {
             <div className="text-[11px] text-slate-400">Stable Delivery Pace</div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1 animate-in fade-in zoom-in-95 duration-300">
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1 animate-in fade-in zoom-in-95 duration-300">
             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Task Completion Rate</span>
             <div className="text-2xl font-bold text-purple-400">
               <CountUpNumber value={92.4} decimals={1} suffix="%" />
@@ -138,7 +138,7 @@ export default function ReportsPage() {
             <div className="text-[11px] text-emerald-400">On Time Delivery</div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1 animate-in fade-in zoom-in-95 duration-300">
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1 animate-in fade-in zoom-in-95 duration-300">
             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Client Retention</span>
             <div className="text-2xl font-bold text-emerald-400">
               <CountUpNumber value={100} suffix="%" />
@@ -150,8 +150,8 @@ export default function ReportsPage() {
         {/* Visual Analytics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Velocity Chart Component */}
-          <div className="p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-5 animate-in fade-in zoom-in-95 duration-300">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="p-4 sm:p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-5 animate-in fade-in zoom-in-95 duration-300">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-800 pb-3">
               <div>
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
                   <Activity className="size-4 text-sky-400" />
@@ -173,9 +173,9 @@ export default function ReportsPage() {
             </div>
 
             {/* Custom SVG Responsive Bar Chart */}
-            <div className="flex gap-3 items-stretch">
+            <div className="flex gap-2 sm:gap-3 items-stretch">
               {/* Y-Axis Labels (Positioned outside plot area with left-side spacing) */}
-              <div className="flex flex-col justify-between pt-3 pb-8 text-[10px] font-mono text-slate-400 text-right w-11 shrink-0 select-none">
+              <div className="flex flex-col justify-between pt-3 pb-8 text-[9px] sm:text-[10px] font-mono text-slate-400 text-right w-9 sm:w-11 shrink-0 select-none">
                 <span>50 pts</span>
                 <span>35 pts</span>
                 <span>20 pts</span>
@@ -184,14 +184,14 @@ export default function ReportsPage() {
 
               {/* Main Chart Column */}
               <div className="flex-1 space-y-2 min-w-0">
-                <div className="h-44 bg-[#060913] border border-slate-800/80 rounded-xl p-4 flex items-end justify-between gap-3 relative overflow-hidden">
+                <div className="h-44 bg-[#060913] border border-slate-800/80 rounded-xl p-2.5 sm:p-4 flex items-end justify-between gap-1.5 sm:gap-3 relative overflow-hidden">
                   {/* Horizontal Y-Gridlines (Clean lines without overlapping label text) */}
                   <div className="absolute inset-x-0 top-4 border-b border-slate-800/40 pointer-events-none" />
                   <div className="absolute inset-x-0 top-16 border-b border-slate-800/40 pointer-events-none" />
                   <div className="absolute inset-x-0 top-28 border-b border-slate-800/40 pointer-events-none" />
 
                   {velocityData.map((d, idx) => (
-                    <div key={idx} className="flex-1 flex items-end justify-center gap-1.5 h-full relative z-10 group">
+                    <div key={idx} className="flex-1 flex items-end justify-center gap-1 sm:gap-1.5 h-full relative z-10 group">
                       {/* Planned Bar (Smoothly grows from 0 to height on mount) */}
                       <div
                         className="w-1/2 bg-sky-500/10 border border-sky-400/40 rounded-t transition-all duration-700 ease-out group-hover:bg-sky-500/20"
@@ -209,9 +209,9 @@ export default function ReportsPage() {
                 </div>
 
                 {/* X-Axis Labels */}
-                <div className="flex justify-between px-2 text-[10px] text-slate-400 font-mono">
+                <div className="flex justify-between px-1 sm:px-2 text-[9px] sm:text-[10px] text-slate-400 font-mono">
                   {velocityData.map((d, idx) => (
-                    <span key={idx} className="flex-1 text-center">{d.sprint}</span>
+                    <span key={idx} className="flex-1 text-center truncate">{d.sprint}</span>
                   ))}
                 </div>
               </div>

@@ -87,13 +87,13 @@ export default function ProjectIntelligencePage() {
         ) : summary ? (
           <>
             {/* AI Health Summary Card */}
-            <div className="p-6 rounded-2xl bg-[#0b0f19] border border-purple-500/30 space-y-4 animate-in fade-in zoom-in-95 duration-300">
-              <div className="flex items-center justify-between">
+            <div className="p-4 sm:p-6 rounded-2xl bg-[#0b0f19] border border-purple-500/30 space-y-4 animate-in fade-in zoom-in-95 duration-300">
+              <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2.5">
                 <span className="text-xs font-bold text-purple-300 uppercase tracking-wider">
                   Company Project Health Rating
                 </span>
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-extrabold border ${
+                  className={`self-start xs:self-auto px-3 py-1 rounded-full text-xs font-extrabold border ${
                     summary.overallHealthScore >= 80
                       ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                       : summary.overallHealthScore >= 60
@@ -111,17 +111,17 @@ export default function ProjectIntelligencePage() {
             </div>
 
             {/* Project Health Score Breakdown */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {summary.projectHealthList.map((p) => (
-                <div key={p.projectId} className="p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-4 animate-in fade-in zoom-in-95 duration-300">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] font-semibold text-slate-400 block uppercase">
+                <div key={p.projectId} className="p-4 sm:p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-4 animate-in fade-in zoom-in-95 duration-300">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[10px] font-semibold text-slate-400 block uppercase truncate">
                         {p.clientName}
                       </span>
-                      <h3 className="text-base font-bold text-white">{p.projectName}</h3>
+                      <h3 className="text-base font-bold text-white truncate">{p.projectName}</h3>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                       <span
                         className={`text-xl font-extrabold ${
                           p.healthScore >= 80

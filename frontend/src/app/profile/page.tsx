@@ -54,9 +54,9 @@ export default function ProfilePage() {
           <p className="text-xs text-slate-400">Manage user account details, profile photo, preferences, and workspace appearance.</p>
         </div>
 
-        <div className="p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-6">
+        <div className="p-4 sm:p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-6">
           {/* User Header Info */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2.5">
             <div>
               <h3 className="text-lg font-bold text-white">{user?.name || 'Authenticated User'}</h3>
               <p className="text-xs text-slate-400">{user?.email}</p>

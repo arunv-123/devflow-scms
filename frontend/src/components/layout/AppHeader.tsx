@@ -263,22 +263,24 @@ export function AppHeader() {
   const displayBadgeText = unreadCount > 99 ? '99+' : unreadCount.toString();
 
   return (
-    <header className="h-16 border-b border-slate-800 bg-[#060913]/90 backdrop-blur-md sticky top-0 z-20 px-4 md:px-6 flex items-center justify-between">
+    <header className="h-16 border-b border-slate-800 bg-[#060913]/90 backdrop-blur-md sticky top-0 z-20 px-3 sm:px-4 md:px-6 flex items-center justify-between gap-2">
       {/* Title & Path & Toggle Triggers */}
-      <div className="flex items-center gap-2.5 sm:gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
         {/* Mobile Menu Drawer Toggle Button */}
         <button
           onClick={toggleMobileSidebar}
           aria-label="Open mobile navigation menu"
-          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 md:hidden transition-colors"
+          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 md:hidden transition-colors shrink-0 min-h-[40px] min-w-[40px] flex items-center justify-center"
         >
           <Menu className="size-5" />
         </button>
 
-        <h1 className="text-sm sm:text-base font-bold text-white tracking-tight truncate">
+        <h1 className="text-xs xs:text-sm sm:text-base font-bold text-white tracking-tight truncate min-w-0">
           {formatTitle(pathname)}
         </h1>
-        <LiveSyncStatus />
+        <div className="hidden xs:inline-flex shrink-0">
+          <LiveSyncStatus />
+        </div>
       </div>
 
       {/* Center Global Search Trigger */}
@@ -519,11 +521,11 @@ export function AppHeader() {
       </div>
 
       {/* Right Controls */}
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
         {/* Landing Page Link */}
         <Link
           href="/"
-          className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900/60 transition-colors shrink-0"
+          className="hidden sm:flex p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900/60 transition-colors shrink-0"
           title="Landing Page"
           aria-label="Landing Page"
         >
@@ -547,22 +549,22 @@ export function AppHeader() {
 
 
         {/* AI Assistant Quick Launcher */}
-        <Link href="/ai/assistant">
+        <Link href="/ai/assistant" className="hidden sm:inline-flex">
           <Button
             size="sm"
             variant="outline"
             className="border-sky-500/40 dark:border-sky-500/30 bg-sky-50 dark:bg-sky-950/20 hover:bg-sky-100 dark:hover:bg-sky-900/40 text-sky-700 dark:text-sky-300 text-xs gap-1.5 font-semibold"
           >
             <Sparkles className="size-3.5 text-sky-500 dark:text-sky-400 animate-pulse" />
-            <span className="hidden sm:inline">Ask AI</span>
+            <span className="hidden md:inline">Ask AI</span>
           </Button>
         </Link>
 
         {/* Create Quick Task / Project */}
-        <Link href="/tasks">
+        <Link href="/tasks" className="hidden sm:inline-flex">
           <Button size="sm" className="bg-sky-600 hover:bg-sky-500 text-white text-xs gap-1.5 shadow-md shadow-sky-600/20">
             <Plus className="size-4" />
-            <span className="hidden sm:inline">New Task</span>
+            <span className="hidden md:inline">New Task</span>
           </Button>
         </Link>
 
@@ -583,7 +585,7 @@ export function AppHeader() {
 
 
           {showNotifMenu && (
-            <div className="absolute right-0 mt-2 w-80 bg-[#0b0f19] border border-slate-800 rounded-xl shadow-2xl p-3 space-y-2 z-50">
+            <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-xs sm:w-80 bg-[#0b0f19] border border-slate-800 rounded-xl shadow-2xl p-3 space-y-2 z-50">
               <div className="flex items-center justify-between px-2 pb-2 border-b border-slate-800">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-white">Notifications</span>

@@ -54,8 +54,8 @@ export default function CRMOverviewPage() {
         </div>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1">
             <span className="text-xs font-semibold text-slate-400 uppercase">Pipeline Value</span>
             <div className="text-3xl font-extrabold text-white">
               <CountUpNumber value={stats.pipelineValue} formatter={formatCurrency} />
@@ -65,7 +65,7 @@ export default function CRMOverviewPage() {
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1">
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1">
             <span className="text-xs font-semibold text-slate-400 uppercase">Active Clients</span>
             <div className="text-3xl font-extrabold text-sky-400">
               <CountUpNumber value={stats.activeClients} /> Enterprise Clients
@@ -73,7 +73,7 @@ export default function CRMOverviewPage() {
             <div className="text-[11px] text-slate-400">100% Retainer Active</div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1">
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#0b0f19] border border-slate-800 space-y-1">
             <span className="text-xs font-semibold text-slate-400 uppercase">Upcoming Meetings</span>
             <div className="text-3xl font-extrabold text-purple-400">
               <CountUpNumber value={stats.scheduledMeetings} /> Scheduled
@@ -83,9 +83,9 @@ export default function CRMOverviewPage() {
         </div>
 
         {/* CRM Submodule Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <Link href="/crm/leads">
-            <div className="p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 hover:border-sky-500/40 transition-all space-y-3">
+            <div className="p-4 sm:p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 hover:border-sky-500/40 transition-all space-y-3">
               <div className="size-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center">
                 <PhoneCall className="size-5 text-sky-400" />
               </div>

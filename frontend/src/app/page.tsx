@@ -30,6 +30,8 @@ import {
   Sliders,
   Sun,
   Moon,
+  Menu,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { authApi } from '@/services/authApi';
@@ -214,6 +216,7 @@ if (typeof window !== 'undefined') {
 export default function StitchLandingPage() {
   const authHref = '/auth/signin';
   const { resolvedTheme, setTheme } = useTheme();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleToggleTheme = () => {
     const nextTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
@@ -322,19 +325,19 @@ export default function StitchLandingPage() {
 
       {/* Stitch Header */}
       <header className="relative z-20 border-b border-slate-800/80 bg-[#060913]/75 backdrop-blur-xl sticky top-0 transition-all">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
-            <DevFlowLogo size={40} showText={true} subtext="AI SCMS Platform" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group shrink-0 min-w-0">
+            <DevFlowLogo size={36} showText={true} subtext="AI SCMS Platform" />
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+          <nav className="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-medium text-slate-300">
             <a href="#features" className="hover:text-sky-400 transition-colors relative py-1 after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-sky-400 hover:after:w-full after:transition-all after:duration-300">Features</a>
             <a href="#ai-platform" className="hover:text-sky-400 transition-colors relative py-1 after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-sky-400 hover:after:w-full after:transition-all after:duration-300">AI Intelligence</a>
             <a href="#solutions" className="hover:text-sky-400 transition-colors relative py-1 after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-sky-400 hover:after:w-full after:transition-all after:duration-300">Solutions</a>
             <a href="#enterprise" className="hover:text-sky-400 transition-colors relative py-1 after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-sky-400 hover:after:w-full after:transition-all after:duration-300">Enterprise</a>
           </nav>
 
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Simple Icon-Only Navbar Theme Button */}
             <button
               type="button"
@@ -350,48 +353,113 @@ export default function StitchLandingPage() {
               )}
             </button>
 
-            <Link href={authHref}>
+            {/* Desktop / Tablet Buttons */}
+            <Link href={authHref} className="hidden sm:inline-flex">
               <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800/60 text-sm transition-all">
                 Sign In
               </Button>
             </Link>
-            <Link href={authHref}>
-              <Button className="bg-sky-600 hover:bg-sky-500 text-white font-medium text-sm px-5 py-2.5 rounded-xl shadow-lg shadow-sky-600/30 hover:shadow-sky-500/50 hover:-translate-y-0.5 transition-all gap-2 border border-sky-400/30">
+            <Link href={authHref} className="hidden md:inline-flex">
+              <Button className="bg-sky-600 hover:bg-sky-500 text-white font-medium text-sm px-4 lg:px-5 py-2.5 rounded-xl shadow-lg shadow-sky-600/30 hover:shadow-sky-500/50 hover:-translate-y-0.5 transition-all gap-2 border border-sky-400/30">
                 <span>Get Started</span>
                 <ArrowRight className="size-4" />
               </Button>
             </Link>
+
+            {/* Mobile Hamburger Toggle Button */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen((prev) => !prev)}
+              aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+              className="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 border border-slate-800/80 transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center"
+            >
+              {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Navigation Drawer Overlay */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-b border-slate-800/90 bg-[#060913]/98 backdrop-blur-2xl shadow-2xl px-5 py-5 space-y-4 animate-in fade-in slide-in-from-top-3 duration-200">
+            <nav className="flex flex-col space-y-1">
+              <a
+                href="#features"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-sky-400 hover:bg-slate-900/60 transition-colors flex items-center justify-between"
+              >
+                <span>Features</span>
+                <ChevronRight className="size-4 text-slate-500" />
+              </a>
+              <a
+                href="#ai-platform"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-sky-400 hover:bg-slate-900/60 transition-colors flex items-center justify-between"
+              >
+                <span>AI Intelligence</span>
+                <ChevronRight className="size-4 text-slate-500" />
+              </a>
+              <a
+                href="#solutions"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-sky-400 hover:bg-slate-900/60 transition-colors flex items-center justify-between"
+              >
+                <span>Solutions</span>
+                <ChevronRight className="size-4 text-slate-500" />
+              </a>
+              <a
+                href="#enterprise"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-sky-400 hover:bg-slate-900/60 transition-colors flex items-center justify-between"
+              >
+                <span>Enterprise</span>
+                <ChevronRight className="size-4 text-slate-500" />
+              </a>
+            </nav>
+
+            <div className="pt-3 border-t border-slate-800/80 flex flex-col gap-2.5">
+              <Link href={authHref} onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="outline" className="w-full h-11 text-slate-200 border-slate-800 hover:bg-slate-800 text-sm font-medium">
+                  Sign In
+                </Button>
+              </Link>
+              <Link href={authHref} onClick={() => setMobileMenuOpen(false)}>
+                <Button className="w-full h-11 bg-sky-600 hover:bg-sky-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-sky-600/30 gap-2">
+                  <span>Get Started Now</span>
+                  <ArrowRight className="size-4" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Stitch Hero Section */}
-      <section className="relative z-10 pt-20 pb-16 px-6 max-w-7xl mx-auto text-center space-y-8">
-        <div className="reveal-base delay-100 inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-slate-900/90 border border-sky-500/30 text-sky-300 text-xs font-semibold shadow-inner">
+      <section className="relative z-10 pt-16 sm:pt-20 pb-12 sm:pb-16 px-4 sm:px-6 max-w-7xl mx-auto text-center space-y-6 sm:space-y-8">
+        <div className="reveal-base delay-100 inline-flex items-center gap-2.5 px-3.5 sm:px-4 py-1.5 rounded-full bg-slate-900/90 border border-sky-500/30 text-sky-300 text-xs font-semibold shadow-inner">
           <span className="px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 text-[10px] font-extrabold uppercase">
             NEW
           </span>
-          <span>AI-powered project health & forecasting</span>
+          <span className="truncate">AI-powered project health & forecasting</span>
         </div>
 
-        <h1 className="reveal-base delay-150 text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white max-w-5xl mx-auto leading-[1.12]">
+        <h1 className="reveal-base delay-150 text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white max-w-5xl mx-auto leading-[1.12]">
           Run software projects with{' '}
           <span className="cyan-gradient-text drop-shadow-[0_0_15px_rgba(14,165,233,0.25)]">intelligence.</span>
         </h1>
 
-        <p className="reveal-base delay-200 text-base md:text-lg text-slate-400 max-w-3xl mx-auto font-normal leading-relaxed">
+        <p className="reveal-base delay-200 text-sm sm:text-base md:text-lg text-slate-400 max-w-3xl mx-auto font-normal leading-relaxed px-2">
           DevFlow brings projects, clients, teams, analytics, and AI-connected planning into one intelligent workspace — so your company ships faster with complete clarity.
         </p>
 
-        <div className="reveal-base delay-250 flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-          <Link href={authHref}>
-            <Button size="lg" className="h-12 px-8 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-sm font-semibold shadow-xl shadow-sky-600/30 hover:shadow-sky-500/50 hover:-translate-y-0.5 transition-all border border-sky-400/30 gap-2">
+        <div className="reveal-base delay-250 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-2">
+          <Link href={authHref} className="w-full sm:w-auto">
+            <Button size="lg" className="w-full sm:w-auto h-12 px-8 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-sm font-semibold shadow-xl shadow-sky-600/30 hover:shadow-sky-500/50 hover:-translate-y-0.5 transition-all border border-sky-400/30 gap-2">
               <span>See the Tour</span>
               <ArrowRight className="size-4" />
             </Button>
           </Link>
-          <Link href="/ai/assistant">
-            <Button size="lg" variant="outline" className="h-12 px-8 rounded-xl border-slate-700 bg-slate-900/80 hover:bg-slate-800 text-slate-200 text-sm font-medium hover:-translate-y-0.5 transition-all gap-2">
+          <Link href="/ai/assistant" className="w-full sm:w-auto">
+            <Button size="lg" variant="outline" className="w-full sm:w-auto h-12 px-8 rounded-xl border-slate-700 bg-slate-900/80 hover:bg-slate-800 text-slate-200 text-sm font-medium hover:-translate-y-0.5 transition-all gap-2">
               <Play className="size-4 text-sky-400" />
               <span>View the Demo</span>
             </Button>
@@ -399,17 +467,19 @@ export default function StitchLandingPage() {
         </div>
 
         {/* Stitch Window Mockup */}
-        <div className="reveal-scale delay-300 pt-12 relative max-w-5xl mx-auto">
-          <div className="rounded-2xl bg-[#0b0f19] border border-slate-800 shadow-2xl shadow-sky-950/40 p-4 lg:p-6 text-left space-y-6">
+        <div className="reveal-scale delay-300 pt-8 sm:pt-12 relative max-w-5xl mx-auto">
+          <div className="rounded-2xl bg-[#0b0f19] border border-slate-800 shadow-2xl shadow-sky-950/40 p-3.5 sm:p-4 lg:p-6 text-left space-y-5 sm:space-y-6">
             {/* Mac OS Window Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-slate-800/80">
-              <div className="flex items-center gap-2">
-                <span className="size-3 rounded-full bg-red-500/80" />
-                <span className="size-3 rounded-full bg-yellow-500/80" />
-                <span className="size-3 rounded-full bg-green-500/80" />
-                <span className="ml-4 text-xs font-mono text-slate-500">app.devflow.io/dashboard</span>
+            <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2.5 pb-4 border-b border-slate-800/80">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="size-2.5 sm:size-3 rounded-full bg-red-500/80" />
+                  <span className="size-2.5 sm:size-3 rounded-full bg-yellow-500/80" />
+                  <span className="size-2.5 sm:size-3 rounded-full bg-green-500/80" />
+                </div>
+                <span className="ml-2 xs:ml-4 text-xs font-mono text-slate-500 truncate">app.devflow.io/dashboard</span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-sky-400 bg-sky-500/10 px-3 py-1 rounded-full border border-sky-500/20 font-semibold">
+              <div className="flex items-center gap-2 text-xs text-sky-400 bg-sky-500/10 px-3 py-1 rounded-full border border-sky-500/20 font-semibold self-start xs:self-auto shrink-0">
                 <Activity className="size-3.5" />
                 <span>AI Health Score: 87/100</span>
               </div>
@@ -969,9 +1039,9 @@ export default function StitchLandingPage() {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto pt-12 mt-12 border-t border-slate-800/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
+        <div className="max-w-7xl mx-auto pt-12 mt-12 border-t border-slate-800/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500 text-center sm:text-left">
           <span>© 2026 DevFlow SCMS Inc. All rights reserved.</span>
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 sm:gap-6">
             <a href="#" className="hover:text-sky-400 transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-sky-400 transition-colors">Terms of Service</a>
             <a href="#" className="hover:text-sky-400 transition-colors">Security</a>

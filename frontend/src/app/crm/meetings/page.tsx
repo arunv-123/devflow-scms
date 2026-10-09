@@ -676,8 +676,8 @@ export default function MeetingsPage() {
 
         {/* Schedule / Edit Meeting Modal */}
         {isFormModalOpen && (
-          <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen min-h-screen z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
-            <div className="relative w-full max-w-lg max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-6 text-white shadow-2xl z-10">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-3.5 sm:p-4 overflow-y-auto animate-fadeIn">
+            <div className="relative w-full max-w-lg max-h-[88dvh] sm:max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-4 sm:p-6 text-white shadow-2xl z-10">
               {/* Modal Header */}
               <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
                 <div>
@@ -835,7 +835,7 @@ export default function MeetingsPage() {
                   </div>
 
                   {/* Date, Time, Duration Grid */}
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-2">
                     <div>
                       <label className="block text-slate-300 mb-1 font-medium">Date <span className="text-rose-400">*</span></label>
                       <input
@@ -999,8 +999,8 @@ export default function MeetingsPage() {
 
         {/* Complete Meeting Modal */}
         {completingMeeting && (
-          <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen min-h-screen z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
-            <div className="relative w-full max-w-lg max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-6 text-white shadow-2xl z-10">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-3.5 sm:p-4 overflow-y-auto animate-fadeIn">
+            <div className="relative w-full max-w-lg max-h-[88dvh] sm:max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-4 sm:p-6 text-white shadow-2xl z-10">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
                 <div>
                   <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wider">

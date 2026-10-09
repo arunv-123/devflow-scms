@@ -176,8 +176,8 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen min-h-screen z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto devflow-backdrop-enter">
-      <div className="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-6 text-white shadow-2xl z-10 devflow-modal-enter">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-3.5 sm:p-4 overflow-y-auto devflow-backdrop-enter">
+      <div className="relative w-full max-w-md max-h-[88dvh] sm:max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-4 sm:p-6 text-white shadow-2xl z-10 devflow-modal-enter">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
           <h3 className="text-base font-bold">Create New Project</h3>

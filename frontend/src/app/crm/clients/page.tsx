@@ -182,8 +182,8 @@ export default function ClientsPage() {
 
         {/* Create Client Modal */}
         {isCreateModalOpen && (
-          <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen min-h-screen z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
-            <div className="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-6 text-white shadow-2xl z-10">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-3.5 sm:p-4 overflow-y-auto animate-fadeIn">
+            <div className="relative w-full max-w-md max-h-[88dvh] sm:max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-4 sm:p-6 text-white shadow-2xl z-10">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
                 <h3 className="text-base font-bold">Add Enterprise Client</h3>
                 <button onClick={() => setIsCreateModalOpen(false)} className="text-slate-400 hover:text-white transition-colors">
@@ -242,7 +242,7 @@ export default function ClientsPage() {
                     placeholder="e.g. +1 (555) 123-4567"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-slate-400 mb-1">Total Contract Value (₹)</label>
                     <input
@@ -296,8 +296,8 @@ export default function ClientsPage() {
 
         {/* Edit Client Modal */}
         {editingClient && (
-          <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen min-h-screen z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
-            <div className="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-6 text-white shadow-2xl z-10">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-3.5 sm:p-4 overflow-y-auto animate-fadeIn">
+            <div className="relative w-full max-w-md max-h-[88dvh] sm:max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-4 sm:p-6 text-white shadow-2xl z-10">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
                 <h3 className="text-base font-bold">Edit Client Details</h3>
                 <button onClick={() => setEditingClient(null)} className="text-slate-400 hover:text-white transition-colors">
@@ -352,7 +352,7 @@ export default function ClientsPage() {
                     className="w-full px-3 py-2 rounded-lg bg-[#060913] border border-slate-800 text-white focus:outline-none focus:border-sky-500"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-slate-400 mb-1">Total Contract Value (₹)</label>
                     <input
@@ -406,8 +406,8 @@ export default function ClientsPage() {
 
         {/* View Client Modal */}
         {viewingClient && (
-          <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen min-h-screen z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
-            <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-6 text-white shadow-2xl z-10">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-3.5 sm:p-4 overflow-y-auto animate-fadeIn">
+            <div className="relative w-full max-w-2xl max-h-[88dvh] sm:max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-4 sm:p-6 text-white shadow-2xl z-10">
               {/* Header */}
               <div className="flex items-start justify-between border-b border-slate-800 pb-4 shrink-0">
                 <div className="flex items-center gap-4">
@@ -570,8 +570,8 @@ export default function ClientsPage() {
 
         {/* Delete Confirmation Modal */}
         {deletingClient && (
-          <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen min-h-screen z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fadeIn">
-            <div className="relative w-full max-w-sm rounded-2xl bg-[#0b0f19] border border-slate-800 p-6 space-y-4 text-white shadow-2xl z-10">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-3.5 sm:p-4 overflow-y-auto animate-fadeIn">
+            <div className="relative w-full max-w-sm max-h-[88dvh] sm:max-h-[90vh] rounded-2xl bg-[#0b0f19] border border-slate-800 p-4 sm:p-6 space-y-4 text-white shadow-2xl z-10">
               <div className="flex items-center gap-3 text-red-400 border-b border-slate-800 pb-3">
                 <ShieldAlert className="size-6 shrink-0" />
                 <h3 className="text-base font-bold text-white">Remove Client Account</h3>
@@ -598,11 +598,11 @@ export default function ClientsPage() {
         )}
 
         {/* Clients Directory Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {clients.map((client) => (
             <div
               key={client.id}
-              className="p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between space-y-4 group"
+              className="p-4 sm:p-6 rounded-2xl bg-[#0b0f19] border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between space-y-4 group"
             >
               <div className="space-y-4">
                 <div className="flex items-center justify-between gap-3">

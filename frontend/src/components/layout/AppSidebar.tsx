@@ -105,6 +105,17 @@ export function AppSidebar() {
   const { isCollapsed, toggleSidebar, isMobileOpen, setMobileOpen } = useSidebar();
   const [isHovered, setIsHovered] = useState<boolean>(false);
 
+  // Prevent background scroll chaining when mobile drawer is open
+  useEffect(() => {
+    if (isMobileOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isMobileOpen]);
+
   // Effective collapsed state: collapsed by default, expands automatically on hover or when manually pinned open
   const effectiveCollapsed = isCollapsed && !isHovered;
   const role = user?.role || 'Admin';
@@ -460,7 +471,7 @@ export function AppSidebar() {
       {/* Mobile Drawer (Slide-over) */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-64 bg-[#060913] border-r border-slate-800 flex flex-col h-full transform transition-transform duration-300 ease-in-out md:hidden shadow-2xl',
+          'fixed inset-y-0 left-0 z-50 w-64 bg-[#060913] border-r border-slate-800 flex flex-col h-full max-h-[100dvh] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] transform transition-transform duration-300 ease-in-out md:hidden shadow-2xl',
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >

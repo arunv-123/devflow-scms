@@ -673,32 +673,32 @@ export default function AIAssistantPage() {
 
   return (
     <AppLayout>
-      <div className="max-w-4xl mx-auto space-y-4 flex flex-col h-[calc(100vh-7rem)] lg:h-[calc(100vh-8rem)]">
+      <div className="max-w-4xl mx-auto space-y-3 sm:space-y-4 flex flex-col h-[calc(100dvh-5.5rem)] sm:h-[calc(100dvh-7rem)] lg:h-[calc(100dvh-8rem)] min-h-0">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-3 sm:pb-4 border-b border-slate-800 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center">
-              <Bot className="size-6 text-purple-400" />
+            <div className="size-9 sm:size-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center shrink-0">
+              <Bot className="size-5 sm:size-6 text-purple-400" />
             </div>
-            <div>
-              <h1 className="text-lg font-bold text-white flex items-center gap-2">
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-bold text-white flex items-center gap-2 truncate">
                 <span>AI Project Copilot Assistant</span>
-                <Sparkles className="size-4 text-purple-400 animate-pulse" />
+                <Sparkles className="size-3.5 sm:size-4 text-purple-400 animate-pulse shrink-0" />
               </h1>
-              <p className="text-xs text-slate-400">Context-aware AI for software requirement analysis & duplicate-safe task creation.</p>
+              <p className="text-[11px] sm:text-xs text-slate-400 truncate">Context-aware AI for software requirement analysis & duplicate-safe task creation.</p>
             </div>
           </div>
 
           {/* Context Selectors */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2 sm:gap-3 w-full sm:w-auto">
             {/* Task Selector for Developer / QA / Team Lead */}
             {(!user || ['Developer', 'Designer', 'QA', 'Team Lead'].includes(user?.role || '')) && existingTasks.length > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400 font-medium">Target Task:</span>
+              <div className="flex items-center gap-2 w-full xs:w-auto">
+                <span className="text-xs text-slate-400 font-medium shrink-0">Target Task:</span>
                 <select
                   value={selectedTaskId}
                   onChange={(e) => setSelectedTaskId(e.target.value)}
-                  className="h-9 px-3 text-xs bg-[#0b0f19] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500 max-w-[200px] truncate"
+                  className="h-9 px-3 text-xs bg-[#0b0f19] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500 w-full xs:max-w-[180px] sm:max-w-[200px] truncate"
                 >
                   <option value="">-- All Assigned Tasks --</option>
                   {existingTasks.map((t) => (
@@ -711,12 +711,12 @@ export default function AIAssistantPage() {
             )}
 
             {/* Project Context Selector */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-400 font-medium">Target Project:</span>
+            <div className="flex items-center gap-2 w-full xs:w-auto">
+              <span className="text-xs text-slate-400 font-medium shrink-0">Target Project:</span>
               <select
                 value={selectedProjectId}
                 onChange={(e) => setSelectedProjectId(e.target.value)}
-                className="h-9 px-3 text-xs bg-[#0b0f19] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500"
+                className="h-9 px-3 text-xs bg-[#0b0f19] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500 w-full xs:w-auto font-medium"
               >
                 {projects.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -752,33 +752,33 @@ export default function AIAssistantPage() {
         )}
 
         {/* Quick Suggestion Chips */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-none sm:flex-wrap sm:pb-0 shrink-0">
           {(!user || ['Developer', 'Designer'].includes(user?.role || '')) && (
             <>
               <button
                 onClick={() => handleSendPrompt('Explain my assigned tasks, deadlines and priorities', 'explain_my_tasks')}
-                className="px-3 py-1.5 rounded-lg text-xs bg-purple-950/40 hover:bg-purple-900/50 text-purple-300 border border-purple-500/30 transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg text-xs bg-purple-950/40 hover:bg-purple-900/50 text-purple-300 border border-purple-500/30 transition-colors flex items-center gap-1.5 shrink-0 whitespace-nowrap"
               >
                 <Sparkles className="size-3 text-purple-400" />
                 <span>Explain My Tasks</span>
               </button>
               <button
                 onClick={() => handleSendPrompt('Break down my task into actionable subtasks', 'breakdown_task', selectedTaskId)}
-                className="px-3 py-1.5 rounded-lg text-xs bg-sky-950/40 hover:bg-sky-900/50 text-sky-300 border border-sky-500/30 transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg text-xs bg-sky-950/40 hover:bg-sky-900/50 text-sky-300 border border-sky-500/30 transition-colors flex items-center gap-1.5 shrink-0 whitespace-nowrap"
               >
                 <ListTodo className="size-3 text-sky-400" />
                 <span>Break Down Task</span>
               </button>
               <button
                 onClick={() => handleSendPrompt('Provide technical assistance and architectural guidance', 'technical_assistant')}
-                className="px-3 py-1.5 rounded-lg text-xs bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-500/30 transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg text-xs bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-500/30 transition-colors flex items-center gap-1.5 shrink-0 whitespace-nowrap"
               >
                 <Code2 className="size-3 text-emerald-400" />
                 <span>Technical Assistant</span>
               </button>
               <button
                 onClick={() => handleSendPrompt('Provide step-by-step debugging strategies', 'debugging_assistance')}
-                className="px-3 py-1.5 rounded-lg text-xs bg-amber-950/40 hover:bg-amber-900/50 text-amber-300 border border-amber-500/30 transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg text-xs bg-amber-950/40 hover:bg-amber-900/50 text-amber-300 border border-amber-500/30 transition-colors flex items-center gap-1.5 shrink-0 whitespace-nowrap"
               >
                 <AlertTriangle className="size-3 text-amber-400" />
                 <span>Debugging Assistance</span>
@@ -790,21 +790,21 @@ export default function AIAssistantPage() {
             <>
               <button
                 onClick={() => handleSendPrompt('Explain test tasks and bug reports', 'explain_my_tasks')}
-                className="px-3 py-1.5 rounded-lg text-xs bg-purple-950/40 hover:bg-purple-900/50 text-purple-300 border border-purple-500/30 transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg text-xs bg-purple-950/40 hover:bg-purple-900/50 text-purple-300 border border-purple-500/30 transition-colors flex items-center gap-1.5 shrink-0 whitespace-nowrap"
               >
                 <Sparkles className="size-3 text-purple-400" />
                 <span>Explain Test Tasks</span>
               </button>
               <button
                 onClick={() => handleSendPrompt('Break down user story into test scenarios', 'breakdown_test_cases')}
-                className="px-3 py-1.5 rounded-lg text-xs bg-sky-950/40 hover:bg-sky-900/50 text-sky-300 border border-sky-500/30 transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg text-xs bg-sky-950/40 hover:bg-sky-900/50 text-sky-300 border border-sky-500/30 transition-colors flex items-center gap-1.5 shrink-0 whitespace-nowrap"
               >
                 <ListTodo className="size-3 text-sky-400" />
                 <span>Break Down Test Cases</span>
               </button>
               <button
                 onClick={() => handleSendPrompt('Review acceptance criteria for current deliverables', 'requirement_clarification')}
-                className="px-3 py-1.5 rounded-lg text-xs bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-500/30 transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg text-xs bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-500/30 transition-colors flex items-center gap-1.5 shrink-0 whitespace-nowrap"
               >
                 <CheckCircle2 className="size-3 text-emerald-400" />
                 <span>Acceptance Criteria Review</span>
@@ -816,21 +816,21 @@ export default function AIAssistantPage() {
             <>
               <button
                 onClick={() => handleSendPrompt('Analyze team workload and capacity', 'team_workload_analysis')}
-                className="px-3 py-1.5 rounded-lg text-xs bg-purple-950/40 hover:bg-purple-900/50 text-purple-300 border border-purple-500/30 transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg text-xs bg-purple-950/40 hover:bg-purple-900/50 text-purple-300 border border-purple-500/30 transition-colors flex items-center gap-1.5 shrink-0 whitespace-nowrap"
               >
                 <Sparkles className="size-3 text-purple-400" />
                 <span>Team Workload Analysis</span>
               </button>
               <button
                 onClick={() => handleSendPrompt('Recommend task distribution across team members', 'task_distribution')}
-                className="px-3 py-1.5 rounded-lg text-xs bg-sky-950/40 hover:bg-sky-900/50 text-sky-300 border border-sky-500/30 transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg text-xs bg-sky-950/40 hover:bg-sky-900/50 text-sky-300 border border-sky-500/30 transition-colors flex items-center gap-1.5 shrink-0 whitespace-nowrap"
               >
                 <ListTodo className="size-3 text-sky-400" />
                 <span>Task Distribution Recommendations</span>
               </button>
               <button
                 onClick={() => handleSendPrompt('Break down task into actionable subtasks', 'breakdown_task', selectedTaskId)}
-                className="px-3 py-1.5 rounded-lg text-xs bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-500/30 transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg text-xs bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-500/30 transition-colors flex items-center gap-1.5 shrink-0 whitespace-nowrap"
               >
                 <Code2 className="size-3 text-emerald-400" />
                 <span>Task Breakdown</span>
@@ -842,21 +842,21 @@ export default function AIAssistantPage() {
             <>
               <button
                 onClick={() => handleSendPrompt('Analyze overall company project health and risks', 'project_health')}
-                className="px-3 py-1.5 rounded-lg text-xs bg-purple-950/40 hover:bg-purple-900/50 text-purple-300 border border-purple-500/30 transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg text-xs bg-purple-950/40 hover:bg-purple-900/50 text-purple-300 border border-purple-500/30 transition-colors flex items-center gap-1.5 shrink-0 whitespace-nowrap"
               >
                 <Sparkles className="size-3 text-purple-400" />
                 <span>Analyze Project Health</span>
               </button>
               <button
                 onClick={() => handleSendPrompt('Summarize recent meeting notes and generate sprint tasks', 'summarize_meetings')}
-                className="px-3 py-1.5 rounded-lg text-xs bg-sky-950/40 hover:bg-sky-900/50 text-sky-300 border border-sky-500/30 transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg text-xs bg-sky-950/40 hover:bg-sky-900/50 text-sky-300 border border-sky-500/30 transition-colors flex items-center gap-1.5 shrink-0 whitespace-nowrap"
               >
                 <ListTodo className="size-3 text-sky-400" />
                 <span>Summarize Meeting & Generate Tasks</span>
               </button>
               <button
                 onClick={() => handleSendPrompt('Suggest optimal tech stack for project architecture', 'suggest_tech_stack')}
-                className="px-3 py-1.5 rounded-lg text-xs bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-500/30 transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg text-xs bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-500/30 transition-colors flex items-center gap-1.5 shrink-0 whitespace-nowrap"
               >
                 <Code2 className="size-3 text-emerald-400" />
                 <span>Suggest Tech Stack</span>
@@ -868,21 +868,21 @@ export default function AIAssistantPage() {
             <>
               <button
                 onClick={() => handleSendPrompt('Analyze overall company project health and risks', 'project_health')}
-                className="px-3 py-1.5 rounded-lg text-xs bg-purple-950/40 hover:bg-purple-900/50 text-purple-300 border border-purple-500/30 transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg text-xs bg-purple-950/40 hover:bg-purple-900/50 text-purple-300 border border-purple-500/30 transition-colors flex items-center gap-1.5 shrink-0 whitespace-nowrap"
               >
                 <Sparkles className="size-3 text-purple-400" />
                 <span>Analyze Project Health</span>
               </button>
               <button
                 onClick={() => handleSendPrompt('Analyze organization team workload and capacity', 'team_workload_analysis')}
-                className="px-3 py-1.5 rounded-lg text-xs bg-sky-950/40 hover:bg-sky-900/50 text-sky-300 border border-sky-500/30 transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg text-xs bg-sky-950/40 hover:bg-sky-900/50 text-sky-300 border border-sky-500/30 transition-colors flex items-center gap-1.5 shrink-0 whitespace-nowrap"
               >
                 <ListTodo className="size-3 text-sky-400" />
                 <span>Team Workload Insights</span>
               </button>
               <button
                 onClick={() => handleSendPrompt('Summarize meeting notes and generate sprint tasks', 'summarize_meetings')}
-                className="px-3 py-1.5 rounded-lg text-xs bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-500/30 transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg text-xs bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-300 border border-emerald-500/30 transition-colors flex items-center gap-1.5 shrink-0 whitespace-nowrap"
               >
                 <Code2 className="size-3 text-emerald-400" />
                 <span>Summarize Meeting & Tasks</span>
@@ -1579,7 +1579,7 @@ export default function AIAssistantPage() {
         </div>
 
         {/* Input Form */}
-        <form onSubmit={handleSubmit} className="flex items-center gap-3">
+        <form onSubmit={handleSubmit} className="flex items-center gap-2 sm:gap-3 sticky bottom-0 bg-[#060913]/95 backdrop-blur-md pt-2 pb-1 shrink-0">
           <input
             ref={inputRef}
             type="text"
@@ -1587,12 +1587,12 @@ export default function AIAssistantPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={loading}
-            className="flex-1 h-12 px-4 text-xs bg-[#0b0f19] border border-slate-800 rounded-xl text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-sky-500 disabled:opacity-50"
+            className="flex-1 h-11 sm:h-12 px-3.5 sm:px-4 text-xs bg-[#0b0f19] border border-slate-800 rounded-xl text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-sky-500 disabled:opacity-50 min-w-0"
           />
           <Button
             type="submit"
             disabled={loading || !input.trim()}
-            className="h-12 px-6 bg-sky-600 hover:bg-sky-500 text-white text-xs gap-2 shadow-md shadow-sky-600/20 disabled:opacity-50"
+            className="h-11 sm:h-12 px-4 sm:px-6 bg-sky-600 hover:bg-sky-500 text-white text-xs gap-1.5 sm:gap-2 shadow-md shadow-sky-600/20 disabled:opacity-50 shrink-0 min-w-[44px] min-h-[44px]"
           >
             <span>Send</span>
             {loading ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
@@ -1601,8 +1601,8 @@ export default function AIAssistantPage() {
 
         {/* Edit Milestone Modal */}
         {editingMilestone && (
-          <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen min-h-screen z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
-            <div className="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-6 text-white shadow-2xl z-10">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-3.5 sm:p-4 overflow-y-auto animate-fadeIn">
+            <div className="relative w-full max-w-md max-h-[88dvh] sm:max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-4 sm:p-6 text-white shadow-2xl z-10">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
                 <h3 className="text-base font-bold flex items-center gap-2 text-sky-400">
                   <Flag className="size-4" />
@@ -1683,8 +1683,8 @@ export default function AIAssistantPage() {
 
         {/* Edit Task Modal */}
         {editingTask && (
-          <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen min-h-screen z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
-            <div className="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-6 text-white shadow-2xl z-10">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-3.5 sm:p-4 overflow-y-auto animate-fadeIn">
+            <div className="relative w-full max-w-md max-h-[88dvh] sm:max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-4 sm:p-6 text-white shadow-2xl z-10">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
                 <h3 className="text-base font-bold flex items-center gap-2 text-purple-400">
                   <ListTodo className="size-4" />
@@ -1785,8 +1785,8 @@ export default function AIAssistantPage() {
 
         {/* Edit Tech Stack Modal */}
         {editingTechStack && (
-          <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-screen h-screen min-h-screen z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
-            <div className="relative w-full max-w-lg max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-6 text-white shadow-2xl z-10">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-3.5 sm:p-4 overflow-y-auto animate-fadeIn">
+            <div className="relative w-full max-w-lg max-h-[88dvh] sm:max-h-[90vh] flex flex-col rounded-2xl bg-[#0b0f19] border border-slate-800 p-4 sm:p-6 text-white shadow-2xl z-10">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
                 <h3 className="text-base font-bold flex items-center gap-2 text-emerald-400">
                   <Code2 className="size-5" />
