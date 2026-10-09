@@ -136,15 +136,20 @@ export interface Client {
 }
 
 export type MeetingStatus = 'Scheduled' | 'In Progress' | 'Completed' | 'Cancelled';
+export type CustomerType = 'Lead' | 'Client';
 
 export interface Meeting {
   id: string;
   title: string;
+  customerType?: CustomerType;
+  leadId?: string;
+  clientId?: string;
   clientName: string;
   date: string;
   time: string;
   duration: string;
   status: MeetingStatus;
+  participantIds?: string[];
   participants: string[];
   notes?: string;
   outcome?: string;

@@ -2,6 +2,7 @@ import { Lead } from '../models/leadModel';
 import { Client } from '../models/clientModel';
 import { Meeting } from '../models/meetingModel';
 import { Project } from '../models/projectModel';
+import { User } from '../models/userModel';
 import { ILead, IClient, IMeeting, CRMOverviewStats } from '../types/crm';
 import { ApiError } from '../utils/errors';
 
@@ -283,11 +284,61 @@ export class CRMService {
   }
 
   static async createMeeting(data: Partial<IMeeting>, userId?: string): Promise<IMeeting> {
-    if (!data.title || !data.clientName || !data.date || !data.time) {
-      throw new ApiError('Please provide meeting title, client name, date, and time', 400);
+    if (!data.title || !data.date || !data.time) {
+      throw new ApiError('Please provide meeting title, date, and time', 400);
     }
+
+    const customerType = data.customerType || (data.leadId ? 'Lead' : 'Client');
+    let resolvedClientName = (data.clientName || '').trim();
+    let leadId = data.leadId || null;
+    let clientId = data.clientId || null;
+
+    if (customerType === 'Lead') {
+      if (leadId) {
+        const lead = await Lead.findById(leadId);
+        if (!lead) {
+          throw new ApiError('Selected Lead not found', 400);
+        }
+        resolvedClientName = lead.company || lead.name;
+        clientId = null;
+      } else if (!resolvedClientName) {
+        throw new ApiError('Please select a Lead or provide client name', 400);
+      }
+    } else {
+      // Default / Client
+      if (clientId) {
+        const client = await Client.findById(clientId);
+        if (!client) {
+          throw new ApiError('Selected Client not found', 400);
+        }
+        resolvedClientName = client.company || client.name;
+        leadId = null;
+      } else if (!resolvedClientName) {
+        throw new ApiError('Please select a Client or provide client name', 400);
+      }
+    }
+
+    let resolvedParticipantIds: any[] = [];
+    let resolvedParticipants: string[] = Array.isArray(data.participants) ? [...data.participants] : [];
+
+    if (Array.isArray(data.participantIds) && data.participantIds.length > 0) {
+      const users = await User.find({ _id: { $in: data.participantIds } });
+      if (users.length !== data.participantIds.length) {
+        throw new ApiError('One or more selected participants do not exist', 400);
+      }
+      resolvedParticipantIds = users.map((u) => u._id);
+      const userNames = users.map((u) => u.name);
+      resolvedParticipants = Array.from(new Set([...userNames, ...resolvedParticipants]));
+    }
+
     const meeting = await Meeting.create({
       ...data,
+      customerType,
+      leadId,
+      clientId,
+      clientName: resolvedClientName,
+      participantIds: resolvedParticipantIds,
+      participants: resolvedParticipants,
       ...(userId && { createdBy: userId }),
     });
     return meeting;
@@ -306,6 +357,51 @@ export class CRMService {
       }
       if (!finalOutcome || !finalOutcome.trim()) {
         throw new ApiError('Meeting Outcome is required when completing a meeting', 400);
+      }
+    }
+
+    const customerType = data.customerType || existingMeeting.customerType || (data.leadId ? 'Lead' : 'Client');
+    let resolvedClientName = data.clientName !== undefined ? data.clientName.trim() : existingMeeting.clientName;
+    let leadId = data.leadId !== undefined ? data.leadId : existingMeeting.leadId;
+    let clientId = data.clientId !== undefined ? data.clientId : existingMeeting.clientId;
+
+    if (data.customerType || data.leadId !== undefined || data.clientId !== undefined) {
+      if (customerType === 'Lead') {
+        if (leadId) {
+          const lead = await Lead.findById(leadId);
+          if (!lead) throw new ApiError('Selected Lead not found', 400);
+          resolvedClientName = lead.company || lead.name;
+          clientId = null;
+        } else if (!resolvedClientName) {
+          throw new ApiError('Please select a Lead or provide client name', 400);
+        }
+      } else {
+        if (clientId) {
+          const client = await Client.findById(clientId);
+          if (!client) throw new ApiError('Selected Client not found', 400);
+          resolvedClientName = client.company || client.name;
+          leadId = null;
+        } else if (!resolvedClientName) {
+          throw new ApiError('Please select a Client or provide client name', 400);
+        }
+      }
+      data.customerType = customerType;
+      data.leadId = leadId;
+      data.clientId = clientId;
+      data.clientName = resolvedClientName;
+    }
+
+    if (data.participantIds !== undefined) {
+      if (Array.isArray(data.participantIds) && data.participantIds.length > 0) {
+        const users = await User.find({ _id: { $in: data.participantIds } });
+        if (users.length !== data.participantIds.length) {
+          throw new ApiError('One or more selected participants do not exist', 400);
+        }
+        data.participantIds = users.map((u) => u._id as any);
+        data.participants = users.map((u) => u.name);
+      } else {
+        data.participantIds = [];
+        data.participants = [];
       }
     }
 

@@ -34,14 +34,20 @@ export interface IClient extends Document {
   updatedAt: Date;
 }
 
+export type CustomerType = 'Lead' | 'Client';
+
 export interface IMeeting extends Document {
   _id: Types.ObjectId;
   title: string;
+  customerType?: CustomerType;
+  leadId?: Types.ObjectId | string | null;
+  clientId?: Types.ObjectId | string | null;
   clientName: string;
   date: string;
   time: string;
   duration: string;
   status: MeetingStatus;
+  participantIds?: (Types.ObjectId | string)[];
   participants: string[];
   notes?: string;
   outcome?: string;

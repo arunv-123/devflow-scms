@@ -10,6 +10,24 @@ const meetingSchema = new Schema<IMeeting>(
       required: [true, 'Meeting title is required'],
       trim: true,
     },
+    customerType: {
+      type: String,
+      enum: {
+        values: ['Lead', 'Client'],
+        message: '{VALUE} is not a valid customer type',
+      },
+      default: 'Client',
+    },
+    leadId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Lead',
+      default: null,
+    },
+    clientId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Client',
+      default: null,
+    },
     clientName: {
       type: String,
       required: [true, 'Client name is required'],
@@ -38,6 +56,12 @@ const meetingSchema = new Schema<IMeeting>(
       },
       default: 'Scheduled',
     },
+    participantIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
     participants: {
       type: [String],
       default: [],

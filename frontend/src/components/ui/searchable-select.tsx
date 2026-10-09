@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Search, Check } from 'lucide-react';
+import { ChevronDown, Search, Check, Loader2, AlertCircle } from 'lucide-react';
 
 export interface SelectOption {
   value: string;
   label: string;
+  subLabel?: string;
+  badge?: string;
   group?: string;
 }
 
@@ -15,6 +17,9 @@ interface SearchableSelectProps {
   onChange: (value: string) => void;
   placeholder?: string;
   disabled?: boolean;
+  loading?: boolean;
+  error?: string;
+  emptyMessage?: string;
   className?: string;
 }
 
@@ -24,6 +29,9 @@ export function SearchableSelect({
   onChange,
   placeholder = 'Select option...',
   disabled = false,
+  loading = false,
+  error,
+  emptyMessage = 'No matching options found',
   className = '',
 }: SearchableSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -59,6 +67,7 @@ export function SearchableSelect({
     (opt) =>
       opt.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
       opt.value.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (opt.subLabel && opt.subLabel.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (opt.group && opt.group.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
@@ -72,26 +81,91 @@ export function SearchableSelect({
 
   const hasGroups = options.some((opt) => opt.group);
 
+  const renderOptionContent = (opt: SelectOption) => {
+    const isSelected = opt.value === value;
+    return (
+      <button
+        key={opt.value}
+        type="button"
+        onClick={() => {
+          onChange(opt.value);
+          setIsOpen(false);
+        }}
+        className={`w-full px-2.5 py-2 rounded-lg text-left flex items-start justify-between gap-2 transition-colors ${
+          isSelected
+            ? 'bg-sky-500/10 text-sky-300 font-semibold border border-sky-500/20'
+            : 'text-slate-300 hover:bg-[#060913] hover:text-white'
+        }`}
+      >
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="truncate font-medium text-xs">{opt.label}</span>
+            {opt.badge && (
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
+                {opt.badge}
+              </span>
+            )}
+          </div>
+          {opt.subLabel && (
+            <div className="text-[11px] text-slate-400 truncate mt-0.5 font-normal">
+              {opt.subLabel}
+            </div>
+          )}
+        </div>
+        {isSelected && <Check className="size-3.5 text-sky-400 shrink-0 mt-0.5" />}
+      </button>
+    );
+  };
+
   return (
     <div ref={containerRef} className={`relative w-full ${className}`}>
       {/* Trigger Button */}
       <button
         type="button"
-        disabled={disabled}
-        onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`w-full h-9 px-3 text-xs bg-[#060913] border rounded-lg text-left flex items-center justify-between transition-colors ${
+        disabled={disabled || loading}
+        onClick={() => !disabled && !loading && setIsOpen(!isOpen)}
+        className={`w-full min-h-9 px-3 py-1.5 text-xs bg-[#060913] border rounded-lg text-left flex items-center justify-between transition-colors gap-2 ${
           disabled
             ? 'opacity-50 cursor-not-allowed border-slate-800 text-slate-500'
+            : error
+            ? 'border-rose-500/60 text-slate-200'
             : isOpen
             ? 'border-sky-500 text-white ring-1 ring-sky-500/20'
             : 'border-slate-800 text-slate-200 hover:border-slate-700'
         }`}
       >
-        <span className="truncate pr-2 font-medium">
-          {selectedOption ? selectedOption.label : value || placeholder}
-        </span>
-        <ChevronDown className={`size-3.5 text-slate-400 shrink-0 transition-transform ${isOpen ? 'rotate-180 text-sky-400' : ''}`} />
+        <div className="truncate flex-1 min-w-0">
+          {loading ? (
+            <span className="flex items-center gap-2 text-slate-400">
+              <Loader2 className="size-3.5 animate-spin text-sky-400 shrink-0" />
+              <span>Loading options...</span>
+            </span>
+          ) : selectedOption ? (
+            <div className="flex items-center gap-1.5 truncate">
+              <span className="truncate font-medium text-white">{selectedOption.label}</span>
+              {selectedOption.badge && (
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
+                  {selectedOption.badge}
+                </span>
+              )}
+            </div>
+          ) : (
+            <span className="text-slate-500 font-normal">{placeholder}</span>
+          )}
+        </div>
+        <ChevronDown
+          className={`size-3.5 text-slate-400 shrink-0 transition-transform ${
+            isOpen ? 'rotate-180 text-sky-400' : ''
+          }`}
+        />
       </button>
+
+      {error && (
+        <div className="mt-1 text-[11px] text-rose-400 flex items-center gap-1">
+          <AlertCircle className="size-3 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
 
       {/* Dropdown Menu */}
       {isOpen && (
@@ -112,60 +186,27 @@ export function SearchableSelect({
           </div>
 
           {/* Options List */}
-          <div className="max-h-56 overflow-y-auto p-1.5 space-y-1">
-            {filteredOptions.length === 0 ? (
-              <div className="p-3 text-center text-slate-500 italic text-[11px]">No matching options found</div>
+          <div className="max-h-60 overflow-y-auto p-1.5 space-y-1">
+            {loading ? (
+              <div className="p-4 text-center text-slate-400 flex items-center justify-center gap-2 text-xs">
+                <Loader2 className="size-4 animate-spin text-sky-400" />
+                <span>Loading options...</span>
+              </div>
+            ) : filteredOptions.length === 0 ? (
+              <div className="p-3 text-center text-slate-500 italic text-[11px]">
+                {emptyMessage}
+              </div>
             ) : hasGroups ? (
               Object.entries(groupedOptions).map(([groupName, groupOpts]) => (
                 <div key={groupName} className="space-y-1">
                   <div className="px-2 pt-1.5 pb-0.5 text-[10px] font-bold text-slate-400 tracking-wider uppercase">
                     {groupName}
                   </div>
-                  {groupOpts.map((opt) => {
-                    const isSelected = opt.value === value;
-                    return (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => {
-                          onChange(opt.value);
-                          setIsOpen(false);
-                        }}
-                        className={`w-full px-2.5 py-1.5 rounded-lg text-left flex items-center justify-between transition-colors ${
-                          isSelected
-                            ? 'bg-sky-500/10 text-sky-300 font-semibold border border-sky-500/20'
-                            : 'text-slate-300 hover:bg-[#060913] hover:text-white'
-                        }`}
-                      >
-                        <span className="truncate pr-2">{opt.label}</span>
-                        {isSelected && <Check className="size-3.5 text-sky-400 shrink-0" />}
-                      </button>
-                    );
-                  })}
+                  {groupOpts.map(renderOptionContent)}
                 </div>
               ))
             ) : (
-              filteredOptions.map((opt) => {
-                const isSelected = opt.value === value;
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => {
-                      onChange(opt.value);
-                      setIsOpen(false);
-                    }}
-                    className={`w-full px-2.5 py-1.5 rounded-lg text-left flex items-center justify-between transition-colors ${
-                      isSelected
-                        ? 'bg-sky-500/10 text-sky-300 font-semibold border border-sky-500/20'
-                        : 'text-slate-300 hover:bg-[#060913] hover:text-white'
-                    }`}
-                  >
-                    <span className="truncate pr-2">{opt.label}</span>
-                    {isSelected && <Check className="size-3.5 text-sky-400 shrink-0" />}
-                  </button>
-                );
-              })
+              filteredOptions.map(renderOptionContent)
             )}
           </div>
         </div>

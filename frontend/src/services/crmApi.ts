@@ -129,12 +129,18 @@ export const crmApi = {
     return res.data.meetings.map((m) => ({
       id: m._id || m.id,
       title: m.title,
+      customerType: m.customerType || 'Client',
+      leadId: m.leadId ? (typeof m.leadId === 'object' ? (m.leadId._id || m.leadId.id) : String(m.leadId)) : undefined,
+      clientId: m.clientId ? (typeof m.clientId === 'object' ? (m.clientId._id || m.clientId.id) : String(m.clientId)) : undefined,
       clientName: m.clientName,
       date: m.date,
       time: m.time,
       duration: m.duration,
       status: m.status,
-      participants: m.participants,
+      participantIds: Array.isArray(m.participantIds)
+        ? m.participantIds.map((p: any) => (typeof p === 'object' && p ? String(p._id || p.id) : String(p)))
+        : [],
+      participants: Array.isArray(m.participants) ? m.participants : [],
       notes: m.notes,
       outcome: m.outcome,
       actionItems: m.actionItems,
@@ -148,12 +154,18 @@ export const crmApi = {
     return {
       id: m._id || m.id,
       title: m.title,
+      customerType: m.customerType || 'Client',
+      leadId: m.leadId ? (typeof m.leadId === 'object' ? (m.leadId._id || m.leadId.id) : String(m.leadId)) : undefined,
+      clientId: m.clientId ? (typeof m.clientId === 'object' ? (m.clientId._id || m.clientId.id) : String(m.clientId)) : undefined,
       clientName: m.clientName,
       date: m.date,
       time: m.time,
       duration: m.duration,
       status: m.status,
-      participants: m.participants,
+      participantIds: Array.isArray(m.participantIds)
+        ? m.participantIds.map((p: any) => (typeof p === 'object' && p ? String(p._id || p.id) : String(p)))
+        : [],
+      participants: Array.isArray(m.participants) ? m.participants : [],
       notes: m.notes,
       outcome: m.outcome,
       actionItems: m.actionItems,
@@ -167,12 +179,18 @@ export const crmApi = {
     return {
       id: m._id || m.id,
       title: m.title,
+      customerType: m.customerType || 'Client',
+      leadId: m.leadId ? (typeof m.leadId === 'object' ? (m.leadId._id || m.leadId.id) : String(m.leadId)) : undefined,
+      clientId: m.clientId ? (typeof m.clientId === 'object' ? (m.clientId._id || m.clientId.id) : String(m.clientId)) : undefined,
       clientName: m.clientName,
       date: m.date,
       time: m.time,
       duration: m.duration,
       status: m.status,
-      participants: m.participants,
+      participantIds: Array.isArray(m.participantIds)
+        ? m.participantIds.map((p: any) => (typeof p === 'object' && p ? String(p._id || p.id) : String(p)))
+        : [],
+      participants: Array.isArray(m.participants) ? m.participants : [],
       notes: m.notes,
       outcome: m.outcome,
       actionItems: m.actionItems,

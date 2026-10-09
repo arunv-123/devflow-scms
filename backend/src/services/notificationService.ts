@@ -387,16 +387,22 @@ export class NotificationService {
   }): Promise<void> {
     const { meeting, eventType, actorUserId, actorName } = params;
 
-    // Find users by participant names or emails
+    // Find users by participant IDs or participant names/emails
     const participants = meeting.participants || [];
-    if (participants.length === 0) return;
+    const participantIds = (meeting.participantIds || []).filter(Boolean);
 
-    const matchedUsers = await User.find({
-      $or: [
-        { name: { $in: participants } },
-        { email: { $in: participants } },
-      ],
-    });
+    const userQueries: any[] = [];
+    if (participantIds.length > 0) {
+      userQueries.push({ _id: { $in: participantIds } });
+    }
+    if (participants.length > 0) {
+      userQueries.push({ name: { $in: participants } });
+      userQueries.push({ email: { $in: participants } });
+    }
+
+    if (userQueries.length === 0) return;
+
+    const matchedUsers = await User.find({ $or: userQueries });
 
     const actionUrl = `/crm?tab=meetings&meetingId=${meeting._id?.toString()}`;
     const titles = {
