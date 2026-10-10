@@ -32,6 +32,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     try {
       const res = await authApi.login(email, password);
+      if (res.token && typeof window !== 'undefined') {
+        localStorage.setItem('devflow_auth_token', res.token);
+      }
       setUser(res.user);
       return res.user;
     } finally {
@@ -47,6 +50,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       // Only clear user session if HTTP status is 401 Unauthorized (invalid/expired token)
       if (error.response?.status === 401) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('devflow_auth_token');
+        }
         setUser(null);
         return null;
       }
@@ -62,6 +68,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.error('Logout error', e);
     } finally {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('devflow_auth_token');
+      }
       setUser(null);
       if (typeof window !== 'undefined') {
         window.location.replace('/auth/signin');
@@ -79,6 +88,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .catch((error: any) => {
         // Only clear user session if HTTP status is 401 Unauthorized (invalid/expired token)
         if (isMounted && error.response?.status === 401) {
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('devflow_auth_token');
+          }
           setUser(null);
         }
       })

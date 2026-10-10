@@ -19,7 +19,9 @@ export const protect = asyncHandler(
       req.headers.authorization.startsWith('Bearer')
     ) {
       // Fallback to Bearer header
-      token = req.headers.authorization.split(' ')[1];
+      token = req.headers.authorization.replace(/^Bearer\s+/i, '').trim();
+    } else if (typeof req.query?.token === 'string') {
+      token = req.query.token;
     }
 
     if (!token) {

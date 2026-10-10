@@ -33,6 +33,9 @@ console.log(`  GROQ_API_KEY configured: ${Boolean(process.env.GROQ_API_KEY && pr
 const app: Express = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust reverse proxy / Next.js dev server rewrites to correctly determine client IP and prevent express-rate-limit warning
+app.set('trust proxy', 1);
+
 // Security & Utility Middleware
 app.use(helmet());
 const allowedOrigins = [
@@ -69,6 +72,7 @@ const authLimiter = rateLimit({
   message: { error: 'Too many authentication attempts. Please try again in 15 minutes.' },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
 });
 
 // 2. Global rate limiter for standard workspace API navigation & data operations
@@ -78,6 +82,7 @@ const apiLimiter = rateLimit({
   message: { error: 'Too many requests, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
 });
 
 app.use('/api/auth/login', authLimiter);
