@@ -549,7 +549,14 @@ export function AppHeader() {
 
 
         {/* AI Assistant Quick Launcher */}
-        <Link href="/ai/assistant" className="hidden sm:inline-flex">
+        <Link
+          href={
+            pathname.startsWith('/projects/') && pathname.split('/')[2] && pathname.split('/')[2] !== 'new'
+              ? `/ai/assistant?projectId=${pathname.split('/')[2]}`
+              : '/ai/assistant'
+          }
+          className="hidden sm:inline-flex"
+        >
           <Button
             size="sm"
             variant="outline"

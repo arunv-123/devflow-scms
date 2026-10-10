@@ -6,6 +6,18 @@ import { Task } from '../models/taskModel';
 import { Meeting } from '../models/meetingModel';
 import { User } from '../models/userModel';
 import { aiService } from './aiService';
+import {
+  resolveUserProjectContext,
+  getAccessibleProjects,
+  formatProjectContextForPrompt,
+  formatMultipleProjectsList,
+  detectProjectQueryIntent,
+  buildProjectIdResponse,
+  buildProjectDetailsResponse,
+  buildProjectProgressResponse,
+  buildProjectOverdueResponse,
+  buildProjectMilestonesResponse,
+} from './aiProjectContext';
 
 const isToolAuthorizedForRole = (toolName: string, role: string): boolean => {
   const allowedMap: Record<string, string[]> = {
@@ -16,6 +28,8 @@ const isToolAuthorizedForRole = (toolName: string, role: string): boolean => {
     'get_team_workload_analysis': ['Super Admin', 'Admin', 'Project Manager', 'Project Coordinator', 'Team Lead'],
     'get_my_tasks': ['Super Admin', 'Admin', 'Project Manager', 'Project Coordinator', 'Team Lead', 'Developer', 'Designer', 'QA', 'Client'],
     'break_down_task': ['Super Admin', 'Admin', 'Project Manager', 'Project Coordinator', 'Team Lead', 'Developer', 'Designer', 'QA'],
+    'get_project_details': ['Super Admin', 'Admin', 'Project Manager', 'Project Coordinator', 'Team Lead', 'Developer', 'Designer', 'QA', 'Client'],
+    'list_accessible_projects': ['Super Admin', 'Admin', 'Project Manager', 'Project Coordinator', 'Team Lead', 'Developer', 'Designer', 'QA', 'Client'],
   };
   const roles = allowedMap[toolName];
   return !!roles && roles.includes(role);
@@ -112,6 +126,30 @@ const groqTools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
         properties: {
           projectId: { anyOf: [{ type: 'string' }, { type: 'null' }], description: 'Optional project ID' },
         },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_project_details',
+      description: 'Retrieve real-time project details, progress, remaining milestones, and overdue tasks for an authorized project.',
+      parameters: {
+        type: 'object',
+        properties: {
+          projectId: { anyOf: [{ type: 'string' }, { type: 'null' }], description: 'Optional project ID to inspect' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_accessible_projects',
+      description: 'List all authorized projects accessible to the authenticated user.',
+      parameters: {
+        type: 'object',
+        properties: {},
       },
     },
   },
@@ -273,12 +311,65 @@ export class GroqProvider {
       };
     }
 
+    // Resolve project context & verify user permissions
+    const projectResolution = await resolveUserProjectContext({ projectId, user });
+    const resolvedProjectId = projectResolution.projectId || projectId;
+
+    // Check if the user is asking a general project inquiry (details, progress, overdue, milestones)
+    const intent = detectProjectQueryIntent(prompt || '');
+    if (intent) {
+      if (projectResolution.status === 'UNAUTHORIZED') {
+        return {
+          answer: `⚠️ **Permission Denied**\n\nYou do not have authorization to view project ID \`${projectResolution.unauthorizedProjectId}\`. Please select an authorized project.`,
+        };
+      }
+      if (projectResolution.status === 'NO_PROJECTS') {
+        return {
+          answer: `I could not find any accessible projects for your account in DevFlow. You are currently not assigned to any projects, or no projects exist in the system.`,
+        };
+      }
+      if (projectResolution.status === 'MULTIPLE_PROJECTS' && projectResolution.accessibleProjects) {
+        return {
+          answer: formatMultipleProjectsList(projectResolution.accessibleProjects),
+        };
+      }
+      if (projectResolution.status === 'RESOLVED' && projectResolution.freshData) {
+        const fresh = projectResolution.freshData;
+        if (intent === 'PROJECT_ID') {
+          return { answer: buildProjectIdResponse(fresh) };
+        }
+        if (intent === 'DETAILS') {
+          return { answer: buildProjectDetailsResponse(fresh) };
+        }
+        if (intent === 'PROGRESS') {
+          return { answer: buildProjectProgressResponse(fresh) };
+        }
+        if (intent === 'OVERDUE') {
+          return { answer: buildProjectOverdueResponse(fresh) };
+        }
+        if (intent === 'MILESTONES') {
+          return { answer: buildProjectMilestonesResponse(fresh) };
+        }
+      }
+    }
+
+    let projectContextNotice = '';
+    if (projectResolution.status === 'RESOLVED' && projectResolution.freshData) {
+      projectContextNotice = `\n\n${formatProjectContextForPrompt(projectResolution.freshData)}\n`;
+    } else if (projectResolution.status === 'MULTIPLE_PROJECTS' && projectResolution.accessibleProjects) {
+      projectContextNotice = `\n\nAuthorized Accessible Projects for User:\n${formatMultipleProjectsList(projectResolution.accessibleProjects)}\n`;
+    } else if (projectResolution.status === 'UNAUTHORIZED') {
+      projectContextNotice = `\n\nUnauthorized Access Notice: User requested project ID '${projectResolution.unauthorizedProjectId}', which they are NOT authorized to view.\n`;
+    } else if (projectResolution.status === 'NO_PROJECTS') {
+      projectContextNotice = `\n\nProject Context Notice: No accessible projects were found for this user in the database.\n`;
+    }
+
     const systemInstruction = `You are DevFlow AI Assistant, an intelligent hybrid AI copilot for DevFlow SCMS, software engineering, and general technical guidance.
 Authenticated User Context:
 - Name: ${user.name}
 - Email: ${user.email}
 - Role: ${user.role}
-- User ID: ${userIdStr}
+- User ID: ${userIdStr}${projectContextNotice}
 
 Core Behavior & Hybrid Guidelines:
 1. HYBRID SCOPE & GENERAL KNOWLEDGE:
@@ -293,15 +384,27 @@ Core Behavior & Hybrid Guidelines:
      • If no live-data tool is available, clearly state that live information is currently unavailable.
      • Do not fabricate or hallucinate current conditions.
 
-3. PROJECT DATA INTEGRITY (NO HALLUCINATIONS):
+3. PROJECT DATA INTEGRITY & CONTEXT RESOLUTION (NO HALLUCINATIONS):
+   - When Active Project Context is provided above:
+     • For general questions regarding project details (e.g. "Give me the current project details", "Can you give the current project details?", "Tell me about my project"): Answer thoroughly and accurately using the Active Project Context (project name, client, status, priority, progress, health score, budget, dates, tech stack, overdue tasks, and remaining milestones).
+     • For progress questions (e.g. "How is my project progressing?"): Report overall progress percentage, task completion ratio, active status, and delivery health score.
+     • For overdue task questions (e.g. "What tasks are overdue?"): Detail all overdue tasks with title, due date, priority, and status, or confirm that no tasks are overdue.
+     • For milestone questions (e.g. "What milestones are remaining?"): Detail all remaining milestones with target due dates, progress, and status, or confirm that all milestones have been achieved.
+     • NEVER ask the user to provide a project ID or exact project name when an Active Project Context is already present above.
+   - When the user asks about project details, progress, overdue tasks, or milestones but NO Active Project Context is resolved:
+     • If multiple accessible projects are listed above: Politely ask the user to select or specify which project they want information for, and present the list of authorized projects provided in the context above.
+     • If no accessible projects exist: Explain clearly that no projects exist or they are not assigned to any project, without inventing data.
+     • If the user requested an unauthorized project: Inform them that their role (${user.role}) is not authorized to access that project.
    - Never invent or hallucinate project data (project names, task names, statuses, milestone dates, client info, team assignments, health scores, database records).
-   - If the user asks about a specific DevFlow project item or metric and that data is not provided or unavailable via tool/context, state clearly that the project information is currently unavailable instead of guessing.
 
 4. SECURITY & PERMISSIONS:
    - If a tool call returns a PERMISSION DENIED result, inform the user politely that their role (${user.role}) is not authorized for that action and state which roles possess authorization. Never override or bypass permissions.
+   - Do not allow model-assumed project IDs to bypass authorization checks.
 
-5. RESPONSE FORMATTING:
-   - Provide clean, professional responses formatted in GitHub Markdown. Never reveal API keys, secret tokens, or internal database connection strings.`;
+5. RESPONSE FORMATTING & ID POLICY:
+   - Provide clean, professional responses formatted in GitHub Markdown. Never reveal API keys, secret tokens, or internal database connection strings.
+   - Do NOT display or quote internal MongoDB project IDs (or database object IDs) in conversational greetings, project overviews, summaries, or progress reports. Refer to projects by their human-readable name.
+   - ONLY provide the project ID if the user explicitly asks for the project ID (e.g. "What is the project ID?"). When requested, return it inline (e.g. The project ID for "**Project**" is \`ID\`. ), without breaking it into standalone blocks or inserting stray punctuation.`;
 
     const messagesPayload: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemInstruction },
@@ -318,6 +421,9 @@ Core Behavior & Hybrid Guidelines:
     }
 
     let userPromptContent = prompt || '';
+    if (projectResolution.status === 'RESOLVED' && projectResolution.freshData) {
+      userPromptContent = `[Active Project: "${projectResolution.freshData.name}"]\n${userPromptContent}`;
+    }
     if (action) {
       userPromptContent = `[Action: ${action}] ${userPromptContent}`;
     }
@@ -383,21 +489,55 @@ Core Behavior & Hybrid Guidelines:
             continue;
           }
 
-          // Tool Execution
+          // Tool Execution with Strict Authorization
           let toolOutput: any = {};
 
-          if (toolName === 'analyze_project_health') {
-            toolOutput = await aiService.analyzeProjectHealth(args.projectId || projectId);
+          if (toolName === 'get_project_details') {
+            const targetPid = args.projectId || resolvedProjectId;
+            const res = await resolveUserProjectContext({ projectId: targetPid, user });
+            if (res.status === 'UNAUTHORIZED') {
+              toolOutput = { error: `PERMISSION DENIED: User role '${role}' is not authorized to access project ID '${targetPid}'.` };
+            } else if (res.status === 'NO_PROJECTS') {
+              toolOutput = { error: 'Project not found or no accessible projects exist.' };
+            } else if (res.status === 'MULTIPLE_PROJECTS') {
+              toolOutput = { status: 'MULTIPLE_PROJECTS', projects: res.accessibleProjects };
+            } else {
+              toolOutput = res.freshData;
+            }
+          } else if (toolName === 'list_accessible_projects') {
+            const projects = await getAccessibleProjects(user);
+            toolOutput = {
+              projects: projects.map((p) => ({
+                id: p._id.toString(),
+                name: p.name,
+                status: p.status,
+                clientName: p.clientName,
+              })),
+            };
+          } else if (toolName === 'analyze_project_health') {
+            const targetPid = args.projectId || resolvedProjectId;
+            if (targetPid) {
+              const chk = await resolveUserProjectContext({ projectId: targetPid, user });
+              if (chk.status === 'UNAUTHORIZED') {
+                toolOutput = { error: `PERMISSION DENIED: User is not authorized to access project ID '${targetPid}'.` };
+              } else {
+                toolOutput = await aiService.analyzeProjectHealth(targetPid);
+              }
+            } else {
+              toolOutput = await aiService.analyzeProjectHealth();
+            }
           } else if (toolName === 'get_smart_team_recommendations') {
-            toolOutput = await aiService.getSmartTeamRecommendations(args.projectId || projectId, args.skills);
+            const targetPid = args.projectId || resolvedProjectId;
+            toolOutput = await aiService.getSmartTeamRecommendations(targetPid, args.skills);
           } else if (toolName === 'get_my_tasks') {
             let query: any = { 'assignee.id': userIdStr };
-            if (args.projectId || projectId) {
-              query.projectId = args.projectId || projectId;
+            const targetPid = args.projectId || resolvedProjectId;
+            if (targetPid) {
+              query.projectId = targetPid;
             }
             let userTasks = await Task.find(query).sort({ dueDate: 1 });
-            if (userTasks.length === 0 && (args.projectId || projectId)) {
-              userTasks = await Task.find({ projectId: args.projectId || projectId }).limit(5);
+            if (userTasks.length === 0 && targetPid) {
+              userTasks = await Task.find({ projectId: targetPid }).limit(5);
             }
             toolOutput = { tasksCount: userTasks.length, tasks: userTasks };
           } else if (toolName === 'break_down_task') {
@@ -442,9 +582,10 @@ Core Behavior & Hybrid Guidelines:
               toolOutput = { error: 'Task not found or unavailable' };
             }
           } else if (toolName === 'suggest_tech_stack') {
+            const targetPid = args.projectId || resolvedProjectId;
             let existingStack: string[] = ['React', 'Node.js', 'TypeScript', 'MongoDB'];
-            if (args.projectId || projectId) {
-              const p = await Project.findById(args.projectId || projectId);
+            if (targetPid) {
+              const p = await Project.findById(targetPid);
               if (p && p.techStack && p.techStack.length > 0) existingStack = p.techStack;
             }
             const recStack = Array.from(new Set([...existingStack, 'Next.js', 'Express', 'Mongoose', 'Tailwind CSS', 'Docker']));

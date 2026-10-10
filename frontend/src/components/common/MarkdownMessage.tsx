@@ -98,12 +98,19 @@ export const MarkdownMessage: React.FC<MarkdownMessageProps> = ({ content, class
               {children}
             </td>
           ),
+          pre: ({ children }: any) => <>{children}</>,
           code: ({ inline, className, children, ...props }: any) => {
-            if (inline) {
+            const { node, ...rest } = props;
+            const isInline =
+              typeof inline === 'boolean'
+                ? inline
+                : !className && !String(children).includes('\n');
+
+            if (isInline) {
               return (
                 <code
                   className="bg-purple-950/70 text-purple-300 border border-purple-800/40 rounded px-1.5 py-0.5 text-[11px] font-mono whitespace-nowrap"
-                  {...props}
+                  {...rest}
                 >
                   {children}
                 </code>
@@ -111,7 +118,10 @@ export const MarkdownMessage: React.FC<MarkdownMessageProps> = ({ content, class
             }
             return (
               <div className="my-3 rounded-xl border border-slate-800 bg-[#090d16] p-3 overflow-x-auto">
-                <code className="text-xs font-mono text-purple-200 block whitespace-pre" {...props}>
+                <code
+                  className={`text-xs font-mono text-purple-200 block whitespace-pre ${className || ''}`}
+                  {...rest}
+                >
                   {children}
                 </code>
               </div>

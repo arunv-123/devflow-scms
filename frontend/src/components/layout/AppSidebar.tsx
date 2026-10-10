@@ -351,13 +351,20 @@ export function AppSidebar() {
                   pathname === item.href ||
                   (item.href !== '/dashboard' && item.href !== '/crm' && pathname.startsWith(item.href + '/'));
                 const Icon = item.icon;
+                const targetHref =
+                  item.href === '/ai/assistant' &&
+                  pathname.startsWith('/projects/') &&
+                  pathname.split('/')[2] &&
+                  pathname.split('/')[2] !== 'new'
+                    ? `/ai/assistant?projectId=${pathname.split('/')[2]}`
+                    : item.href;
 
                 if (collapsedState && !isMobileView) {
                   // Collapsed Icon-Only View with Custom Accessible Tooltip
                   return (
                     <div key={item.href} className="relative group/tooltip flex justify-center">
                       <Link
-                        href={item.href}
+                        href={targetHref}
                         onClick={handleNavClick}
                         className={cn(
                           'flex items-center justify-center size-10 rounded-lg text-xs font-medium transition-all duration-150 relative mx-auto',
@@ -409,7 +416,7 @@ export function AppSidebar() {
                 return (
                   <Link
                     key={item.href}
-                    href={item.href}
+                    href={targetHref}
                     onClick={handleNavClick}
                     className={cn(
                       'group flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150',

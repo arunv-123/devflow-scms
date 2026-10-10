@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Bot,
   Send,
@@ -76,7 +77,9 @@ interface ChatMessage {
   };
 }
 
-export default function AIAssistantPage() {
+function AIAssistantContent() {
+  const searchParams = useSearchParams();
+  const urlProjectId = searchParams.get('projectId');
   const { user } = useAuth();
   const isAuthorizedPM = !user || ['Super Admin', 'Admin', 'Project Manager', 'Team Lead', 'Project Coordinator'].includes(user.role);
 
@@ -84,7 +87,14 @@ export default function AIAssistantPage() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(() => {
+    if (urlProjectId) return urlProjectId;
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('devflow_active_project_id');
+      if (saved) return saved;
+    }
+    return '';
+  });
   const [selectedTaskId, setSelectedTaskId] = useState<string>('');
 
   // Track existing milestones & tasks for duplicate classification
@@ -226,18 +236,38 @@ export default function AIAssistantPage() {
     });
   };
 
-  // Load projects list
+  // Load projects list and reconcile project selection
   useEffect(() => {
     projectApi
       .getProjects()
       .then((data) => {
         setProjects(data);
-        if (data.length > 0 && !selectedProjectId) {
+        if (urlProjectId && data.some((p) => p.id === urlProjectId)) {
+          setSelectedProjectId(urlProjectId);
+          try {
+            localStorage.setItem('devflow_active_project_id', urlProjectId);
+          } catch (_) {}
+        } else if (selectedProjectId && data.some((p) => p.id === selectedProjectId)) {
+          // Keep current selection
+          try {
+            localStorage.setItem('devflow_active_project_id', selectedProjectId);
+          } catch (_) {}
+        } else if (
+          typeof window !== 'undefined' &&
+          localStorage.getItem('devflow_active_project_id') &&
+          data.some((p) => p.id === localStorage.getItem('devflow_active_project_id'))
+        ) {
+          const savedId = localStorage.getItem('devflow_active_project_id')!;
+          setSelectedProjectId(savedId);
+        } else if (data.length === 1) {
           setSelectedProjectId(data[0].id);
+          try {
+            localStorage.setItem('devflow_active_project_id', data[0].id);
+          } catch (_) {}
         }
       })
       .catch((err) => console.error('Failed to fetch projects context:', err));
-  }, []);
+  }, [urlProjectId]);
 
   // Load existing milestones and tasks for current selected project
   const loadExistingProjectData = (projectId: string) => {
@@ -669,7 +699,7 @@ export default function AIAssistantPage() {
     }
   };
 
-  const selectedProjectObj = projects.find((p) => p.id === selectedProjectId) || projects[0];
+  const selectedProjectObj = projects.find((p) => p.id === selectedProjectId) || (selectedProjectId ? projects[0] : undefined);
 
   return (
     <AppLayout>
@@ -715,9 +745,20 @@ export default function AIAssistantPage() {
               <span className="text-xs text-slate-400 font-medium shrink-0">Target Project:</span>
               <select
                 value={selectedProjectId}
-                onChange={(e) => setSelectedProjectId(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSelectedProjectId(val);
+                  try {
+                    if (val) {
+                      localStorage.setItem('devflow_active_project_id', val);
+                    } else {
+                      localStorage.removeItem('devflow_active_project_id');
+                    }
+                  } catch (_) {}
+                }}
                 className="h-9 px-3 text-xs bg-[#0b0f19] border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-purple-500 w-full xs:w-auto font-medium"
               >
+                <option value="">-- No Project Selected --</option>
                 {projects.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -1801,7 +1842,7 @@ export default function AIAssistantPage() {
                 <div className="p-3 rounded-lg bg-slate-900/60 border border-slate-800 text-slate-300 space-y-1">
                   <div className="flex items-center gap-1.5 font-semibold text-white">
                     <Building className="size-3.5 text-purple-400" />
-                    <span>Target Project: {selectedProjectObj?.name}</span>
+                    <span>Target Project: {selectedProjectObj?.name || 'None (Global)'}</span>
                   </div>
                   <p className="text-[11px] text-slate-400">
                     Add or remove technologies below. Upon saving, the project's actual <strong>techStack</strong> field in the database will be updated.
@@ -1927,5 +1968,13 @@ export default function AIAssistantPage() {
         )}
       </div>
     </AppLayout>
+  );
+}
+
+export default function AIAssistantPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#060913] text-white flex items-center justify-center text-xs">Loading AI Copilot...</div>}>
+      <AIAssistantContent />
+    </Suspense>
   );
 }

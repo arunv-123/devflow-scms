@@ -9,6 +9,7 @@ import {
   Flag,
   Users,
   BrainCircuit,
+  Bot,
   Clock,
   ArrowLeft,
   Plus,
@@ -98,6 +99,9 @@ export default function ProjectDetailsPage() {
 
   useEffect(() => {
     if (projectId) {
+      try {
+        localStorage.setItem('devflow_active_project_id', projectId);
+      } catch (_) {}
       projectApi
         .getProjectById(projectId)
         .then((data) => {
@@ -235,6 +239,12 @@ export default function ProjectDetailsPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <Link href={`/ai/assistant?projectId=${projectId}`}>
+                <Button size="sm" variant="outline" className="border-sky-500/30 bg-sky-950/20 text-sky-300 hover:bg-sky-900/40 text-xs gap-1.5">
+                  <Bot className="size-4 text-sky-400" />
+                  <span>AI Assistant</span>
+                </Button>
+              </Link>
               <Link href="/ai/project-intelligence">
                 <Button size="sm" variant="outline" className="border-purple-500/30 bg-purple-950/20 text-purple-300 hover:bg-purple-900/40 text-xs gap-1.5">
                   <BrainCircuit className="size-4 text-purple-400" />
