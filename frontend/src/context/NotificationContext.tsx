@@ -93,7 +93,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const router = useRouter();
 
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const unreadCount = notifications.filter((n) => !n.read).length;
   const [loading, setLoading] = useState<boolean>(true);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('connecting');
@@ -107,7 +107,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const fetchNotifications = useCallback(async () => {
     if (!user) {
       setNotifications([]);
-      setUnreadCount(0);
       setLoading(false);
       setSyncStatus('disconnected');
       return;
@@ -132,7 +131,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         freshNotifs.forEach((n) => seenIdsRef.current.add(n.id));
         isInitialFetchRef.current = false;
         setNotifications(freshNotifs);
-        setUnreadCount(freshUnreadCount);
       } else {
         // Identify genuinely NEW unread notifications that have never been seen by this client session
         const brandNewNotifs = freshNotifs.filter(
@@ -161,7 +159,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
 
         setNotifications(freshNotifs);
-        setUnreadCount(freshUnreadCount);
       }
     } catch (err) {
       console.error('Failed to fetch notifications in context:', err);
@@ -282,7 +279,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, read: true } : n))
       );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (err) {
       console.error('Failed to mark notification as read:', err);
       throw err;
@@ -293,7 +289,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       await notificationsApi.markAllAsRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-      setUnreadCount(0);
     } catch (err) {
       console.error('Failed to mark all notifications as read:', err);
       throw err;
@@ -303,13 +298,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const deleteNotification = async (id: string) => {
     try {
       await notificationsApi.deleteNotification(id);
-      setNotifications((prev) => {
-        const target = prev.find((n) => n.id === id);
-        if (target && !target.read) {
-          setUnreadCount((u) => Math.max(0, u - 1));
-        }
-        return prev.filter((n) => n.id !== id);
-      });
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
       setToasts((prev) => prev.filter((t) => t.notifId !== id));
     } catch (err) {
       console.error('Failed to delete notification:', err);
@@ -321,7 +310,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       await notificationsApi.clearAllNotifications();
       setNotifications([]);
-      setUnreadCount(0);
       setToasts([]);
     } catch (err) {
       console.error('Failed to clear all notifications:', err);

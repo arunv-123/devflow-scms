@@ -29,7 +29,7 @@ import {
   LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { mockNotifications } from '@/lib/mockData';
+import { useNotifications } from '@/context/NotificationContext';
 import { useAuth } from '@/context/AuthContext';
 import { useSidebar } from '@/context/SidebarContext';
 import { DevFlowLogo } from '@/components/common/DevFlowLogo';
@@ -81,7 +81,7 @@ const navigationGroups: NavGroup[] = [
     items: [
       { name: 'Documents', href: '/documents', icon: FileText },
       { name: 'Activity Logs', href: '/activity-logs', icon: Clock },
-      { name: 'Notifications', href: '/notifications', icon: Bell, badge: mockNotifications.filter(n => !n.read).length.toString() },
+      { name: 'Notifications', href: '/notifications', icon: Bell },
       { name: 'Reports & Analytics', href: '/reports', icon: BarChart2 },
       { name: 'Client Portal', href: '/client-portal', icon: ExternalLink },
     ],
@@ -102,6 +102,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const navRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
+  const { unreadCount } = useNotifications();
   const { isCollapsed, toggleSidebar, isMobileOpen, setMobileOpen } = useSidebar();
   const [isHovered, setIsHovered] = useState<boolean>(false);
 
@@ -126,8 +127,16 @@ export function AppSidebar() {
   const isCoordinator = role === 'Project Coordinator';
   const isPM = role === 'Project Manager';
 
+  const notificationBadge = unreadCount > 0 ? (unreadCount > 99 ? '99+' : unreadCount.toString()) : undefined;
+
   // Filter navigation groups based on user role (Preserving existing RBAC strictly)
   const filteredGroups = navigationGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.map((item) =>
+        item.href === '/notifications' ? { ...item, badge: notificationBadge } : item
+      ),
+    }))
     .map((group) => {
       if (isClient) {
         if (group.title === 'Core Workspace') {
